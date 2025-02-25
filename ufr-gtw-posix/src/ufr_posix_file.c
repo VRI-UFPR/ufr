@@ -37,7 +37,7 @@
 #include <errno.h>
 #include <ufr.h>
 
-#define RECV_BUFFER_SIZE_DEFAULT 1024
+#define RECV_BUFFER_SIZE_DEFAULT (16000)
 
 typedef struct {
     int count;
@@ -85,7 +85,8 @@ size_t ufr_gtw_posix_file_size(const link_t* link, int type){
 
 static
 int ufr_gtw_posix_file_boot(link_t* link, const ufr_args_t* args) {
-	const char* path = ufr_args_gets(args, "@path", NULL);
+    char buffer[UFR_ARGS_TOKEN];
+    const char* path = ufr_args_gets(args, buffer, "@path", NULL);
     if ( path == NULL ) {
         ufr_error(link, EINVAL, "Parameter @path is blank");
         return EINVAL;
@@ -100,7 +101,7 @@ int ufr_gtw_posix_file_boot(link_t* link, const ufr_args_t* args) {
     link->gtw_shr = shr;
 
     // start the link, case mode is present
-	const char* mode = ufr_args_gets(args, "@mode", NULL);
+	const char* mode = ufr_args_gets(args, buffer, "@mode", NULL);
     if ( mode != NULL ) {
         FILE* fd = fopen(shr->path, mode);
         if ( fd == NULL ) {
@@ -314,19 +315,16 @@ ufr_gtw_api_t ufr_gtw_posix_stdin_api = {
 // ============================================================================
 
 int ufr_gtw_posix_new_file(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_file_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_file_api);
     return UFR_OK;
 }
 
 int ufr_gtw_posix_new_stdout(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_stdout_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_stdout_api);
     return UFR_OK;
 }
 
 int ufr_gtw_posix_new_stdin(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_stdin_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_stdin_api);
     return UFR_OK;
 }

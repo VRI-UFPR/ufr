@@ -38,15 +38,13 @@ size_t g_ros_count = 0;
 ll_gateway_t* g_gateway = NULL;
 
 // ======================================================================================
-//  Header
+//  Callback for Main Loop
 // ======================================================================================
 
 static
 int ufr_ros_humble_loop_cb(void) {
     return ( rclcpp::ok() ) ? UFR_OK : 1;
 }
-
-
 
 // ======================================================================================
 //  Subscribe
@@ -70,19 +68,18 @@ int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
         const char *argv[] = {"./teste2", NULL};
         rclcpp::init(1, argv);
         g_gateway = new ll_gateway_t();
-        ufr_put_loop_callback( ufr_ros_humble_loop_cb );
+        ufr_loop_put_callback( ufr_ros_humble_loop_cb );
     }
     g_ros_count += 1;
-
     link->gtw_obj = (void*) g_gateway;
     return UFR_OK;
 }
 
 int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
-    std::string msg = ufr_args_gets(args, "@msg", "");
+    // std::string msg = ufr_args_gets(args, "@msg", "");
 
     if ( type == UFR_START_SUBSCRIBER ) {
-        if ( msg == "laserscan" ) {
+        /*if ( msg == "laserscan" ) {
             sys_ufr_load(link, "dcr", "ros_humble:laserscan", type, args);
             ufr_log(link, "loaded ros_humble:laserscan");
         } else if ( msg == "pose" ) {
@@ -94,11 +91,11 @@ int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
         } else {
             ufr_log(link, "error, message is not registered");
             return 1;
-        }
+        }*/
 
     } else if ( type == UFR_START_PUBLISHER ) {
 
-        if ( msg == "twist" ) {
+        /*if ( msg == "twist" ) {
             sys_ufr_load(link, "enc", "ros_humble:twist", type, args);
             ufr_log(link, "loaded ros_humble:twist");
         } else if ( msg == "pose" ) {
@@ -116,7 +113,7 @@ int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
         } else {
             ufr_log(link, "error, message is not registered");
             return 1;
-        }
+        }*/
         
     }
     return UFR_OK;
@@ -143,8 +140,10 @@ size_t ufr_ros_topic_write(link_t* link, const char* buffer, size_t length) {
 
 static
 int ufr_ros_topic_recv(link_t* link) {
-    link->dcr_api->recv_cb(link, NULL, 0U);
-    return UFR_OK;
+    if ( link && link->dcr_api && link->dcr_api->recv_cb ) {
+        return link->dcr_api->recv_cb(link, NULL, 0U);
+    }
+    return -1;
 }
 
 static
@@ -176,6 +175,18 @@ ufr_gtw_api_t ufr_ros_humble_topic_drv = {
 
 extern "C"
 int ufr_gtw_ros_humble_new_topic(link_t* out, int type) {
-    out->gtw_api = &ufr_ros_humble_topic_drv;
+    ufr_link_init(out, &ufr_ros_humble_topic_drv);
+    return UFR_OK;
+}
+
+extern "C"
+int ufr_gtw_ros_humble_new(link_t* out, int type) {
+    if ( type == UFR_START_PUBLISHER) {
+        ufr_gtw_ros_humble_new_topic(out, type);
+    } else if ( type == UFR_START_SUBSCRIBER) {
+        ufr_gtw_ros_humble_new_topic(out, type);
+    } else {
+        return ufr_error(out, 1, "Start type is invalid");
+    }
     return UFR_OK;
 }

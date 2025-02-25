@@ -40,12 +40,12 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new zmq:topic @coder csv @debug 4 @port 3000"); 
+    link_t pub = ufr_publisher("@new posix:teste @coder csv @debug 4 @port 3000"); 
 
     for(int i=0; i<40; i++) {
         char buffer[1024];
-        snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i);
-        ufr_put(&pub, "s\n", buffer);
+        // snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i); // 10, 20, 30, "ddddd" \n
+        ufr_put(&pub, "iii\n", 10,20,30);
         sleep(1);
     }
 

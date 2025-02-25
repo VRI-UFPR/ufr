@@ -44,7 +44,7 @@ struct Decoder {
 
     uint8_t m_head;
     uint8_t m_tail;
-    uint8_t m_size;
+    volatile uint8_t m_size;
 
     Decoder(Gateway* gtw, const std::string topic_name, int buffer_size) {
         m_head = 0;
@@ -75,7 +75,8 @@ struct Decoder {
 
 static
 int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
-    const std::string topic_name = ufr_args_gets(args, "@topic", "topic");
+    char buffer[UFR_ARGS_TOKEN];
+    const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
 
     Gateway* gtw = (Gateway*) link->gtw_obj;
     Decoder* dcr = new Decoder(gtw, topic_name, 50);
@@ -111,7 +112,7 @@ static
 int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int maxitens) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
     if ( dcr ) {
-        *val = (int32_t) dcr->m_msg_cur->data;
+        // *val = (int32_t) dcr->m_msg_cur->data;
     }
     return UFR_OK;
 }
@@ -140,6 +141,9 @@ int ufr_dcr_ros_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     while ( dcr->m_size == 0 ) {
         ros::spinOnce();
+        if ( ros::ok() == false ) {
+            return -1;
+        }
     }
 
     dcr->m_msg_cur = &dcr->m_msg[ dcr->m_tail ];
@@ -175,7 +179,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .get_type = ufr_dcr_ros_get_type,
     .get_nbytes = ufr_dcr_ros_get_size,
     .get_nitems = ufr_dcr_ros_get_size,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_ros_get_str,

@@ -116,6 +116,6 @@ ufr_gtw_api_t ufr_posix_thread = {
 // ============================================================================
 
 int ufr_new_gtw_posix_thread(link_t* link, int type) {
-	link->gtw_api = &ufr_posix_thread;
+	ufr_link_init(link, &ufr_posix_thread);
 	return UFR_OK;
 }

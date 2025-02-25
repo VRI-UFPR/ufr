@@ -104,13 +104,12 @@ int ufr_posix_socket_copy(link_t* link, link_t* out) {
 
 int ufr_gtw_posix_new_socket(link_t* link, int type) {
     if ( type == UFR_START_CLIENT ) {
-        ufr_init_link(link, &ufr_posix_socket_cli);
+        ufr_link_init(link, &ufr_posix_socket_cli);
     } else if ( type == UFR_START_SERVER ) {
-        ufr_init_link(link, &ufr_posix_socket_srv);
+        ufr_link_init(link, &ufr_posix_socket_srv);
     } else {
         return 1;
     }
 
-    link->type_started = type;
 	return UFR_OK;
 }

@@ -56,6 +56,7 @@ typedef struct {
 
 static
 int ufr_dcr_msgpack_array_boot(link_t* link, const ufr_args_t* args) {
+    return UFR_OK;
 }
 
 static
@@ -107,7 +108,7 @@ char ufr_dcr_msgpack_array_get_type(link_t* link) {
 
 static
 int ufr_dcr_msgpack_array_get_nbytes(link_t* link) {
-	ll_decoder_t* decoder = link->dcr_obj;
+    ll_decoder_t* decoder = link->dcr_obj;
     const int type = decoder->object.type;
     switch (type) {
         case MSGPACK_OBJECT_POSITIVE_INTEGER:
@@ -138,7 +139,7 @@ int ufr_dcr_msgpack_array_get_nbytes(link_t* link) {
 
 static
 int ufr_dcr_msgpack_array_get_nitems(link_t* link) {
-	ll_decoder_t* decoder = link->dcr_obj;
+    ll_decoder_t* decoder = link->dcr_obj;
     const int type = decoder->object.type;
     switch (type) {
         case MSGPACK_OBJECT_POSITIVE_INTEGER:
@@ -168,7 +169,7 @@ int ufr_dcr_msgpack_array_get_nitems(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_msgpack_array_get_raw_ptr(link_t* link) {
+uint8_t* ufr_dcr_msgpack_array_get_rawptr(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     if ( decoder->object.type != MSGPACK_OBJECT_BIN ) {
         return NULL;
@@ -381,7 +382,7 @@ ufr_dcr_api_t ufr_dcr_msgpack_array_api = {
     .get_type = ufr_dcr_msgpack_array_get_type,
     .get_nbytes = ufr_dcr_msgpack_array_get_nbytes,
     .get_nitems = ufr_dcr_msgpack_array_get_nitems,
-    .get_raw_ptr = ufr_dcr_msgpack_array_get_raw_ptr,
+    .get_rawptr = ufr_dcr_msgpack_array_get_rawptr,
 
     .get_raw = ufr_dcr_msgpack_array_get_raw,
     .get_str = ufr_dcr_msgpack_array_get_str,
@@ -389,6 +390,10 @@ ufr_dcr_api_t ufr_dcr_msgpack_array_api = {
     .get_u32 = ufr_dcr_msgpack_array_get_u32,
     .get_i32 = ufr_dcr_msgpack_array_get_i32,
     .get_f32 = ufr_dcr_msgpack_array_get_f32,
+
+    .get_u64 = NULL,
+    .get_i64 = NULL,
+    .get_f64 = NULL,
 
     .enter = ufr_dcr_msgpack_array_enter,
     .leave = ufr_dcr_msgpack_array_leave
@@ -412,10 +417,10 @@ int ufr_dcr_msgpack_boot(link_t* link, const ufr_args_t* args) {
 
 static
 void ufr_dcr_msgpack_close(link_t* link) {
-	if ( link->dcr_obj != NULL ) {
-		free(link->dcr_obj);
-		link->dcr_obj = NULL;
-	}
+    if ( link->dcr_obj != NULL ) {
+        free(link->dcr_obj);
+        link->dcr_obj = NULL;
+    }
 }
 
 static
@@ -423,26 +428,26 @@ int ufr_dcr_msgpack_next(link_t* link) {
     // parse the next object in the message
     ll_decoder_t* decoder = link->dcr_obj;
     size_t current = decoder->cursor;
-    msgpack_unpack_return ret = msgpack_unpack_next(&decoder->result, decoder->msg_data, decoder->msg_size, &current);
+    msgpack_unpack_return ret = msgpack_unpack_next(&decoder->result, (const char *) decoder->msg_data, decoder->msg_size, &current);
 
     // error
     if ( ret != MSGPACK_UNPACK_SUCCESS ) {
         // ufr_info(&link, "Error in the unpacking the message %ld\n", decoder->msg_size);
-		decoder->object.type = MSGPACK_OBJECT_NIL;
+        decoder->object.type = MSGPACK_OBJECT_NIL;
         decoder->object.via.u64 = 0;
-		return -1;
-	}
+        return -1;
+    }
 
     // update decoder object
-	decoder->cursor = current;
+    decoder->cursor = current;
     decoder->object = decoder->result.data;
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_dcr_msgpack_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     ll_decoder_t* decoder = link->dcr_obj;
-    decoder->msg_data = msg_data;
+    decoder->msg_data = (uint8_t*) msg_data;
     decoder->msg_size = msg_size;
     decoder->cursor = 0;
     return ufr_dcr_msgpack_next(link);
@@ -472,7 +477,7 @@ char ufr_dcr_msgpack_get_type(link_t* link) {
         return 'r';
     }
 
-	return 0;
+    return 0;
 }
 
 static
@@ -538,7 +543,7 @@ int ufr_dcr_msgpack_get_nitems(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_msgpack_get_raw_ptr(link_t* link) {
+uint8_t* ufr_dcr_msgpack_get_rawptr(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     if ( decoder->object.type != MSGPACK_OBJECT_BIN ) {
         return NULL;
@@ -632,13 +637,13 @@ int ufr_dcr_msgpack_get_u32(link_t* link, uint32_t out_val[], int max_nitems) {
         // return the value
         const int type = decoder->object.type;
         if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
-            out_val[wrote] = (float) decoder->object.via.u64;
+            out_val[wrote] = (uint32_t) decoder->object.via.u64;
         } else if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
-            out_val[wrote] = (float) decoder->object.via.i64;
+            out_val[wrote] = (uint32_t) decoder->object.via.i64;
         } else if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            out_val[wrote] = (float) decoder->object.via.f64;
+            out_val[wrote] = (uint32_t) decoder->object.via.f64;
         } else if ( type == MSGPACK_OBJECT_FLOAT64 ) {
-            out_val[wrote] = (float) decoder->object.via.f64;
+            out_val[wrote] = (uint32_t) decoder->object.via.f64;
         } else {
             
         }
@@ -664,13 +669,13 @@ int ufr_dcr_msgpack_get_i32(link_t* link, int32_t out_val[], int max_nitems) {
         // return the value
         const int type = decoder->object.type;
         if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
-            out_val[wrote] = (float) decoder->object.via.u64;
+            out_val[wrote] = (int32_t) decoder->object.via.u64;
         } else if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
-            out_val[wrote] = (float) decoder->object.via.i64;
+            out_val[wrote] = (int32_t) decoder->object.via.i64;
         } else if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            out_val[wrote] = (float) decoder->object.via.f64;
+            out_val[wrote] = (int32_t) decoder->object.via.f64;
         } else if ( type == MSGPACK_OBJECT_FLOAT64 ) {
-            out_val[wrote] = (float) decoder->object.via.f64;
+            out_val[wrote] = (int32_t) decoder->object.via.f64;
         } else {
             
         }
@@ -845,7 +850,7 @@ ufr_dcr_api_t ufr_dcr_msgpack_api = {
     .get_type = ufr_dcr_msgpack_get_type,
     .get_nbytes = ufr_dcr_msgpack_get_nbytes,
     .get_nitems = ufr_dcr_msgpack_get_nitems,
-    .get_raw_ptr = ufr_dcr_msgpack_get_raw_ptr,
+    .get_rawptr = ufr_dcr_msgpack_get_rawptr,
 
     // 32 bits
     .get_u32 = ufr_dcr_msgpack_get_u32,
@@ -853,9 +858,9 @@ ufr_dcr_api_t ufr_dcr_msgpack_api = {
     .get_f32 = ufr_dcr_msgpack_get_f32,
 
     // 64 bits
-    .get_u64 = NULL,
-    .get_i64 = NULL,
-    .get_f64 = NULL,
+    .get_u64 = ufr_dcr_msgpack_get_u64,
+    .get_i64 = ufr_dcr_msgpack_get_i64,
+    .get_f64 = ufr_dcr_msgpack_get_f64,
 
     // 8 bits
     .get_raw = ufr_dcr_msgpack_get_raw,

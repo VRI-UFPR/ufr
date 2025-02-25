@@ -61,7 +61,8 @@ struct Encoder {
 
 static
 int ufr_enc_ros_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic = ufr_args_gets(args, "@topic", "image");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic = ufr_args_gets(args, buffer, "@topic", "image");
     Gateway* gtw_obj = (Gateway*) link->gtw_obj;
     Encoder* enc_obj = new Encoder();
     enc_obj->publisher = gtw_obj->node.advertise<sensor_msgs::Image>(topic, 10);

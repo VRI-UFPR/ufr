@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -71,20 +71,23 @@
 extern "C" {
 #endif
 
+struct _link;
+
 // ============================================================================
-//  Parameters
+//  UFR ARGS
 // ============================================================================
 
 // 8 bytes
 typedef union {
-	uint32_t    u32;
-	uint64_t    u64;
-	int32_t     i32;
-	int32_t     i64;
-	float       f32;
-	double      f64;
-	void*       ptr;
-	char const* str;
+    uint32_t    u32;
+    uint64_t    u64;
+    int32_t     i32;
+    int32_t     i64;
+    float       f32;
+    double      f64;
+    void*       ptr;
+    char const* str;
+    int         (*func)(struct _link*, int);
 } item_t;
 
 // 64 bytes for #64
@@ -97,35 +100,27 @@ typedef struct {
 //  API
 // ============================================================================
 
-struct _link;
-
 typedef struct {
-    int flag;
-    size_t size;
-    int32_t* data;
-} ufr_ai32_t;
+    const char* name;
 
-typedef struct {
-	const char* name;
+    // incerto
+    int    (*type)(const struct _link* link);  // remover
+    int    (*state)(const struct _link* link); // remover
+    size_t (*size)(const struct _link* link, int type); // remover
 
-	// incerto
-	int    (*type)(const struct _link* link);  // remover
-	int    (*state)(const struct _link* link); // remover
-	size_t (*size)(const struct _link* link, int type); // remover
+    // certo
+    int  (*boot)(struct _link* link, const ufr_args_t* args);
+    int  (*start)(struct _link* link, int type, const ufr_args_t* args);
+    void (*stop)(struct _link* link, int type);
+    int  (*copy)(struct _link* link, struct _link* out);
 
-	// certo
-	int  (*boot)(struct _link* link, const ufr_args_t* args);
-	int  (*start)(struct _link* link, int type, const ufr_args_t* args);
-	void (*stop)(struct _link* link, int type);
-	int  (*copy)(struct _link* link, struct _link* out);
-
-	// certo
-	size_t (*read)(struct _link* link, char* buffer, size_t length);
-	size_t (*write)(struct _link* link, const char* buffer, size_t length);
+    // certo
+    size_t (*read)(struct _link* link, char* buffer, size_t length);
+    size_t (*write)(struct _link* link, const char* buffer, size_t length);
 
     // receive functions
-	int (*recv)(struct _link* link);
-	int (*recv_async)(struct _link* link);
+    int (*recv)(struct _link* link);
+    int (*recv_async)(struct _link* link);
     int (*recv_peer_name)(struct _link* link, char* buffer, size_t maxbuffer);
 
     // server multi-thread
@@ -141,7 +136,7 @@ typedef struct {
     void (*close)(struct _link* link);
 
     // receive callback
-	int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
+    int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
     int (*recv_async_cb)(struct _link* link, char* msg_data, size_t msg_size);
 
     // Next item
@@ -151,18 +146,18 @@ typedef struct {
     char     (*get_type)(struct _link* link);
     int      (*get_nbytes)(struct _link* link);
     int      (*get_nitems)(struct _link* link);
-    uint8_t* (*get_raw_ptr)(struct _link* link);
+    uint8_t* (*get_rawptr)(struct _link* link);
 
     int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
     int (*get_str)(struct _link* link, char* out, int max_nbytes);
 
-	int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
-	int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
-	int (*get_f32)(struct _link* link, float* out, int max_nitems);
+    int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
+    int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
+    int (*get_f32)(struct _link* link, float* out, int max_nitems);
 
     int (*get_u64)(struct _link* link, uint64_t* out, int max_nitems);
-	int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
-	int (*get_f64)(struct _link* link, double* out, int max_nitems);
+    int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
+    int (*get_f64)(struct _link* link, double* out, int max_nitems);
 
     int (*enter)(struct _link* link);
     int (*leave)(struct _link* link);
@@ -174,34 +169,28 @@ typedef struct {
     void (*clear)(struct _link* link);
 
     // 32 bits
-	int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
-	int (*put_i32)(struct _link* link, const int32_t* val, int nitems);
-	int (*put_f32)(struct _link* link, const float* val, int nitems);
+    int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
+    int (*put_i32)(struct _link* link, const int32_t* val, int nitems);
+    int (*put_f32)(struct _link* link, const float* val, int nitems);
 
     // 64 bits
     int (*put_u64)(struct _link* link, const uint64_t* val, int nitems);
-	int (*put_i64)(struct _link* link, const int64_t* val, int nitems);
-	int (*put_f64)(struct _link* link, const double* val, int nitems);
+    int (*put_i64)(struct _link* link, const int64_t* val, int nitems);
+    int (*put_f64)(struct _link* link, const double* val, int nitems);
 
     // Single - 8 bits
     int (*put_cmd)(struct _link* link, char cmd);
     int (*put_str)(struct _link* link, const char* val);
     int (*put_raw)(struct _link* link, const uint8_t* val, int nbytes);
 
-    // acho que tah bom, talvez colocar o tipo
+    // acho que tah bom, talvez retirar o leave e deixar no next
     int (*enter)(struct _link* link, size_t max_nitems);
     int (*leave)(struct _link* link);
 } ufr_enc_api_t;
 
 // ============================================================================
-//  Link
+//  Link Definition
 // ============================================================================
-
-typedef struct {
-    void* handle;
-    size_t count;
-    char name[240];
-} ufr_library_t;
 
 typedef struct _link {
     // Gateway
@@ -215,7 +204,10 @@ typedef struct _link {
     
     // Decoder
     const ufr_dcr_api_t* dcr_api;
-    void* dcr_obj;
+    union {
+        void* dcr_obj;
+        int32_t dcr_obj_idx;
+    };
 
     // Decoder Stack
     const ufr_dcr_api_t* dcr_api_s0;
@@ -224,7 +216,6 @@ typedef struct _link {
 
     uint8_t type_started;
     uint8_t log_level;
-    uint8_t log_ident;
     uint8_t status;
 
     union {
@@ -236,11 +227,7 @@ typedef struct _link {
     };
 
     uint16_t put_count;
-
-    uint8_t slot_gtw;
-    uint8_t slot_enc;
-    uint8_t slot_dcr;
-    char errstr[180];
+    char errstr[172];
 } link_t;
 
 typedef struct {
@@ -249,39 +236,38 @@ typedef struct {
 } ufr_node_t;
 
 // ============================================================================
-//  Link Functions
+//  Sem bloco ainda
 // ============================================================================
 
-// Meta data
 const char* ufr_api_name(const link_t* link);
-// int ufr_gtw_type(const link_t* link);
-// int ufr_gtw_state(const link_t* link);
-// size_t ufr_size(const link_t* link);
-// size_t ufr_size_max(const link_t* link);
+link_t ufr_accept(link_t* link);
+
+size_t ufr_write(link_t* link, const char* buffer, size_t size);
+size_t ufr_read(link_t* link, char* buffer, size_t maxsize);
+
+bool ufr_send(link_t* link);
+
+int ufr_boot_enc(link_t* link, const ufr_args_t* args);
+int ufr_boot_dcr(link_t* link, const ufr_args_t* args);
+
+// ============================================================================
+//  UFR LINK
+// ============================================================================
 
 bool ufr_link_is_publisher(const link_t* link);
 bool ufr_link_is_subscriber(const link_t* link);
 bool ufr_link_is_server(const link_t* link);
 bool ufr_link_is_client(const link_t* link);
 
-bool ufr_is_valid(const link_t* link);
-bool ufr_is_blank(const link_t* link);
+bool ufr_link_is_valid(const link_t* link);
+bool ufr_link_is_blank(const link_t* link);
 bool ufr_link_is_error(const link_t* link);
 
+void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
 
-// Set zeros to link
-void ufr_init_link(link_t* link, ufr_gtw_api_t* gtw_api);
-
-// system new
-int ufr_init(link_t* link, const char* package_name, const char* class_name);
-
-/**
- * @brief Pensar em remover
- * 
- * @param text 
- * @return link_t 
- */
-link_t ufr_new(const char* text);
+// ============================================================================
+//  UFR
+// ============================================================================
 
 /**
  * @brief Create a new publisher
@@ -289,7 +275,8 @@ link_t ufr_new(const char* text);
  * @param text parameters for the publisher. Example "@new zmq:topic @coder msgpack"
  * @return link_t opened link
  */
-link_t ufr_publisher(const char* text);
+link_t ufr_publisher(const char* text, ...);
+int ufr_publisher_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new subscriber 
@@ -297,23 +284,8 @@ link_t ufr_publisher(const char* text);
  * @param text 
  * @return link_t 
  */
-link_t ufr_subscriber(const char* text);
-
-/**
- * @brief Create a new single thread server
- * 
- * @param text 
- * @return link_t 
- */
-link_t ufr_server(const char* text);
-
-/**
- * @brief Create a new single thread server
- * 
- * @param text 
- * @return link_t 
- */
-link_t ufr_server_st(const char* text);
+link_t ufr_subscriber(const char* text, ...);
+int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a link as client
@@ -326,78 +298,35 @@ link_t ufr_server_st(const char* text);
  * 
  * @version 1.0
  */
-link_t ufr_client(const char* text);
+link_t ufr_client(const char* text, ...);
 
-// boot
-int ufr_boot_dcr(link_t* link, const ufr_args_t* args);
-int ufr_boot_enc(link_t* link, const ufr_args_t* args);
-int ufr_boot_gtw(link_t* link, const ufr_args_t* args);
+/**
+ * @brief Create a new single thread server
+ * 
+ * @param text 
+ * @return link_t 
+ */
+link_t ufr_server(const char* text, ...);
 
-int ufr_boot_publisher(link_t* link, const char* text);
-int ufr_boot_subscriber(link_t* link, const char* text);
+/**
+ * @brief Create a new single thread server
+ * 
+ * @param text 
+ * @return link_t 
+ */
+link_t ufr_server_st(const char* text, ...);
+
+/**
+ * @brief Create a new single thread server
+ * 
+ * @param text 
+ * @return link_t 
+ */
+link_t ufr_server_mt(const char* text, ...);
 
 // ============================================================================
-//  Start
+//  UFR CLOSE
 // ============================================================================
-
-// Eliminar essas funcoes
-
-/*
- * @brief 
- * 
- * @param link link to be started 
- * @param type type to start (publisher, subscriber, client or server)
- * @param param_args variable arguments for start function 
- * @return int returns error code and 0 for success;
- */
-int ufr_start(link_t* link, int type, const ufr_args_t* param_args);
-
-/**
- * @brief start a link as topic publisher
- * 
- * @param link link to be started 
- * @param args variable arguments for start function 
- * @return int error code or 0 for success 
- */
-int ufr_start_publisher(link_t* link, const ufr_args_t* args);
-
-/**
- * @brief start a link as topic subscriber
- * 
- * @param link link to be started
- * @param args variable arguments for start function
- * @return int error code or 0 for success 
- */
-int ufr_start_subscriber(link_t* link, const ufr_args_t* args);
-
-/**
- * @brief start a link as socket server
- * 
- * @param link link to be started 
- * @param args variable arguments for start function 
- * @return int error code or 0 for success 
- */
-int ufr_start_server(link_t* link, const ufr_args_t* args);
-
-/**
- * @brief start a link as socket client
- * 
- * @param link link to be started
- * @param args variable arguments for start function
- * @return int error code or 0 for success
- */
-int ufr_start_client(link_t* link, const ufr_args_t* args);
-
-// ============================================================================
-//  Stop and Close
-// ============================================================================
-
-/**
- * @brief 
- * 
- * @param link 
- */
-void ufr_stop(link_t* link);
 
 /**
  * @brief 
@@ -406,13 +335,16 @@ void ufr_stop(link_t* link);
  */
 void ufr_close(link_t* link);
 
+// ============================================================================
+//  UFR LOOP
+// ============================================================================
 
 bool ufr_loop_ok();
 void ufr_loop_set_end();
-int ufr_put_loop_callback( int (*loop_callback)(void)  );
+int  ufr_loop_put_callback( int (*loop_callback)(void)  );
 
 // ============================================================================
-//  Receive, Read and Get
+//  UFR RECV
 // ============================================================================
 
 /**
@@ -422,6 +354,10 @@ int ufr_put_loop_callback( int (*loop_callback)(void)  );
  * @return int 
  */
 int ufr_recv(link_t* link);
+int ufr_recv_sy(link_t* link0, link_t* link1, int time_ms);
+int ufr_recv_sy1(link_t* link0, link_t* link1, int time_ms);
+int ufr_recv_2s(link_t* link0, link_t* link1, int time_ms);
+int ufr_recv_sy3(link_t* link0, link_t* link1, link_t link2, int time_ms);
 
 /**
  * @brief 
@@ -429,28 +365,22 @@ int ufr_recv(link_t* link);
  * @param link 
  * @return int 
  */
+
 int ufr_recv_async(link_t* link);
+int ufr_recv_as(link_t* link);
+int ufr_recv_as1(link_t* link);
+int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms);
+int ufr_recv_as3(link_t* link0, link_t* link1, link_t* link2, int time_ms);
 
+int ufr_recv_peername(link_t* link, char* buffer, size_t maxbuffer);
 
-
+// ============================================================================
+//  UFR GET
+// ============================================================================
 
 int ufr_get_nbytes(link_t* link);
 int ufr_get_nitems(link_t* link);
-
-
-
-
-const uint8_t* ufr_get_raw_ptr(link_t* link);
-
-/**
- * @brief 
- * 
- * @param node 
- * @param buffer 
- * @param size 
- * @return size_t 
- */
-size_t ufr_read(link_t* node, char* buffer, size_t size);
+const uint8_t* ufr_get_rawptr(link_t* link);
 
 /**
  * @brief 
@@ -505,29 +435,27 @@ int ufr_get_str(link_t* link, char* buffer, int maxlen);
  */
 int ufr_get_raw(link_t* link, uint8_t buffer[], int max_nitems);
 
+// GET Scalar - 32 bites 
+uint32_t ufr_get_u32(link_t* link, uint32_t defval);
+int32_t  ufr_get_i32(link_t* link, int32_t defval);
+float    ufr_get_f32(link_t* link, float defval);
+
+// GET Vector - 64 bites
+// int ufr_get_pf32(link_t* link, float buffer[], int max_nitems);
+int ufr_get_af32(link_t* link, float buffer[], int max_items);
+
+// GET Scalar - 64 bites
+uint64_t ufr_get_u64(link_t* link, uint64_t defval);
+int64_t  ufr_get_i64(link_t* link, int64_t defval);
+double   ufr_get_f64(link_t* link, double defval);
+
+// Enter and Leave
+int ufr_get_enter(link_t* link);
+int ufr_get_leave(link_t* link);
 
 // ============================================================================
-//  Send, Write and Put
+//  UFR PUT
 // ============================================================================
-
-/**
- * @brief 
- * 
- * @param link 
- * @return true 
- * @return false 
- */
-bool ufr_send(link_t* link);
-
-/**
- * @brief 
- * 
- * @param node 
- * @param buffer 
- * @param size 
- * @return size_t 
- */
-size_t ufr_write(link_t* node, const char* buffer, size_t size);
 
 /**
  * @brief 
@@ -537,7 +465,6 @@ size_t ufr_write(link_t* node, const char* buffer, size_t size);
  * @param list 
  */
 int ufr_put_va(link_t* link, const char* format, va_list list);
-
 
 /**
  * @brief Put data to the message for link
@@ -564,65 +491,36 @@ int ufr_put_raw(link_t* link, const uint8_t* array, int nbytes);
 int ufr_put_u8(link_t* link, const uint8_t* array, int nbytes);
 int ufr_put_i8(link_t* link, const int8_t* array, int nbytes);
 
-
 int ufr_put_str(link_t* link, const char* value);
 int ufr_put_eof(link_t* link);
-
 
 int ufr_put_enter(link_t* link, int max_nitems);
 int ufr_put_leave(link_t* link);
 
+// ============================================================================
+//  UFR ARGS
+// ============================================================================
 
-// GET Scalar - 32 bites 
-uint32_t ufr_get_u32(link_t* link, uint32_t defval);
-int32_t  ufr_get_i32(link_t* link, int32_t defval);
-float    ufr_get_f32(link_t* link, float defval);
-
-// GET Vector - 64 bites
-int ufr_get_pf32(link_t* link, float buffer[], int max_nitems);
-
-// GET Scalar - 64 bites
-uint64_t ufr_get_u64(link_t* link, uint64_t defval);
-int64_t  ufr_get_i64(link_t* link, int64_t defval);
-double   ufr_get_f64(link_t* link, double defval);
-
-// Enter and Leave
-int ufr_get_enter(link_t* link);
-int ufr_get_leave(link_t* link);
-
-
-
-// Functions on ufr_args_t
-bool ufr_flex_text_div(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max, const char div);
-bool ufr_flex_text(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max);
+#define UFR_ARGS_TOKEN 512
+typedef int (*dl_func_new_t) (link_t*, int type);
 
 size_t ufr_args_getu(const ufr_args_t* args, const char* noun, const size_t default_value);
 int    ufr_args_geti(const ufr_args_t* args, const char* noun, const int default_value);
 float  ufr_args_getf(const ufr_args_t* args, const char* noun, const float default_value);
 const void* ufr_args_getp(const ufr_args_t* args, const char* noun, const void* default_value);
-const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* default_value);
+const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun, const char* default_value);
 
+void* ufr_args_getfunc(const ufr_args_t* args, const char* type, const char* noun, void* default_value);
 
+bool ufr_args_flex_div(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max, const char div);
+bool ufr_args_flex(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max);
 
+int ufr_args_decrease_level(const char* src, char* dst);
 
-const char* ufr_test_args(const link_t* link);
-
-link_t ufr_accept(link_t* link);
-
-int ufr_recv_peer_name(link_t* link, char* buffer, size_t maxbuffer);
-
-
-
-link_t ufr_sys_subscriber22(const char* name);
-link_t ufr_sys_publisher22(const char* name, const char* params);
-
-int ufr_recv_2s(link_t* link0, link_t* link1, int time_ms);
-int ufr_recv_2a(link_t* link0, link_t* link1, int time_ms);
-
-int ufr_recv_3a(link_t* link0, link_t* link1, link_t* link2, int time_ms);
+void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list);
 
 // ============================================================================
-//  Dummy functions
+//  UFR DUMMY (remover)
 // ============================================================================
 
 size_t ufr_dummy_read (link_t*, char*, size_t);
@@ -630,26 +528,9 @@ size_t ufr_dummy_write(link_t*, const char*, size_t);
 bool   ufr_dummy_recv (link_t*);
 int    ufr_dummy_send (link_t*);
 
-
 // ============================================================================
 //  UFR functions
 // ============================================================================
-
-// Functions used for test framework
-int ufr_load_gtw_from_lib(link_t* link, const char* lib_file, const char* pack_name);
-
-
-
-// ufr_sys.h
-int ufr_load_gateway(link_t* link, const char* class_name, const ufr_args_t* args);
-int ufr_load_encoder(link_t* link, const char* class_name, const ufr_args_t* args);
-int ufr_load_decoder(link_t* link, const char* class_name, const ufr_args_t* args);
-int ufr_new_ptr(link_t* link, const char* text);
-
-int ufr_link_with_type(link_t* link, const char* text, int boot_type);
-
-link_t ufr_sys_publisher(const char* var_name, const char* text);
-link_t ufr_sys_subscriber(const char* name, const char* default_text);
 
 void ufr_output_init(const char* text);
 void ufr_output(const char* format, ...);
@@ -661,36 +542,28 @@ bool ufr_input_recv();
 void ufr_inoutput_init(const char* text);
 
 
-// ============================================================================
-//  Log Functions
-// ============================================================================
-
-void ufr_put_log(link_t* link, uint8_t level, const char* func_name, const char* format, ...);
-int  ufr_put_log_error(link_t* link, int error, const char* func_name, const char* format, ...);
-int  ufr_put_log_error_ident(link_t* link, int error, const char* func_name, const char* format, ...);
-
-#define ufr_warn(link, ...) ufr_put_log(link, 1, __func__, __VA_ARGS__)
-#define ufr_info(link, ...) ufr_put_log(link, 2, __func__, __VA_ARGS__)
-#define ufr_log(link, ...) ufr_put_log(link, 2, __func__, __VA_ARGS__)
-#define ufr_log_end(link, ...) if (link->log_ident > 0){link->log_ident-=1;} ufr_put_log(link, 3, __func__, __VA_ARGS__)
-#define ufr_log_ini(link, ...) ufr_put_log(link, 4, __func__, __VA_ARGS__); link->log_ident+=1
-#define ufr_log_error(link, error, ...) ufr_put_log_error_ident(link, error, __func__, __VA_ARGS__);
-
-#define ufr_error(link, error, ...) ufr_put_log_error(link, error, __func__, __VA_ARGS__)
-#define ufr_fatal(link, error, ...) ufr_put_log_error(link, error, __func__, __VA_ARGS__); exit(1)
-
+void ufr_exit_if_error(link_t* link);
 
 // ============================================================================
-//  Functions with dependency of Operating System
+//  UFR LOG
 // ============================================================================
 
-link_t ufr_sys_open(const char* name, const char* def_args);
-const char* ufr_sys_lib_call_list (const uint8_t slot, const uint8_t list_idx);
-int ufr_sys_lib_call_new (link_t* link, const uint8_t slot, const char* name, const int type);
-void urf_sys_set_ld_path(char* path);
+void ufr_log_put(link_t* link, uint8_t level, const char* func_name, const char* format, ...);
+int  ufr_log_put_error(link_t* link, int error, const char* func_name, const char* format, ...);
+void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...);
+
+#define ufr_warn(link, ...) ufr_log_put(link, 1, __func__, __VA_ARGS__)
+#define ufr_info(link, ...) ufr_log_put(link, 2, __func__, __VA_ARGS__)
+#define ufr_log(link, ...) ufr_log_put(link, 2, __func__, __VA_ARGS__)
+#define ufr_log_end(link, ...) ufr_log_put(link, 3, __func__, __VA_ARGS__)
+#define ufr_log_ini(link, ...) ufr_log_put(link, 4, __func__, __VA_ARGS__)
+#define ufr_log_error(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__);
+
+#define ufr_error(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__)
+#define ufr_fatal(link, error, ...) ufr_log_put_fatal(error, __func__, __VA_ARGS__);
 
 // ============================================================================
-//  Buffer Implementation for Encoders
+//  UFR BUFFER
 // ============================================================================
 
 #define MESSAGE_ITEM_SIZE 4096
@@ -715,16 +588,8 @@ void ufr_buffer_put_f32_as_str(ufr_buffer_t* buffer, float val);
 void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text);
 void ufr_buffer_check_size(ufr_buffer_t* buffer, size_t size);
 
-
-
-
-int sys_ufr_load (link_t* link, const char* library_type, 
-    const char* class_path, int boot_type, const ufr_args_t* args);
-
-
-
 // ============================================================================
-//  Use for tests
+//  UFR TEST
 // ============================================================================
 
 int ufr_gtw_posix_new_pipe(link_t* link, int type);
@@ -735,12 +600,9 @@ link_t ufr_new_pipe();
 void ufr_test_inc_count();
 void ufr_test_print_result();
 
-
 // ============================================================================
-//  App
+//  UFR APP
 // ============================================================================
-
-int sys_ufr_new_link(link_t* link, int boot_type, const ufr_args_t* args);
 
 int ufr_app_init(ufr_node_t* root);
 int ufr_app_open(link_t* link, const char* name, int type);

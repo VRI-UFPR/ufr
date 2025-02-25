@@ -59,8 +59,9 @@ size_t ufr_gtw_sqlite_size(const link_t* link, int type) {
 }
 
 int ufr_gtw_sqlite_boot (link_t* link, const ufr_args_t* args) {
-    const char* filename = ufr_args_gets(args, "@file", "sqlite3.db");
-link->log_level = 5;
+    char buffer[UFR_ARGS_TOKEN];
+    const char* filename = ufr_args_gets(args, buffer, "@file", "sqlite3.db");
+
     // create the shared object
     ufr_log_ini(link, "opening the database");
     sqlite3 *db;
@@ -70,6 +71,18 @@ link->log_level = 5;
     }
     link->gtw_shr = (void*) db;
     ufr_log_end(link, "opened the database %s", filename);
+
+    // execute create table
+    const char* sql = ufr_args_gets(args, buffer, "@oncreate", NULL);
+    if ( sql != NULL ) {
+        char* err_msg = NULL;
+        const int rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+        if (rc == SQLITE_OK) {
+            ufr_info(link, "table created");
+        } else {
+            ufr_warn(link, "error in the SQL: %s", err_msg);
+        }
+    }
 
     // create the private object
     ll_gtw_obj_t* obj = malloc(sizeof(ll_gtw_obj_t));
@@ -97,7 +110,8 @@ int ufr_gtw_sqlite_start (link_t* link, int type, const ufr_args_t* args) {
         obj->index = 0;
 
         // get the SQL command
-        const char* sql = ufr_args_gets(args, "@sql", NULL);
+        char buffer[UFR_ARGS_TOKEN];
+        const char* sql = ufr_args_gets(args, buffer, "@sql", NULL);
         if ( sql == NULL ) {
             return ufr_error(link, 1, "parameter @sql is blank");
         }
@@ -163,7 +177,7 @@ size_t ufr_gtw_sqlite_write(link_t* link, const char* buffer, size_t size) {
 
 static
 ufr_gtw_api_t ufr_gtw_sqlite_api = {
-    .name = "sqlite/client",
+    .name = "sqlite/topico",
 	.type = ufr_gtw_sqlite_type,
 	.state = ufr_gtw_sqlite_state,
 	.size = ufr_gtw_sqlite_size,
@@ -194,8 +208,9 @@ size_t ufr_gtw_sqlite_client_size(const link_t* link, int type) {
 }
 
 int ufr_gtw_sqlite_client_boot (link_t* link, const ufr_args_t* args) {
-    const char* filename = ufr_args_gets(args, "@file", "sqlite3.db");
-link->log_level = 5;
+    char buffer[UFR_ARGS_TOKEN];
+    const char* filename = ufr_args_gets(args, buffer, "@file", "sqlite3.db");
+
     // create the shared object
     ufr_log_ini(link, "opening the database");
     sqlite3 *db;
@@ -290,6 +305,7 @@ size_t ufr_gtw_sqlite_client_write(link_t* link, const char* buffer, size_t size
     char command[512];
     for (int ir=0; ir<512; ir++) {
         const char c = buffer[ir];
+printf("%c\n", c);
         if ( c == '\0' || c == '\n' || c == ' ' ) {
             command[iw++] = '\0';
             break;
@@ -326,7 +342,7 @@ size_t ufr_gtw_sqlite_client_write(link_t* link, const char* buffer, size_t size
 
     // Error
     } else {
-        return ufr_error(link, -1, "Command not valid");
+        return ufr_error(link, -1, "Command %s not valid", command);
     }
 
     /*
@@ -365,11 +381,15 @@ ufr_gtw_api_t ufr_gtw_sqlite_client_api = {
 
 int ufr_gtw_sqlite_new(link_t* link, int type) {
     if (type == UFR_START_CLIENT ) {
-        ufr_init_link(link, &ufr_gtw_sqlite_client_api);
+        ufr_link_init(link, &ufr_gtw_sqlite_client_api);
+    } else if (type == UFR_START_SUBSCRIBER ) {
+        ufr_link_init(link, &ufr_gtw_sqlite_api);
+        ufr_dcr_sqlite_new_table(link, type);
+    } else if (type == UFR_START_PUBLISHER ) {
+        ufr_link_init(link, &ufr_gtw_sqlite_api);
+        ufr_enc_sqlite_new(link, type);
     } else {
-        ufr_fatal(link, 1, "Tipo invalido");
+        return ufr_error(link, 1, "Tipo invalido");
     }
-    // link->dcr_api = &ufr_dcr_sqlite_api;
-    // link->enc_api = &ufr_enc_sqlite_api;
 	return UFR_OK;
 }

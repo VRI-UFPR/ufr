@@ -61,7 +61,8 @@ link->log_level = 10;
     struct sockaddr_in serverAddr;
 
     // get the parameters
-    const char* address = ufr_args_gets(args, "@host", "127.0.0.1");
+    char buffer[UFR_ARGS_TOKEN];
+    const char* address = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
     const uint16_t port = ufr_args_geti(args, "@port", 2000);
 
     /*---- Create the socket. The three arguments are: ----*/

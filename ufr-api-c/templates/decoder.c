@@ -79,13 +79,9 @@ ufr_dcr_api_t dcr_pack_api = {
 	.get_i32 = ufr_dcr_pack_get_i32,
 	.get_f32 = ufr_dcr_pack_get_f32,
 	.get_str = ufr_dcr_pack_get_str,
-	.get_arr = ufr_dcr_pack_get_arr,
 
-    .copy_str = ufr_dcr_pack_copy_str,
-	.copy_arr = ufr_dcr_pack_copy_arr,
-
-    .enter_array = ufr_dcr_pack_enter_array,
-    .leave_array = ufr_dcr_pack_leave_array
+    .enter = ufr_dcr_pack_enter,
+    .leave = ufr_dcr_pack_leave
 };
 
 // ============================================================================

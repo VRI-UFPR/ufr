@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -67,7 +67,8 @@ size_t ufr_zmq_size(const link_t* link, int type) {
 
 int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
     // get optional parameter context
-    const char* host = ufr_args_gets(args, "@host", "127.0.0.1");
+    char buffer[UFR_ARGS_TOKEN];
+    const char* host = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
 
     // get optional parameter context
     void* context = (void*) ufr_args_getp(args, "@context", NULL);
@@ -82,14 +83,14 @@ int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
     // get optional parameter port
     const uint32_t port = ufr_args_geti(args, "@port", 5000);
 
-	// prepare shared data with the socket parameters
-	const size_t host_str_len = strlen(host);
-	ll_shr_t* shr = malloc( sizeof(ll_shr_t) + host_str_len + 1 );
+    // prepare shared data with the socket parameters
+    const size_t host_str_len = strlen(host);
+    ll_shr_t* shr = malloc( sizeof(ll_shr_t) + host_str_len + 1 );
     if ( shr == NULL ) {
         return ufr_error(link, ENOMEM, "%s", strerror(ENOMEM));
     }
-	shr->context = context;
-	shr->port = port;
+    shr->context = context;
+    shr->port = port;
     strcpy(shr->host, host);
 
     // prepare the gateway object
@@ -180,11 +181,11 @@ size_t ufr_zmq_read(link_t* link, char* buffer, size_t max_size) {
     size_t copied = 0;
     const size_t rest_of_msg = msg_size - offset;
     if ( rest_of_msg > max_size ) {
-        strncpy(buffer, msg_data, max_size);
+        strncpy(buffer, (const char*) msg_data, max_size);
         local->idx += max_size;
         copied = max_size;
     } else {
-        strncpy(buffer, msg_data, rest_of_msg);
+        strncpy(buffer, (const char*) msg_data, rest_of_msg);
         local->idx += rest_of_msg;
         copied = rest_of_msg;
     }
@@ -205,7 +206,6 @@ size_t ufr_zmq_write(link_t* link, const char* buffer, size_t size) {
     if ( sent != size ) {
         return ufr_error(link, 0, "%s", zmq_strerror(errno));
     }
-    ufr_info(link, "sent %ld bytes", sent);
     return sent;
 }
 

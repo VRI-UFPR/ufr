@@ -42,12 +42,8 @@ int ufr_dcr_csv_new(link_t* link);
 // ============================================================================
 
 void test_simple() {
-    link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
-    ufr_args_t args = {.text="@sep ;"}; 
-    ufr_dcr_csv_new(&link);
-    ufr_boot_dcr(&link, &args);
+    link_t link = ufr_subscriber("@new %p @coder %p @sep ;", 
+        ufr_gtw_posix_new_pipe, ufr_dcr_csv_new);
 
     // test 1
     {
@@ -75,13 +71,8 @@ void test_simple() {
 }
 
 void test_simple_2() {
-    link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
-
-    ufr_args_t args = {.text="@sep ,"};  
-    ufr_dcr_csv_new(&link);
-    ufr_boot_dcr(&link, &args);
+    link_t link = ufr_subscriber("@new %p @coder %p @sep ,", 
+        ufr_gtw_posix_new_pipe, ufr_dcr_csv_new);
 
     // test 1
     {

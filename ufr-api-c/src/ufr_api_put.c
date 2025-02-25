@@ -93,7 +93,7 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
                 ufr_put_pf32(link, arr_ptr, arr_size);
             } else if ( arr_type == 'b' ) {
                 const int8_t* arr_ptr = va_arg(list, int8_t*);
-                ufr_put_raw(link, arr_ptr, arr_size);
+                ufr_put_raw(link, (uint8_t*) arr_ptr, arr_size);
             } 
 
 		// s, i or f

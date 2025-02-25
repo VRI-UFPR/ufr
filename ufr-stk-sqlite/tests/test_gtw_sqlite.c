@@ -63,24 +63,22 @@ void test_select() {
 
     ufr_close(&link);
 }
+*/
 
 void test_insert() {
-    link_t link;
-    ufr_args_t args_boot = {.text="@file test.db"};
-    ufr_new_gtw_sqlite_table(&link, &args_boot);
-
-    ufr_args_t args_subs = {.text="@sql %s", .arg[0].str="INSERT INTO pessoa VALUES(?,?,?)"};
-    ufr_start_publisher(&link, &args_subs);
+    link_t link = ufr_publisher("@new %p @file test.db " 
+         " @sql 'INSERT INTO pessoa VALUES(?,?,?)'" 
+         " @oncreate 'CREATE TABLE IF NOT EXISTS pessoa ("
+         " id int, nome char[64], idade int)'"
+        , ufr_gtw_sqlite_new);
 
     ufr_put(&link, "isi\n", 7, "trrr", 80);
     ufr_put(&link, "isi\n", 4, "teste", 50);
     ufr_put(&link, "isi\n", 5, "teste", 60);
     ufr_put(&link, "isi\n", 6, "teste", 70);
 
-
     ufr_close(&link);
 }
-*/
 
 // ============================================================================
 //  Main
@@ -88,6 +86,6 @@ void test_insert() {
 
 int main() {
     // test_select();
-    // test_insert();
+    test_insert();
 	return 0;
 }

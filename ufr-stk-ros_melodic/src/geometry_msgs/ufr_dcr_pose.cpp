@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -32,17 +32,28 @@
 #include <ufr.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/image.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "ufr_gtw_ros_humble.hpp"
 
-typedef ufr_ros_decoder_t<sensor_msgs::msg::Image> ll_decoder_t;
+typedef ufr_ros_decoder_t<geometry_msgs::msg::Pose> ll_decoder_t;
 
-// ============================================================================l
-//  Image - Private
+/*
+const size_t g_translation[6] = {
+    offsetof(geometry_msgs::msg::Twist, linear.x),
+    offsetof(geometry_msgs::msg::Twist, linear.y),
+    offsetof(geometry_msgs::msg::Twist, linear.z),
+    offsetof(geometry_msgs::msg::Twist, angular.x),
+    offsetof(geometry_msgs::msg::Twist, angular.y),
+    offsetof(geometry_msgs::msg::Twist, angular.z)
+};
+*/
+
+// ============================================================================
+//  Twist - Private
 // ============================================================================
 
 static
-int ufr_dcr_ros_humble_get_u32(link_t* link, uint32_t* val, int nitems) {
+int ufr_dcr_ros_humble_get_u32(link_t* link, uint32_t* val) {
 	ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
 	if ( dcr ) {
 
@@ -53,7 +64,7 @@ int ufr_dcr_ros_humble_get_u32(link_t* link, uint32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val, int nitems) {
+int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val) {
 	ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
 	if ( dcr ) {
         // update the index
@@ -63,7 +74,7 @@ int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_f32(link_t* link, float* val, int nitems) {
+int ufr_dcr_ros_humble_get_f32(link_t* link, float* val) {
 	ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
 	if ( dcr ) {
 
@@ -82,18 +93,15 @@ int ufr_dcr_ros_humble_get_str(link_t* link, std::string& val) {
 	return 0;
 }
 
-static 
-int ufr_dcr_ros_humble_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
+static void ufr_dcr_ros_humble_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
-    ll_gateway_t* gtw = (ll_gateway_t*) link->gtw_obj;
-    return dcr->recv(gtw);
-}
+    dcr->index = 0;
 
-static 
-int ufr_dcr_ros_humble_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
-    ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
-    ll_gateway_t* gtw = (ll_gateway_t*) link->gtw_obj;
-    return dcr->recv_async(gtw);
+    ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
+    while ( dcr->m_is_received == false ) {
+        rclcpp::spin_some(gtw_obj->m_node);
+    }
+    dcr->m_is_received = false;
 }
 
 static
@@ -106,12 +114,12 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 };
 
 // ============================================================================
-//  Image - Public
+//  Twist - Public
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_humble_new_image(link_t* link, int type) {
-	link->dcr_api = &ufr_dcr_ros_driver;
+int ufr_dcr_ros_humble_new_pose(link_t* link, int type) {
+    link->dcr_api = &ufr_dcr_ros_driver;
     return UFR_OK;
 }
 

@@ -19,6 +19,7 @@ struct Gateway {
 
 static
 int ufr_dcr_opencv_boot(link_t* link, const ufr_args_t* args) {
+    link->dcr_obj_idx = 0;
     return UFR_OK;
 }
 
@@ -28,30 +29,53 @@ void ufr_dcr_opencv_close(link_t* link) {
 }
 
 static
-void ufr_dcr_opencv_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
-
+int ufr_dcr_opencv_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
+    link->dcr_obj_idx = 0;
+    return UFR_OK;
 }
 
 static
-size_t ufr_dcr_opencv_get_size(link_t* link) {
+int ufr_dcr_opencv_get_nbytes(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     return gtw->frame.total();
 }
 
 static
-uint8_t* ufr_dcr_opencv_get_raw_ptr(link_t* link) {
+int ufr_dcr_opencv_get_nitems(link_t* link) {
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+    return gtw->frame.total();
+}
+
+static
+uint8_t* ufr_dcr_opencv_get_rawptr(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     return (uint8_t*) gtw->frame.data;
 }
 
 static
 int ufr_dcr_opencv_get_u32(link_t* link, uint32_t* val, int maxlen) {
-    return UFR_OK;
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+    switch (link->dcr_obj_idx) {
+        case 0: val[0] = gtw->frame.type();  break;
+        case 1: val[0] = gtw->frame.rows;  break;
+        case 2: val[0] = gtw->frame.cols;  break;
+        default: break;
+    }
+    link->dcr_obj_idx += 1;
+    return 1;
 }
 
 static
 int ufr_dcr_opencv_get_i32(link_t* link, int32_t* val, int maxlen) {
-    return UFR_OK;
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+    switch (link->dcr_obj_idx) {
+        case 0: val[0] = gtw->frame.type(); break;
+        case 1: val[0] = gtw->frame.rows; break;
+        case 2: val[0] = gtw->frame.cols; break;
+        default: val[0] = 0; break;
+    }
+    link->dcr_obj_idx += 1;
+    return 1;
 }
 
 static
@@ -60,7 +84,17 @@ int ufr_dcr_opencv_get_f32(link_t* link, float* ret_val, int maxlen) {
 }
 
 static
-int ufr_dcr_opencv_get_str(link_t* link, char* ret_val, int maxlen) {
+int ufr_dcr_opencv_get_str(link_t* link, char* val, int maxlen) {
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+    if ( link->dcr_obj_idx == 0 ) {
+        const int type = gtw->frame.type();
+        if ( type == CV_8UC1 ) {
+            strcpy(val, "CV_8UC1");
+        } else if ( type == CV_8UC3 ) {
+            strcpy(val, "CV_8UC3");
+        }
+        link->dcr_obj_idx += 1;
+    }
     return UFR_OK;
 }
 
@@ -79,13 +113,13 @@ ufr_dcr_api_t ufr_dcr_opencv_api = {
     .boot = ufr_dcr_opencv_boot,
     .close = ufr_dcr_opencv_close,
     .recv_cb = ufr_dcr_opencv_recv_cb,
-    .recv_async_cb = NULL,
+    .recv_async_cb = ufr_dcr_opencv_recv_cb,
     .next = NULL,
 
     .get_type = NULL,
-    .get_nbytes = ufr_dcr_opencv_get_size,
-    .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_nbytes = ufr_dcr_opencv_get_nbytes,
+    .get_nitems = ufr_dcr_opencv_get_nitems,
+    .get_rawptr = ufr_dcr_opencv_get_rawptr,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_opencv_get_str,
@@ -133,11 +167,30 @@ static
 int  ufr_gtw_opencv_start(link_t* link, int type, const ufr_args_t* args) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
 
-    link->dcr_api = &ufr_dcr_opencv_api;
-    ufr_boot_dcr(link, args);
+    if ( type == UFR_START_SUBSCRIBER ) {
+        link->dcr_api = &ufr_dcr_opencv_api;
+        ufr_boot_dcr(link, args);
 
-    int idx = ufr_args_geti(args, "@id", 0);
-    gtw->capture.open(idx);
+        char buffer[UFR_ARGS_TOKEN];
+        const char* filename = ufr_args_gets(args, buffer, "@file", NULL);
+        if ( filename != NULL ) {
+            gtw->capture.open(filename);
+            if ( !gtw->capture.isOpened() ) {
+                return -1;
+            }
+        } else {
+            const int idx = ufr_args_geti(args, "@id", -1);
+            if ( idx >= 0 ) {
+                gtw->capture.open(idx);
+                if ( !gtw->capture.isOpened() ) {
+                    return -1;
+                }
+            } else {
+                return -1;
+            }
+        }
+    }
+
     return UFR_OK;
 }
 
@@ -165,13 +218,18 @@ size_t ufr_gtw_opencv_write(link_t* link, const char* buffer, size_t length) {
 static
 int ufr_gtw_opencv_recv(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
-    gtw->capture >> gtw->frame;
+    gtw->capture.read(gtw->frame);
+    if ( gtw->frame.empty() ) {
+        return -1;
+    }
+    link->dcr_api->recv_cb(link, NULL, 0);
     return UFR_OK;
 }
 
 static
 int ufr_gtw_opencv_recv_async(link_t* link) {
-    return UFR_OK;
+    // link->dcr_api->recv_async_cb(link, NULL, 0);
+    return -1;
 }
 
 static

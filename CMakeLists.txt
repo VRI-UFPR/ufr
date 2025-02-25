@@ -42,6 +42,7 @@ endif(COVERAGE_TEST)
 
 # include UFR API
 include_directories(./ufr-api-c/include)
+include_directories(./cv_mat/include)
 
 # Build libraries with no dependencies
 add_subdirectory(./ufr-api-c)
@@ -71,7 +72,7 @@ endif(BUILD_UFR_STK_SQLITE)
 
 # Build examples
 if(BUILD_EXAMPLES)
-    # add_subdirectory(./examples/)
+    add_subdirectory(./examples/)
 endif(BUILD_EXAMPLES)
 
 # Build tests
@@ -89,14 +90,17 @@ endif(BUILD_TESTS)
 # add_subdirectory(./ufr-gtw-gtk)
 # add_subdirectory(./ufr-cdr-http)
 # add_subdirectory(./ufr-gtw-http)
+
 # debian/ubuntu: sudo apt install libssh-dev
 # add_subdirectory(./ufr-stk-ssh)
+
 # add_subdirectory(ufr-stk-irrlicht)
 # add_subdirectory(./ufr-stk-ros_humble)
 # add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
 # add_subdirectory(./ufr-dev-camera)
+add_subdirectory(./cv_mat)
 
 
 # install(FILES ./etc/init.bash DESTINATION .)

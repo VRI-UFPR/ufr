@@ -24,7 +24,7 @@ int main() {
         }
 
         // int size = ufr_get_size(&video);
-        void* data = (void*) ufr_get_raw_ptr(&video);
+        void* data = (void*) ufr_get_rawptr(&video);
         int size[2] = {480, 640};
         Mat image(2, size, CV_8UC3, data, 0);
         imshow("janela", image);

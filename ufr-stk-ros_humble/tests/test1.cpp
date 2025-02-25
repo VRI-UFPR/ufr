@@ -2,7 +2,7 @@
 #include "ufr_gtw_ros_humble.hpp"
 
 void test_twist() {
-    link_t topic;
+    /*link_t topic;
     ufr_args_t args = {.text="@topic scan @msg twist @debug 4"};
     ufr_gtw_ros_humble_new_topic(&topic, UFR_START_PUBLISHER);
     topic.log_level = 4;
@@ -14,11 +14,11 @@ void test_twist() {
         sleep(1);
     }
 
-    ufr_close(&topic);
+    ufr_close(&topic);*/
 }
 
 void test_pose() {
-    link_t topic;
+    /*link_t topic;
     ufr_args_t args = {.text="@topic teste @msg pose @debug 4"};
     ufr_gtw_ros_humble_new_topic(&topic, UFR_START_PUBLISHER);
     topic.log_level = 4;
@@ -30,11 +30,11 @@ void test_pose() {
         sleep(1);
     }
 
-    ufr_close(&topic);
+    ufr_close(&topic);*/
 }
 
 void test_laserscan_publisher() {
-    link_t topic;
+    /*link_t topic;
     ufr_args_t args = {.text="@topic teste @msg laser_scan @debug 4"};
     ufr_gtw_ros_humble_new_topic(&topic, UFR_START_PUBLISHER);
     topic.log_level = 4;
@@ -49,13 +49,15 @@ void test_laserscan_publisher() {
         sleep(1);
     }
 
-    ufr_close(&topic);
+    ufr_close(&topic);*/
 }
 
 
 void test_laserscan() {
-    link_t link = ufr_subscriber("@new ros_humble:topic @msg laserscan @topic scan");
+    link_t link = ufr_subscriber("@new %p @coder %p @topic scan", 
+        ufr_gtw_ros_humble_new, ufr_dcr_ros_humble_new_laserscan);
 
+    /*
     float angle_min, angle_max, angle_increment;
     float time_increment, scan_time;
     float range_min, range_max;
@@ -73,15 +75,14 @@ void test_laserscan() {
         }
     }
 
-    ufr_close(&link);
+    ufr_close(&link);*/
 }
 
 
 void test_image_publisher() {
-    link_t topic;
+    /*link_t topic;
     ufr_boot_publisher(&topic, "@topic teste @msg image @debug 4");
-
-    ufr_close(&topic);
+    ufr_close(&topic);*/
 }
 
 /*
@@ -100,6 +101,6 @@ void test2() {
 */
 
 int main() {
-    test_laserscan();
+    //test_laserscan();
     return 0;
 }

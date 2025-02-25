@@ -128,9 +128,11 @@ int urf_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
     }
     
     // get the arguments
-    const char* host = ufr_args_gets(args, "@host", "127.0.0.1");
+    char buffer_host[UFR_ARGS_TOKEN];
+    const char* host = ufr_args_gets(args, buffer_host, "@host", "127.0.0.1");
     const uint16_t port = ufr_args_geti(args, "@port", 1883);
-    const char* topic = ufr_args_gets(args, "@topic", "topic");
+    char buffer_topic[UFR_ARGS_TOKEN];
+    const char* topic = ufr_args_gets(args, buffer_topic, "@topic", "topic");
 
     // prepare the shared object
     ll_shr_t* shr = malloc(sizeof(ll_shr_t));
@@ -330,17 +332,17 @@ size_t urf_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
 static
 ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
     .name = "mqtt/topic",
-	.type = urf_gtw_mqtt_type,
-	.state = urf_gtw_mqtt_state,
-	.size = urf_gtw_mqtt_size,
-	.boot = urf_gtw_mqtt_boot,
-	.start = urf_gtw_mqtt_start,
-	.stop = urf_gtw_mqtt_stop,
-	.copy = NULL,
+    .type = urf_gtw_mqtt_type,
+    .state = urf_gtw_mqtt_state,
+    .size = urf_gtw_mqtt_size,
+    .boot = urf_gtw_mqtt_boot,
+    .start = urf_gtw_mqtt_start,
+    .stop = urf_gtw_mqtt_stop,
+    .copy = NULL,
     .recv = urf_gtw_mqtt_recv,
     .recv_async = urf_gtw_mqtt_recv_async,
-	.read = urf_gtw_mqtt_read,
-	.write = urf_gtw_mqtt_write
+    .read = urf_gtw_mqtt_read,
+    .write = urf_gtw_mqtt_write
 };
 
 // ============================================================================
@@ -348,13 +350,11 @@ ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
 // ============================================================================
 
 int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
-	ufr_init_link(link, &urf_gtw_mqtt_topic_api);
-    link->type_started = type;
-	return UFR_OK;
+    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    return UFR_OK;
 }
 
 int ufr_gtw_mqtt_new(link_t* link, int type) {
-	ufr_init_link(link, &urf_gtw_mqtt_topic_api);
-    link->type_started = type;
-	return UFR_OK;
+    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    return UFR_OK;
 }

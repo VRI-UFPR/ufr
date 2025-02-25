@@ -57,7 +57,8 @@ static
 int ufr_enc_sqlite_put_u32(link_t* link, uint32_t* val, int nitems) {
 	ll_gtw_obj_t* obj = link->gtw_obj;
 	if ( obj ) {
-
+        obj->index += 1;
+        sqlite3_bind_int(obj->stmt, obj->index, val[0]);
 	}
 	return 0;
 }
@@ -119,9 +120,9 @@ ufr_enc_api_t ufr_enc_sqlite_api = {
     .close = ufr_enc_sqlite_close,
     .clear = NULL,
 
-	.put_u32 = ufr_enc_sqlite_put_u32,
-	.put_i32 = ufr_enc_sqlite_put_i32,
-	.put_f32 = ufr_enc_sqlite_put_f32,
+    .put_u32 = ufr_enc_sqlite_put_u32,
+    .put_i32 = ufr_enc_sqlite_put_i32,
+    .put_f32 = ufr_enc_sqlite_put_f32,
 
     .put_u64 = NULL,
     .put_i64 = NULL,
@@ -134,3 +135,12 @@ ufr_enc_api_t ufr_enc_sqlite_api = {
     .enter = ufr_enc_sqlite_enter,
     .leave = ufr_enc_sqlite_leave
 };
+
+// ============================================================================
+//  Public Functions
+// ============================================================================
+
+int ufr_enc_sqlite_new(link_t* link, int type) {
+    link->enc_api = &ufr_enc_sqlite_api;
+    return UFR_OK;
+}

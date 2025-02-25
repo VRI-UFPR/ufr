@@ -41,10 +41,8 @@
 
 void test1() {
     char buffer[8];
-    link_t link = ufr_new_pipe();
-    
-    assert( ufr_enc_msgpack_new(&link, 0) == UFR_OK );
-    assert( ufr_boot_enc(&link, NULL) == UFR_OK );
+    link_t link = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_msgpack_new);
     
     {
         ufr_put(&link, "iii\n", 10, 20, 30);
@@ -82,9 +80,8 @@ void test1() {
 }
 
 void test_encoder_array() {
-    link_t link = ufr_new_pipe();
-    assert( ufr_enc_msgpack_new(&link, 0) == UFR_OK );
-    assert( ufr_boot_enc(&link, NULL) == UFR_OK );
+    link_t link = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_msgpack_new);
     
     {
         int vet[5] = {20,21,22,23,24};
@@ -108,9 +105,8 @@ void test_encoder_array() {
 }
 
 void show_encoder_bytes() {
-    link_t link = ufr_new_pipe();
-    assert( ufr_enc_msgpack_new(&link, 0) == UFR_OK );
-    assert( ufr_boot_enc(&link, NULL) == UFR_OK );
+    link_t link = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_msgpack_new);
 
     ufr_put_enter(&link, 5);
     ufr_put(&link, "iiiii", 10, 20, 30, 40, 50);

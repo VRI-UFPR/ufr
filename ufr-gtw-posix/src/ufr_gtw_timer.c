@@ -88,7 +88,8 @@ static
 int ufr_gtw_posix_timer_start(link_t* link, int type, const ufr_args_t* args) {
     gateway_t* gtw = (gateway_t*) link->gtw_obj;
     if ( type == UFR_START_SUBSCRIBER ) {
-        const char* time_str = ufr_args_gets(args, "@time", "1s");
+        char buffer[UFR_ARGS_TOKEN];
+        const char* time_str = ufr_args_gets(args, buffer, "@time", "1s");
         time_t time_ms = 0;
         uint16_t i = 0;
         while(1) {
@@ -198,7 +199,6 @@ ufr_gtw_api_t ufr_gtw_posix_timer_api = {
 // ============================================================================
 
 int ufr_gtw_posix_new_timer(link_t* link, int type) {
-    ufr_init_link(link, &ufr_gtw_posix_timer_api);
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_timer_api);
     return UFR_OK;
 }

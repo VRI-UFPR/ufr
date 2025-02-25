@@ -38,8 +38,11 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new ros_melodic:topic @msg i16 @topic left_encoder");
+    link_t sub = ufr_subscriber("@new mqtt @coder msgpack");
 
+    // aaa
+    int a,b,c;
+    ufr_get(&sub, "^iii", &a, &b, &c);
 
     // end
     ufr_close(&sub);

@@ -142,6 +142,6 @@ ufr_gtw_api_t ufr_zmq_topic_api = {
 // ============================================================================
 
 int ufr_gtw_zmq_new_topic(link_t* link) {
-    ufr_init_link(link, &ufr_zmq_topic_api);
+    ufr_link_init(link, &ufr_zmq_topic_api);
 	return UFR_OK;
 }

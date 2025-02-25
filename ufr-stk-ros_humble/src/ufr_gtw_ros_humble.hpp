@@ -132,6 +132,7 @@ public:
 
 extern "C" {
     // gateway
+    int ufr_gtw_ros_humble_new(link_t* out, int type);
     int ufr_gtw_ros_humble_new_topic(link_t* out, int type);
 
     // encoders
@@ -143,4 +144,5 @@ extern "C" {
     int ufr_dcr_ros_humble_new_pose(link_t* link, int type);
     int ufr_dcr_ros_humble_new_twist(link_t* link, int type);
     int ufr_dcr_ros_humble_new_string(link_t* link, int type);
+    int ufr_dcr_ros_humble_new_laserscan(link_t* link, int type);
 }

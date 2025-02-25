@@ -41,9 +41,7 @@
 // ============================================================================
 
 void test_simple() {
-    link_t link = ufr_new_pipe();
-    ufr_enc_sys_new_std(&link, 0);
-    ufr_boot_enc(&link, NULL);
+    link_t link = ufr_publisher("@new %p @coder %p", ufr_gtw_posix_new_pipe, ufr_enc_sys_new_std);
 
     // test 1
     {

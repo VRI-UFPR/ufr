@@ -57,7 +57,8 @@ size_t ufr_posix_dir_size(const link_t* link, int type){
 
 static
 int ufr_posix_dir_boot(link_t* link, const ufr_args_t* args) {
-	const char* path_arg = ufr_args_gets(args, "@path", NULL);
+    char buffer[UFR_ARGS_TOKEN];
+	const char* path_arg = ufr_args_gets(args, buffer, "@path", NULL);
     if ( path_arg == NULL ) {
         return EINVAL;
     }
@@ -137,6 +138,6 @@ ufr_gtw_api_t ufr_posix_dir = {
 // ============================================================================
 
 int ufr_new_gtw_posix_dir(link_t* link, int type) {
-	link->gtw_api = &ufr_posix_dir;
+    ufr_link_init(link, &ufr_posix_dir);
 	return UFR_OK;
 }

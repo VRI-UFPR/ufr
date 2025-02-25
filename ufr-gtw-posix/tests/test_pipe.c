@@ -42,7 +42,7 @@ int ufr_gtw_posix_new_pipe(link_t* link, int type);
 
 void test_simple() {
     char buffer[8];
-    link_t link;
+    link_t link = ufr_;
     ufr_args_t args = {.text=""};
     assert( ufr_gtw_posix_new_pipe(&link, 0) == UFR_OK );
     assert( ufr_boot_gtw(&link, &args) == UFR_OK );

@@ -45,8 +45,9 @@ struct ll_enc_obj_t {
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher;
     sensor_msgs::msg::Image message;
     int index;
+    int index2;
 
-    ll_enc_obj_t() : index{0} {}
+    ll_enc_obj_t() : index{0}, index2{0} {}
 };
 
 // ============================================================================
@@ -82,17 +83,32 @@ int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
     }
 
     int i=0;
-    for (i=0; i<nitems; i++) {
-        switch(enc_obj->index) {
-            case 0: enc_obj->message.height = val[i]; break;
-            case 1: enc_obj->message.width = val[i]; break;
-            // case 2: enc_obj->message.linear.z = val[i]; break;
-            // case 2: enc_obj->message.is_bigendian = val[i]; break;
-            case 2: enc_obj->message.step = val[i]; break;
-            // case 5: enc_obj->message.angular.z = val[i]; break;
-            default: break;
+    if ( enc_obj->index == 3 ) {
+        const int current = enc_obj->index2;
+
+        if ( enc_obj->message.data.size() < current+nitems ) {
+            enc_obj->message.data.resize(current+nitems);
         }
-        enc_obj->index += 1;
+
+        for (i=0; i<nitems; i++) {
+            enc_obj->message.data[current+i] = (uint8_t) val[i];
+        }
+
+        enc_obj->index2 += nitems;
+
+    } else {
+        for (i=0; i<nitems; i++) {
+            switch(enc_obj->index) {
+                case 0: enc_obj->message.height = val[i]; break;
+                case 1: enc_obj->message.width = val[i]; break;
+                // case 2: enc_obj->message.linear.z = val[i]; break;
+                // case 2: enc_obj->message.is_bigendian = val[i]; break;
+                case 2: enc_obj->message.step = val[i]; break;
+                // case 5: enc_obj->message.angular.z = val[i]; break;
+                default: break;
+            }
+            enc_obj->index += 1;
+        }
     }
     return i;
 }
@@ -107,11 +123,11 @@ int ufr_enc_ros_humble_put_i32(link_t* link, const int32_t* val, int nitems) {
     int i=0;
     for (i=0; i<nitems; i++) {
         switch(enc_obj->index) {
-            case 0: enc_obj->message.height = val[i]; break;
-            case 1: enc_obj->message.width = val[i]; break;
+            case 0: enc_obj->message.height = (uint32_t) val[i]; break;
+            case 1: enc_obj->message.width = (uint32_t) val[i]; break;
             // case 2: enc_obj->message.linear.z = val[i]; break;
             // case 2: enc_obj->message.is_bigendian = val[i]; break;
-            case 2: enc_obj->message.step = val[i]; break;
+            case 2: enc_obj->message.step = (uint32_t) val[i]; break;
             // case 5: enc_obj->message.angular.z = val[i]; break;
             default: break;
         }
@@ -130,11 +146,11 @@ int ufr_enc_ros_humble_put_f32(link_t* link, const float* val, int nitems) {
     int i=0;
     for (i=0; i<nitems; i++) {
         switch(enc_obj->index) {
-            case 0: enc_obj->message.height = val[i]; break;
-            case 1: enc_obj->message.width = val[i]; break;
+            case 0: enc_obj->message.height = (uint32_t) val[i]; break;
+            case 1: enc_obj->message.width = (uint32_t) val[i]; break;
             // case 2: enc_obj->message.linear.z = val[i]; break;
             // case 2: enc_obj->message.is_bigendian = val[i]; break;
-            case 2: enc_obj->message.step = val[i]; break;
+            case 2: enc_obj->message.step = (uint32_t) val[i]; break;
             // case 5: enc_obj->message.angular.z = val[i]; break;
             default: break;
         }

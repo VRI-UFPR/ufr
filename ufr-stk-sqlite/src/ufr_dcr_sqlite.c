@@ -45,6 +45,7 @@
 
 static
 int ufr_dcr_sqlite_boot(link_t* link, const ufr_args_t* args) {
+    return UFR_OK;
 }
 
 static
@@ -53,7 +54,7 @@ void ufr_dcr_sqlite_close(link_t* link) {
 
 static
 int ufr_dcr_sqlite_recv(link_t* link, char* msg_data, size_t msg_size) {
-
+    return 0;
 }
 
 static
@@ -69,7 +70,7 @@ int ufr_dcr_sqlite_get_i32(link_t* link, int32_t* val, int nitems) {
 static
 int ufr_dcr_sqlite_get_f32(link_t* link, float* val, int nitems) {
     ll_gtw_obj_t* gtw_obj = link->gtw_obj;
-    *val = sqlite3_column_double(gtw_obj->stmt, gtw_obj->index);
+    *val = (float) sqlite3_column_double(gtw_obj->stmt, gtw_obj->index);
     gtw_obj->index += 1;
 
 	// success
@@ -79,31 +80,9 @@ int ufr_dcr_sqlite_get_f32(link_t* link, float* val, int nitems) {
 static
 int ufr_dcr_sqlite_get_str(link_t* link, char* str, int maxbytes) {
     ll_gtw_obj_t* gtw_obj = link->gtw_obj;
-	// *str = (char*) sqlite3_column_text(gtw_obj->stmt, gtw_obj->index);
-
+	const char* text = (const char*) sqlite3_column_text(gtw_obj->stmt, gtw_obj->index);
+    strcpy(str, text);
 	return 1;
-}
-
-static
-int ufr_dcr_sqlite_copy_str(link_t* link, char* buffer, size_t size_max) {
-    ll_gtw_obj_t* gtw_obj = link->gtw_obj;
-	const char* text = sqlite3_column_text(gtw_obj->stmt, gtw_obj->index);
-    strcpy(buffer, text);
-	return 1;
-}
-
-static
-int ufr_dcr_sqlite_get_arr(link_t* link, char arr_type, size_t arr_size_max, size_t* arr_size, void* arr_ptr) {
-	
-
-	return 1;
-}
-
-static
-int ufr_dcr_sqlite_copy_arr(link_t* link, char arr_type, size_t arr_size_max, size_t* arr_size, void* arr_ptr) {
-	
-	
-	return UFR_OK;
 }
 
 ufr_dcr_api_t ufr_dcr_sqlite_api = {
@@ -121,7 +100,7 @@ ufr_dcr_api_t ufr_dcr_sqlite_api = {
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     // 32 bits
 	.get_u32 = NULL,
@@ -149,8 +128,4 @@ ufr_dcr_api_t ufr_dcr_sqlite_api = {
 int ufr_dcr_sqlite_new_table(link_t* link, const int type) {
     link->dcr_api = &ufr_dcr_sqlite_api;
 	return 0;
-}
-
-const char* ufr_dcr_sqlite_list() {
-    return "table";
 }
