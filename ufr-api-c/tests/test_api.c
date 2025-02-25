@@ -44,15 +44,15 @@ int ufr_dcr_sys_new_std(link_t* link, int type);
 // ============================================================================
 
 int    ufr_gtw_fake_type(const link_t* link) {
-
+	return 0;
 }
 
 int    ufr_gtw_fake_state(const link_t* link) {
-
+	return 0;
 }
 
 size_t ufr_gtw_fake_size(const link_t* link, int type) {
-
+	return 0;
 }
 
 int  ufr_gtw_fake_boot(link_t* link, const ufr_args_t* args) {
@@ -68,32 +68,32 @@ void ufr_gtw_fake_stop(link_t* link, int type) {
 }
 
 int  ufr_gtw_fake_copy(link_t* link, link_t* out) {
-
+	return UFR_OK;
 }
 
 size_t ufr_gtw_fake_read(link_t* link, char* buffer, size_t length) {
-
+	return 0;
 }
 
 size_t ufr_gtw_fake_write(link_t* link, const char* buffer, size_t length) {
-
+	return 0;
 }
 
 int ufr_gtw_fake_recv(link_t* link) {
-
+	return UFR_OK;
 }
 
 int ufr_gtw_fake_recv_async(link_t* link) {
-
+	return UFR_OK;
 }
 
 int ufr_gtw_fake_accept(link_t* link, link_t* out_client) {
-
+	return UFR_OK;
 }
 
 // tests
 const char* ufr_gtw_fake_test_args(const link_t* link) {
-
+	return NULL;
 }
 
 ufr_gtw_api_t ufr_gtw_fake_api = {
@@ -120,7 +120,7 @@ ufr_gtw_api_t ufr_gtw_fake_api = {
 };
 
 int ufr_gtw_fake_new_std(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_fake_api;
+    ufr_link_init(link, &ufr_gtw_fake_api);
     return UFR_OK;
 }
 
@@ -130,7 +130,7 @@ int ufr_gtw_fake_new_std(link_t* link, int type) {
 
 void test_init_link() {
 	link_t link;
-	ufr_init_link(&link, NULL);
+	ufr_link_init(&link, NULL);
 	UFR_TEST_NULL( link.gtw_api );
 	UFR_TEST_NULL( link.dcr_api );
 	UFR_TEST_NULL( link.dcr_obj );
@@ -146,26 +146,26 @@ void test_get_api_name() {
 
 	{
 		link_t link;
-		ufr_init_link(&link, NULL);
+		ufr_link_init(&link, NULL);
 		const char* name = ufr_api_name(&link);
 		UFR_TEST_EQUAL_STR(name, "None");
 	}
 
 	{
 		link_t link;
-		ufr_init_link(&link, &ufr_gtw_fake_api);
+		ufr_link_init(&link, &ufr_gtw_fake_api);
 		const char* name = ufr_api_name(&link);
 		UFR_TEST_EQUAL_STR(name, "fake");
 	}
 }
 
 void test_publisher() {
-	link_t link;
-	UFR_TEST_OK( ufr_gtw_fake_new_std(&link, UFR_START_PUBLISHER) );
+	link_t link = ufr_publisher("@new %p", ufr_gtw_fake_new_std);
+	// UFR_TEST_OK( ufr_gtw_fake_new_std(&link, UFR_START_PUBLISHER) );
 	// UFR_TEST_EQUAL( link.gtw_api, &ufr_gtw_fake_api );
 
-	const ufr_args_t args = {.text=""};
-	UFR_TEST_OK( ufr_start_publisher(&link, &args) );
+	// const ufr_args_t args = {.text=""};
+	// UFR_TEST_OK( ufr_start_publisher(&link, &args) );
 
 
 }

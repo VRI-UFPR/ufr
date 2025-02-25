@@ -45,10 +45,21 @@ uint8_t g_callback_array_count = 0;
 loop_callback g_callback_array[5] = {NULL, NULL, NULL, NULL, NULL};
 
 // ============================================================================
-//  Link - Meta
+//  Outros
 // ============================================================================
 
-int ufr_put_loop_callback( int (*loop_callback)(void)  ) {
+const char* ufr_api_name(const link_t* link) {
+	if ( link == NULL || link->gtw_api == NULL ) {
+		return "None";
+	}
+	return link->gtw_api->name;
+}
+
+// ============================================================================
+//  UFR LOOP
+// ============================================================================
+
+int ufr_loop_put_callback( int (*loop_callback)(void)  ) {
     if ( g_callback_array_count < 5 ) {
         g_callback_array[ g_callback_array_count ] = loop_callback;
         g_callback_array_count += 1;
@@ -70,13 +81,9 @@ void ufr_loop_set_end() {
     g_is_ok = false;
 }
 
-
-const char* ufr_api_name(const link_t* link) {
-	if ( link == NULL || link->gtw_api == NULL ) {
-		return "None";
-	}
-	return link->gtw_api->name;
-}
+// ============================================================================
+//  UFR LINK
+// ============================================================================
 
 int ufr_link_state(const link_t* link) {
     return link->type_started;
@@ -98,7 +105,15 @@ bool ufr_link_is_client(const link_t* link) {
     return link->type_started == UFR_START_CLIENT;
 }
 
-void ufr_init_link(link_t* link, ufr_gtw_api_t* gtw_api) {
+bool ufr_link_is_valid(const link_t* link) {
+    return link->gtw_api != NULL;
+}
+
+bool ufr_link_is_blank(const link_t* link) {
+    return link->gtw_api == NULL;
+}
+
+void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api) {
     link->gtw_api = gtw_api;
     link->gtw_obj = NULL;
     link->gtw_shr = NULL;
@@ -109,175 +124,12 @@ void ufr_init_link(link_t* link, ufr_gtw_api_t* gtw_api) {
     link->type_started = UFR_START_BLANK;
     link->status = UFR_STATUS_RESET;
     link->put_count = 0;
-    // pensar sobre isso
     link->log_level = g_default_log_level;
-    link->log_ident = 0;
 }
 
-int ufr_boot_dcr(link_t* link, const ufr_args_t* args) {
-    ufr_log_ini(link, "booting decoder");
-    if ( link == NULL ) {
-        return ufr_log_error(link, 1, "Link is NULL");
-    }
-    if ( link->dcr_api == NULL ) {
-        return ufr_log_error(link, 1, "Decoder API is NULL");
-    }
-    if ( link->dcr_api->boot == NULL ) {
-        return ufr_log_error(link, 1, "Function boot on Decoder API is NULL");
-    }
-    const int state = link->dcr_api->boot(link, args);
-    ufr_log_end(link, "decoder booted");
-    return state;
-}
-
-int ufr_boot_enc(link_t* link, const ufr_args_t* args) {
-    ufr_log_ini(link, "booting encoder");
-    if ( link == NULL ) {
-        return ufr_log_error(link, 1, "Link is NULL");
-    }
-    if ( link->enc_api == NULL ) {
-        return ufr_log_error(link, 1, "Encoder API is NULL");
-    }
-    if ( link->enc_api->boot == NULL ) {
-        return ufr_log_error(link, 1, "Function boot on Encoder API is NULL");
-    }
-    const int state = link->enc_api->boot(link, args);
-    ufr_log_end(link, "encoder booted");
-    return state;
-}
-
-int ufr_boot_gtw(link_t* link, const ufr_args_t* args) {
-    ufr_log_ini(link, "booting gateway");
-    if ( link == NULL ) {
-        return ufr_log_error(link, 1, "Link is NULL");
-    }
-    if ( link->gtw_api == NULL ) {
-        return ufr_log_error(link, 1, "Gateway API is NULL");
-    }
-    if ( link->gtw_api->boot == NULL ) {
-        return ufr_log_error(link, 1, "Function boot on Gateway API is NULL");
-    }
-
-    const int state = link->gtw_api->boot(link, args);
-    if ( state == UFR_OK ) {
-        link->status = UFR_STATUS_BOOTED;
-        link->is_booted = 1;
-    }
-    ufr_log_end(link, "gateway booted");
-    return state;
-}
-
-int ufr_boot_subscriber(link_t* link, const char* text) {
-    if ( link == NULL || link->gtw_api == NULL ) {
-        return 1;
-    }
-
-    const ufr_args_t args = {.text=text};
-    int retval = ufr_boot_gtw(link, &args);
-    if ( retval == UFR_OK ) {
-        if ( link->dcr_api != NULL ) {
-            retval = ufr_boot_dcr(link, &args);
-        }
-    }
-
-    if ( retval == UFR_OK ) {
-        retval = ufr_start(link, UFR_START_SUBSCRIBER, &args);
-    }
-
-    return retval;
-}
-
-int ufr_boot_publisher(link_t* link, const char* text) {
-    if ( link == NULL || link->gtw_api == NULL ) {
-        return 1;
-    }
-    link->log_ident = 0;
-
-    const ufr_args_t args = {.text=text};
-    int retval = ufr_boot_gtw(link, &args);
-    if ( retval == UFR_OK ) {
-        if ( link->enc_api != NULL ) {
-            retval = ufr_boot_enc(link, &args);
-        }
-    }
-
-    if ( retval == UFR_OK ) {
-        retval = ufr_start(link, UFR_START_PUBLISHER, &args);
-    }
-
-    return retval;
-}
-
-int ufr_boot_server(link_t* link, const char* text) {
-    if ( link == NULL || link->gtw_api == NULL ) {
-        return 1;
-    }
-
-    const ufr_args_t args = {.text=text};
-    int retval = ufr_boot_gtw(link, &args);
-    if ( retval == UFR_OK && link->dcr_api != NULL ) {
-        retval = ufr_boot_dcr(link, &args);
-    }
-    if ( retval == UFR_OK && link->enc_api != NULL ) {
-        retval = ufr_boot_enc(link, &args);
-    }
-    return retval;
-}
-
-
-int ufr_start(link_t* link, int type, const ufr_args_t* param_args) {
-    if ( link == NULL ) {
-        ufr_fatal(link, 1, "link is null");
-    }
-    if ( link->log_level > 0 ) {
-        if ( link->gtw_api == NULL ) {
-            ufr_fatal(link, 1, "gtw_api is null");
-        } else if ( link->gtw_api->start == NULL ) {
-            ufr_fatal(link, 1, "gtw_api->start is null");
-        }
-    }
-
-    ufr_log_ini(link, "starting link");
-
-    if ( link->status == UFR_STATUS_RESET ) {
-        if ( ufr_boot_gtw(link, param_args) != UFR_OK ) {
-            return ufr_log_error(link, 1, "Error in the link boot");
-        }
-    }
-
-    // select the arguments avoiding NULL pointer
-    const ufr_args_t empty_args = {.text=""};
-    const ufr_args_t* args = ( param_args != NULL ) ? param_args : &empty_args;
-
-    // call driver function
-    const int error = link->gtw_api->start(link, type, args);
-    if ( error != UFR_OK ) {
-        return ufr_log_error(link, error, "error");
-    }
-
-    // done
-    link->type_started = type;
-    link->status = UFR_STATUS_STARTED;
-    link->is_started = 1;
-    ufr_log_end(link, "link started");
-    return UFR_OK;
-}
-
-int ufr_start_publisher(link_t* link, const ufr_args_t* args) {
-    return ufr_start(link, UFR_START_PUBLISHER, args);
-}
-
-int ufr_start_subscriber(link_t* link, const ufr_args_t* args) {
-    return ufr_start(link, UFR_START_SUBSCRIBER, args);
-}
-
-int ufr_start_server(link_t* link, const ufr_args_t* args) {
-    return ufr_start(link, UFR_START_SERVER, args);
-}
-
-int ufr_start_client(link_t* link, const ufr_args_t* args) {
-    return ufr_start(link, UFR_START_CLIENT, args);
-}
+// ============================================================================
+//  UFR RECV
+// ============================================================================
 
 int ufr_recv(link_t* link) {
     ufr_log_ini(link, "receiving data from link");
@@ -390,318 +242,8 @@ size_t ufr_write(link_t* link, const char* buffer, size_t size) {
 }
 
 // ============================================================================
-//  Arguments
+//  UFR DUMMY
 // ============================================================================
-
-bool ufr_flex_text_div(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max, const char div) {
-    uint8_t state = 0;
-    uint16_t i_token = 0;
-    uint16_t i_text = *cursor_ini;
-    token[0] = '\0';
-    while (1) {
-        const char c = text[i_text];
-        if ( c == '\0' ) {
-            token[i_token] = '\0';
-            break;
-        }
-        
-        // ignore caracter
-        if ( c == '\n' ) {
-            i_text += 1;
-            continue;
-        }
-
-        // standard state
-        if ( state == 0 ) {
-        
-            if ( c == '\'') {
-                state = 1;
-
-            } else if ( c == div ) {
-                if ( i_token > 0 ) {
-                    token[i_token] = '\0';
-                    break;
-                }
-
-            } else {
-                if ( i_token < token_max-1 ) {
-                    token[i_token] = c;
-                    i_token += 1;
-                }
-            }
-
-        // inside quotes, example: 'text'
-        } else if ( state == 1 ) {
-            if ( c == '\'') {
-                state = 0;
-            } else {
-                if ( i_token < token_max-1 ) {
-                    token[i_token] = c;
-                    i_token += 1;
-                }
-            }
-        }
-
-        i_text += 1;
-    }
-
-    *cursor_ini = i_text;
-    return (i_token > 0);
-}
-
-// static
-bool ufr_flex_text(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max) {
-    return ufr_flex_text_div(text, cursor_ini, token, token_max, ' ');
-}
-
-size_t ufr_args_getu(const ufr_args_t* args, const char* noun, const size_t default_value) {
-    char token[512];
-    uint8_t  count_arg = 0;
-    uint16_t cursor = 0;
-    while( ufr_flex_text(args->text, &cursor, token, sizeof(token)) ) {
-        // jump case word is not noun
-        if ( token[0] != '@' ) {
-            if ( token[0] == '%' ) {
-                count_arg += 1;
-            }
-            continue;
-        }
-
-        // check if the noun is correct
-        if ( strcmp(noun, token) == 0 ) {
-            ufr_flex_text(args->text, &cursor, token, sizeof(token));
-            if ( token[0] == '%' ) {
-                if ( token[1] == 'd' ) {
-                    return args->arg[count_arg].i32;
-                } else if ( token[1] == 's' ) {
-                    return atoi(args->arg[count_arg].str);
-                } else if ( token[1] == 'f' ) {
-                    return args->arg[count_arg].f32;
-                }
-            } else {
-                return atoi(token);
-            }
-        }
-    }
-
-    // not found, return default value
-    return default_value;
-}
-
-int ufr_args_geti(const ufr_args_t* args, const char* noun, const int default_value) {
-    char token[512];
-    uint8_t  count_arg = 0;
-    uint16_t cursor = 0;
-    while( ufr_flex_text(args->text, &cursor, token, sizeof(token)) ) {
-        // jump case word is not noun
-        if ( token[0] != '@' ) {
-            if ( token[0] == '%' ) {
-                count_arg += 1;
-            }
-            continue;
-        }
-
-        // check if the noun is correct
-        if ( strcmp(noun, token) == 0 ) {
-            ufr_flex_text(args->text, &cursor, token, sizeof(token));
-            if ( token[0] == '%' ) {
-                if ( token[1] == 'd' ) {
-                    return args->arg[count_arg].i32;
-                } else if ( token[1] == 's' ) {
-                    return atoi(args->arg[count_arg].str);
-                } else if ( token[1] == 'f' ) {
-                    return args->arg[count_arg].f32;
-                }
-            } else {
-                return atoi(token);
-            }
-        }
-    }
-
-    // not found, return default value
-    return default_value;
-}
-
-float ufr_args_getf(const ufr_args_t* args, const char* noun, const float default_value) {
-    char token[512];
-    uint8_t  count_arg = 0;
-    uint16_t cursor = 0;
-    while( ufr_flex_text(args->text, &cursor, token, sizeof(token)) ) {
-        // jump case word is not noun
-        if ( token[0] != '@' ) {
-            if ( token[0] == '%' ) {
-                count_arg += 1;
-            }
-            continue;
-        }
-
-        // check if the noun is correct
-        if ( strcmp(noun, token) == 0 ) {
-            ufr_flex_text(args->text, &cursor, token, sizeof(token));
-            if ( token[0] == '%' ) {
-                if ( token[1] == 'd' ) {
-                    return args->arg[count_arg].i32;
-                } else if ( token[1] == 's' ) {
-                    return atof(args->arg[count_arg].str);
-                } else if ( token[1] == 'f' ) {
-                    return args->arg[count_arg].f32;
-                }
-            } else {
-                return atof(token);
-            }
-        }
-    }
-
-    // not found, return default value
-    return default_value;
-}
-
-const void* ufr_args_getp(const ufr_args_t* args, const char* noun, const void* default_value) {
-    char token[512];
-    uint8_t  count_arg = 0;
-    uint16_t cursor = 0;
-    while( ufr_flex_text(args->text, &cursor, token, sizeof(token)) ) {
-        // jump case word is not noun
-        if ( token[0] != '@' ) {
-            if ( token[0] == '%' ) {
-                count_arg += 1;
-            }
-            continue;
-        }
-
-        // check if the noun is correct
-        if ( strcmp(noun, token) == 0 ) {
-            ufr_flex_text(args->text, &cursor, token, sizeof(token));
-            if ( token[0] == '%' ) {
-                if ( token[1] == 'p' ) {
-                    return args->arg[count_arg].ptr;
-                } else {
-                    return default_value;
-                }
-            }
-        }
-    }
-
-    // not found, return default value
-    return default_value;
-}
-
-const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* default_value) {
-    static uint8_t shared_i = 0;
-    const uint8_t shared_max = 8;
-    static char shared_data[8][128];
-
-    char token[512];
-    uint8_t  count_arg = 0;
-    uint16_t cursor = 0;
-    while( ufr_flex_text(args->text, &cursor, token, sizeof(token)) ) {
-        // jump case word is not noun
-        if ( token[0] != '@' ) {
-            if ( token[0] == '%' ) {
-                count_arg += 1;
-            }
-            continue;
-        }
-
-        // check if the noun is correct
-        if ( strcmp(noun, token) == 0 ) {
-            ufr_flex_text(args->text, &cursor, token, sizeof(token));
-            if ( token[0] == '%' ) {
-                if ( token[1] == 's' ) {
-                    return args->arg[count_arg].str;
-                } else {
-                    return default_value;
-                }
-            } else {
-                char* retval = &shared_data[shared_i][0];
-                shared_i = (shared_i+1) % shared_max;
-                strcpy(retval, token);
-                return retval;
-            }
-        }
-    }
-
-    // not found, return default value
-    return default_value;
-}
-
-void ufr_put_log(link_t* link, uint8_t level, const char* func_name, const char* format, ...) {
-    if ( level > link->log_level ) {
-        return;
-    }
-    va_list list;
-    va_start(list, format);
-    const int space = 24U - strlen(func_name);
-    const char* name = ufr_api_name(link);
-    fprintf(stderr, "# info:%10s: %s%*s: ", name, func_name, space, "");
-    fprintf(stderr, "%*s", link->log_ident, "");
-    vfprintf(stderr, format, list);
-    fprintf(stderr, "\n");
-    va_end(list);
-}
-
-int ufr_put_log_error(link_t* link, int error, const char* func_name, const char* format, ...) {
-    // copy the error message in the link buffer
-    va_list list;
-    va_start(list, format);
-    vsnprintf(&link->errstr[0], sizeof(link->errstr), format, list);
-    va_end(list);
-
-    // show the debug
-    if ( link->log_level > 0 ) {
-        const int space = 24U - strlen(func_name);
-        fprintf(stderr, "\x1B[31m# erro: %s%*s\033[0m: ", func_name, space, "");
-        fprintf(stderr, "%s", &link->errstr[0]);
-        fprintf(stderr, "\n");
-    }
-
-    // return error number
-    return error;
-}
-
-int  ufr_put_log_error_ident(link_t* link, int error, const char* func_name, const char* format, ...) {
-    // copy the error message in the link buffer
-    va_list list;
-    va_start(list, format);
-    vsnprintf(&link->errstr[0], sizeof(link->errstr), format, list);
-    va_end(list);
-
-    // show the debug
-    if ( link->log_level > 0 ) {
-        const int space = 24U - strlen(func_name);
-        fprintf(stderr, "\x1B[31m# erro: %s%*s\033[0m: ", func_name, space, "");
-        fprintf(stderr, "%s", &link->errstr[0]);
-        fprintf(stderr, "\n");
-    }
-
-    if ( link->log_ident > 0 ) {
-        link->log_ident -= 1;
-    }
-
-    // return error number
-    return error;
-}
-
-void ufr_assert(bool condition, const char* message) {
-    exit(1);
-}
-
-bool ufr_is_valid(const link_t* link) {
-    return link->gtw_api != NULL;
-}
-
-bool ufr_is_blank(const link_t* link) {
-    return link->gtw_api == NULL;
-}
-
-bool ufr_link_is_error(const link_t* link) {
-    return link->slot_gtw == 0;
-}
-
-const char* ufr_test_args(const link_t* link) {
-    return link->gtw_api->test_args(link);
-}
-
 
 size_t  ufr_dummy_read(link_t* link, char* buffer, size_t size) {
     return 0;
@@ -744,7 +286,7 @@ void ufr_test_print_result() {
 } 
 
 // ============================================================================
-//  App
+//  UFR APP
 // ============================================================================
 
 ufr_node_t* g_app_root = NULL;
@@ -767,7 +309,7 @@ int ufr_app_open(link_t* link, const char* name, int type) {
     if ( g_app_root == NULL ) {
         return -1;
     }
-    ufr_init_link(link, NULL);
+    ufr_link_init(link, NULL);
 
     for (int i=0; i<32; i++) {
         if ( g_app_root[i].name == NULL ) {
@@ -776,7 +318,8 @@ int ufr_app_open(link_t* link, const char* name, int type) {
 
         if ( strcmp(name, g_app_root[i].name) == 0 ) {
             printf("%s %s\n", name, g_app_root[i].args.text);
-            return sys_ufr_new_link(link, type, &g_app_root[i].args);
+            // return sys_ufr_new_link(link, type, &g_app_root[i].args);
+            return -1;
         }
     }
     // Error: not found
@@ -804,5 +347,134 @@ link_t ufr_app_client(const char* name) {
 link_t ufr_app_server(const char* name) {
     link_t link;
     ufr_app_open(&link, name, UFR_START_SERVER_ST);
+    return link;
+}
+
+// ============================================================================
+//  UFR LOG
+// ============================================================================
+
+void ufr_log_put(link_t* link, uint8_t level, const char* func_name, const char* format, ...) {
+    if ( level > link->log_level ) {
+        return;
+    }
+    va_list list;
+    va_start(list, format);
+    const char* name = ufr_api_name(link);
+    fprintf(stderr, "# info: %s: ", func_name);
+    vfprintf(stderr, format, list);
+    fprintf(stderr, "\n");
+    va_end(list);
+}
+
+int ufr_log_put_error(link_t* link, int error, const char* func_name, const char* format, ...) {
+    // copy the error message in the link buffer
+    va_list list;
+    va_start(list, format);
+    vsnprintf(&link->errstr[0], sizeof(link->errstr), format, list);
+    va_end(list);
+
+    // show the debug
+    if ( link->log_level > 0 ) {
+        fprintf(stderr, "\x1B[31m# erro: %s\033[0m: ", func_name);
+        fprintf(stderr, "%s", &link->errstr[0]);
+        fprintf(stderr, "\n");
+    }
+
+    // return error number
+    return error;
+}
+
+// ============================================================================
+//  UFR
+// ============================================================================
+
+link_t ufr_subscriber(const char* format, ...) {
+    link_t link;
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Prepare Gateway
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "@new", NULL);
+    if ( func_gtw_new == NULL ) {
+        ufr_fatal(&link, 1, "erro1");
+    }
+    if ( func_gtw_new(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro2");
+    }
+    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    // Prepare Decoder
+    int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "@coder", NULL);
+    if ( func_dcr_new == NULL ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    if ( func_dcr_new(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro4");
+    }
+
+    if ( link.dcr_api->boot(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro5");
+    }
+
+    // success
+    return link;
+}
+
+link_t ufr_publisher(const char* format, ...) {
+    link_t link;
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Prepare Gateway
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "@new", NULL);
+    if ( func_gtw_new == NULL ) {
+        ufr_fatal(&link, 1, "erro1");
+    }
+    if ( func_gtw_new(&link, UFR_START_PUBLISHER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro2");
+    }
+    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    // Prepare Decoder
+    int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(&args, "@coder", NULL);
+    if ( func_enc_new == NULL ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    if ( func_enc_new(&link, UFR_START_PUBLISHER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro4");
+    }
+
+    if ( link.enc_api->boot(&link, UFR_START_PUBLISHER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro5");
+    }
+
+    // success
+    return link;
+}
+
+link_t ufr_client(const char* format, ...) {
+    link_t link;
+    return link;
+}
+
+link_t ufr_server_st(const char* format, ...) {
+    link_t link;
     return link;
 }

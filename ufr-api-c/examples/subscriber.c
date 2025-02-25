@@ -38,8 +38,12 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new ros_melodic:topic @msg i16 @topic left_encoder");
+    link_t sub = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_sys_new_std);
 
+    // aaa
+    ufr_put(&sub, "iii\n", 10, 20, 30);
+    ufr_put(&sub, "fs\n", 10.25, "opa");
 
     // end
     ufr_close(&sub);

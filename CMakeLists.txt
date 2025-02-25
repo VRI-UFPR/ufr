@@ -45,23 +45,23 @@ include_directories(./ufr-api-c/include)
 
 # Build libraries with no dependencies
 add_subdirectory(./ufr-api-c)
-add_subdirectory(./ufr-gtw-posix)
-add_subdirectory(./ufr-cdr-csv)
+# add_subdirectory(./ufr-gtw-posix)
+# add_subdirectory(./ufr-cdr-csv)
 
 # Build libraries with dependencies
 if(BUILD_UFR_GTW_ZMQ)
     # debian/ubuntu: sudo apt install libzmq3-dev
-    add_subdirectory(./ufr-gtw-zmq)
+    # add_subdirectory(./ufr-gtw-zmq)
 endif(BUILD_UFR_GTW_ZMQ)
 
 if(BUILD_UFR_GTW_MQTT)
     # debian/ubuntu: sudo apt install libmosquitto-dev
-    add_subdirectory(./ufr-gtw-mqtt)
+    # add_subdirectory(./ufr-gtw-mqtt)
 endif(BUILD_UFR_GTW_MQTT)
 
 if(BUILD_UFR_CDR_MSGPACK)
     # debian/ubuntu: sudo apt install libmsgpack-dev
-    add_subdirectory(./ufr-cdr-msgpack)
+    # add_subdirectory(./ufr-cdr-msgpack)
 endif(BUILD_UFR_CDR_MSGPACK)
 
 if(BUILD_UFR_STK_SQLITE)

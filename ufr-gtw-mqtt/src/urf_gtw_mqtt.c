@@ -348,13 +348,11 @@ ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
 // ============================================================================
 
 int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
-	ufr_init_link(link, &urf_gtw_mqtt_topic_api);
-    link->type_started = type;
+	ufr_link_init(link, &urf_gtw_mqtt_topic_api);
 	return UFR_OK;
 }
 
 int ufr_gtw_mqtt_new(link_t* link, int type) {
-	ufr_init_link(link, &urf_gtw_mqtt_topic_api);
-    link->type_started = type;
+	ufr_link_init(link, &urf_gtw_mqtt_topic_api);
 	return UFR_OK;
 }

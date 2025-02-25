@@ -229,14 +229,13 @@ ufr_gtw_api_t ufr_posix_pipe = {
 // ============================================================================
 
 int ufr_gtw_posix_new_pipe(link_t* link, int type) {
-	// link->gtw_api = &ufr_posix_pipe;
-    ufr_init_link(link, &ufr_posix_pipe);
+    ufr_link_init(link, &ufr_posix_pipe);
     return UFR_OK;
 }
 
 link_t ufr_new_pipe() {
     link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
+    // ufr_gtw_posix_new_pipe(&link, 0);
+    // ufr_boot_gtw(&link, NULL);
     return link;
 }

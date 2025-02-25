@@ -84,11 +84,11 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
                 break;
             }
             
-            void* arr_ptr = va_arg(list, void*);
+            /*void* arr_ptr = va_arg(list, void*);
             const size_t arr_maxlen = va_arg(list, size_t);
             if ( arr_type == 'f' ) {
-                // ufr_get_af32(link, arr_ptr, arr_maxlen);
-            }
+                ufr_get_af32(link, arr_ptr, arr_maxlen);
+            }*/
 
         } else {
             switch (type) {
@@ -192,8 +192,8 @@ int ufr_get_nitems(link_t* link) {
     return link->dcr_api->get_nitems(link);
 }
 
-const uint8_t* ufr_get_raw_ptr(link_t* link) {
-    return link->dcr_api->get_raw_ptr(link);
+const uint8_t* ufr_get_rawptr(link_t* link) {
+    return link->dcr_api->get_rawptr(link);
 }
 
 

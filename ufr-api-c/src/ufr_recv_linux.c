@@ -32,74 +32,92 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <errno.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 #include "ufr.h"
 
-typedef struct {
-    void* handle;
-    size_t count;
-    char name[240];
-} ufr_library_t;
-
-#define G_DL_MAX  16
-uint8_t g_dl_count = 0;
-void* g_dl_handles[G_DL_MAX];
-
 // ============================================================================
-//  Codigo
+//  UFR RECV
 // ============================================================================
 
-void* ufr_linux_load_library(const char* type, const char* name) {
-    // dl_file: ufr_[gtw,enc,dcr]_name.so
-    char dl_file[512];
-    snprintf(dl_file, sizeof(dl_file), "libufr_%s_%s.so", type, name);
-
-    // dl_funcname: ufr_gtw_mqtt_new, ufr_gtw_mqtt_new_topic
-    char dl_funcname[1024];
-    snprintf(dl_funcname, sizeof(dl_funcname), "ufr_%s_%s_new", type, name);
-
-    // open the dinamic library handle
-    void* dl_handle = dlopen(dl_file, RTLD_LAZY);
-    if ( dl_handle == NULL ) {
-        ufr_fatal(link, 1, dlerror());
-    }
-
-    // get the function pointer
-    // ufr_info(link, "getting function %s", dl_funcname);
-    dl_func_new_t dl_func_new = (dl_func_new_t) dlsym(dl_handle, dl_funcname);
-    if ( dl_func_new == NULL ) {
-        ufr_fatal(link, 1, dlerror());
-    }
-
-    // check if handle is already in the array g_dl_handles 
-    bool is_already_there = false;
-    for (uint8_t i=0; i<g_dl_count; i++) {
-        if ( g_dl_handles[i] == dl_handle ) {
-            is_already_there = true;
-            break;
+int ufr_recv_sy2(link_t* link0, link_t* link1, int time_ms) {
+    // check the 2 links
+    uint8_t i = 0;
+    const uint8_t max = 10;
+    const int time_us = time_ms * 1000/max;
+    for(; i<max; i++) {
+        if ( ufr_recv_as(link0) == UFR_OK ) {
+            goto second;
         }
-    }
 
-    // put the handle pointer to the array g_dl_handles
-    if ( is_already_there == false ) {
-        g_dl_handles[ g_dl_count ] = dl_handle;
-        g_dl_count += 1;
-    }
+        if ( ufr_recv_as(link1) == UFR_OK ) {
+            goto first;
+        }
 
-    // success
-    printf("c %p %d\n", dl_handle, g_dl_count);
-    return (void*) dl_func_new;
+        usleep(time_us);
+    }
+    goto timeout;
+
+first:
+    do {
+        usleep(time_us);
+        if ( ufr_recv_as(link0) == UFR_OK ) {
+            goto success;
+        }
+    } while ( i < max );
+    goto timeout;
+
+second:
+    do {
+        usleep(time_us);
+        if ( ufr_recv_as(link1) == UFR_OK ) {
+            goto success;
+        }
+    } while ( i < max );
+    goto timeout;
+
+timeout:
+    return -1;
+
+success:
+    return UFR_OK;
 }
 
-void ufr_linux_close_libraries() {
-    for (uint8_t i=0; i<g_dl_count; i++) {
-        if ( g_dl_handles[i] != NULL ) {
-            dlclose(g_dl_handles[i]);
-            g_dl_handles[i] = 0;
+int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms) {
+    // check the 2 links
+    uint8_t i = 0;
+    const uint8_t max = 4;
+    const int time_us = time_ms * 1000/max;
+    for(; i<max; i++) {
+        if ( ufr_recv_as(link0) == UFR_OK ) {
+            return 0;
         }
+        if ( ufr_recv_as(link1) == UFR_OK ) {
+            return 1;
+        }
+        usleep(time_us);
     }
+    return -1;
 }
+
+int ufr_recv_as3(link_t* link0, link_t* link1, link_t* link2, int time_ms) {
+    // check the 2 links
+    uint8_t i = 0;
+    const uint8_t max = 4;
+    const int time_us = time_ms * 1000/max;
+    for(; i<max; i++) {
+        if ( ufr_recv_as(link0) == UFR_OK ) {
+            return 0;
+        }
+        if ( ufr_recv_as(link1) == UFR_OK ) {
+            return 1;
+        }
+        if ( ufr_recv_as(link2) == UFR_OK ) {
+            return 2;
+        }
+        usleep(time_us);
+    }
+    return -1;
+}
+

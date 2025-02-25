@@ -18,6 +18,7 @@ add_library(ufr SHARED
     ./src/ufr_sys_std_dcr.c
     ./src/ufr_posix_pipe.c
     ./src/ufr_buffer.c
+    ./src/ufr_args.c
     )
 
 target_compile_options(ufr PUBLIC -O3 -Wall -Wfloat-conversion)
