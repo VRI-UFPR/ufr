@@ -34,22 +34,34 @@
 #include <ufr.h>
 #include <unistd.h>
 
+#include "opencv2/opencv.hpp"
+
+using namespace std;
+using namespace cv;
+
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new ros_melodic @coder ros_melodic:string"); 
+    // link_t video = ufr_subscriber("@new video @id 0");
+    link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
 
-    for(int i=0; i<40; i++) {
-        char buffer[1024];
-        snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i);
-        ufr_put(&pub, "s\n", buffer);
-        sleep(1);
+    while( ufr_loop_ok() ) {
+        if ( ufr_recv(&video) != UFR_OK ) {
+            break;
+        }
+        // printf("%d %p\n", ufr_get_nbytes(&video), ufr_get_rawptr(&video) );
+
+        void* data = (void*) ufr_get_rawptr(&video);
+        int size[2] = {480, 640};
+        Mat image(2, size, CV_8UC1, data, 0);
+        imshow("janela", image);
+        waitKey(1);
     }
 
     // fim
-    ufr_close(&pub);
+    ufr_close(&video);
     return 0;
 }

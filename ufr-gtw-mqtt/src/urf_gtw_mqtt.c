@@ -330,17 +330,17 @@ size_t urf_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
 static
 ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
     .name = "mqtt/topic",
-	.type = urf_gtw_mqtt_type,
-	.state = urf_gtw_mqtt_state,
-	.size = urf_gtw_mqtt_size,
-	.boot = urf_gtw_mqtt_boot,
-	.start = urf_gtw_mqtt_start,
-	.stop = urf_gtw_mqtt_stop,
-	.copy = NULL,
+    .type = urf_gtw_mqtt_type,
+    .state = urf_gtw_mqtt_state,
+    .size = urf_gtw_mqtt_size,
+    .boot = urf_gtw_mqtt_boot,
+    .start = urf_gtw_mqtt_start,
+    .stop = urf_gtw_mqtt_stop,
+    .copy = NULL,
     .recv = urf_gtw_mqtt_recv,
     .recv_async = urf_gtw_mqtt_recv_async,
-	.read = urf_gtw_mqtt_read,
-	.write = urf_gtw_mqtt_write
+    .read = urf_gtw_mqtt_read,
+    .write = urf_gtw_mqtt_write
 };
 
 // ============================================================================
@@ -348,11 +348,11 @@ ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
 // ============================================================================
 
 int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
-	ufr_link_init(link, &urf_gtw_mqtt_topic_api);
-	return UFR_OK;
+    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    return UFR_OK;
 }
 
 int ufr_gtw_mqtt_new(link_t* link, int type) {
-	ufr_link_init(link, &urf_gtw_mqtt_topic_api);
-	return UFR_OK;
+    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    return UFR_OK;
 }

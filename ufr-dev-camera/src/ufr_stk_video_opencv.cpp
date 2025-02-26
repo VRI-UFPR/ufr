@@ -39,7 +39,7 @@ int ufr_dcr_opencv_get_size(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_opencv_get_raw_ptr(link_t* link) {
+uint8_t* ufr_dcr_opencv_get_rawptr(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     return (uint8_t*) gtw->frame.data;
 }
@@ -85,7 +85,7 @@ ufr_dcr_api_t ufr_dcr_opencv_api = {
     .get_type = NULL,
     .get_nbytes = ufr_dcr_opencv_get_size,
     .get_nitems = NULL,
-    .get_rawptr = NULL,
+    .get_rawptr = ufr_dcr_opencv_get_rawptr,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_opencv_get_str,

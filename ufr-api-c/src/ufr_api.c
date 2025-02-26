@@ -435,7 +435,7 @@ link_t ufr_subscriber(const char* format, ...) {
     if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro3");
     }
-
+printf("b1\n");
     // Prepare Decoder
     if ( link.dcr_api == NULL ) {
         int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
@@ -446,15 +446,18 @@ link_t ufr_subscriber(const char* format, ...) {
                 ufr_fatal(&link, 1, "erro4");
             }
         }
-
-        if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
-            ufr_fatal(&link, 1, "erro5");
+        if ( link.dcr_api->boot != NULL ) {
+            if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
+                ufr_fatal(&link, 1, "erro5");
+            }
         }
     }
-
+printf("b2\n");
     // start
-    if ( link.gtw_api->start(&link, UFR_START_SUBSCRIBER, &args) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro6");
+    if ( link.gtw_api->start != NULL ) {
+        if ( link.gtw_api->start(&link, UFR_START_SUBSCRIBER, &args) != UFR_OK ) {
+            ufr_fatal(&link, 1, "erro6");
+        }
     }
 
     // success

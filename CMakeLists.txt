@@ -61,7 +61,7 @@ endif(BUILD_UFR_GTW_MQTT)
 
 if(BUILD_UFR_CDR_MSGPACK)
     # debian/ubuntu: sudo apt install libmsgpack-dev
-    # add_subdirectory(./ufr-cdr-msgpack)
+    add_subdirectory(./ufr-cdr-msgpack)
 endif(BUILD_UFR_CDR_MSGPACK)
 
 if(BUILD_UFR_STK_SQLITE)
@@ -94,11 +94,11 @@ endif(BUILD_TESTS)
 # add_subdirectory(./ufr-stk-ssh)
 
 # add_subdirectory(ufr-stk-irrlicht)
-# add_subdirectory(./ufr-stk-ros_humble)
-add_subdirectory(./ufr-stk-ros_melodic)
+add_subdirectory(./ufr-stk-ros_humble)
+# add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
-# add_subdirectory(./ufr-dev-camera)
+add_subdirectory(./ufr-dev-camera)
 
 
 # install(FILES ./etc/init.bash DESTINATION .)
