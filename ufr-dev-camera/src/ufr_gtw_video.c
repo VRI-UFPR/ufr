@@ -48,7 +48,5 @@ ufr_gtw_api_t ufr_gtw_video_api = {
 
 int ufr_gtw_video_new_topic(link_t* link, int type) {
     link->gtw_api = &ufr_gtw_video_api;
-    link->dcr_api = NULL;
-    link->enc_api = NULL;
     return UFR_OK;
 }

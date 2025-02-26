@@ -137,6 +137,6 @@ ufr_gtw_api_t ufr_posix_dir = {
 // ============================================================================
 
 int ufr_new_gtw_posix_dir(link_t* link, int type) {
-	link->gtw_api = &ufr_posix_dir;
+    ufr_link_init(link, &ufr_posix_dir);
 	return UFR_OK;
 }

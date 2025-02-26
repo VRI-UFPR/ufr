@@ -74,7 +74,7 @@ int  ufr_gtw_webots_boot(link_t* link, const ufr_args_t* args) {
     static uint8_t is_initialized = 0;
     if ( is_initialized == 0 ) {
         wb_robot_init();
-        ufr_put_loop_callback( webots_loop_cb );
+        ufr_loop_put_callback( webots_loop_cb );
     }
     is_initialized = 1;
 
@@ -186,7 +186,7 @@ ufr_gtw_api_t ufr_gtw_webots_api = {
 // ============================================================================
 
 int ufr_gtw_webots_new(link_t* link, int type) {
-    ufr_init_link(link, &ufr_gtw_webots_api);
+    ufr_link_init(link, &ufr_gtw_webots_api);
     return UFR_OK;
 }
 

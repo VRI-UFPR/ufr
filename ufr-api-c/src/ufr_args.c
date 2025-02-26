@@ -276,11 +276,7 @@ const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* 
     return default_value;
 }
 
-void* ufr_args_getfunc(const ufr_args_t* args, const char* noun, void* default_value) {
-    static uint8_t shared_i = 0;
-    const uint8_t shared_max = 8;
-    static char shared_data[8][128];
-
+void* ufr_args_getfunc(const ufr_args_t* args, const char* type, const char* noun, void* default_value) {
     char token[512];
     uint8_t  count_arg = 0;
     uint16_t cursor = 0;
@@ -303,7 +299,7 @@ void* ufr_args_getfunc(const ufr_args_t* args, const char* noun, void* default_v
                     return default_value;
                 }
             } else {
-                return ufr_linux_load_library("gtw", token);
+                return ufr_linux_load_library(type, token);
             }
         }
     }
@@ -328,4 +324,35 @@ void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list) {
 
     // success
     args->text = text;
+}
+
+// Mover essa funcao para UFR
+// @new aaa @param1 bbb @@new ccc @@param1 ddd -> @new ccc @param1 ddd
+int ufr_args_decrease_level(const char* src, char* dst) {
+    dst[0] = '\0';
+    char token[512];
+    uint8_t count_arg = 0;
+    uint16_t cursor = 0;
+    bool ignore = true;
+    while( ufr_args_flex(src, &cursor, token, sizeof(token)) ) {
+        // uint32_t len = strlen(token);
+        // if ( len > 2 ) {
+        if ( token[0] == '@' ) {
+            if ( token[1] == '@' ) {
+                strcat(dst, &token[1]);
+                strcat(dst, " ");
+                ignore = false;
+            } else {
+                ignore = true;
+            }
+        } else {
+            if ( ignore == false ) {
+                strcat(dst, token);
+                strcat(dst, " ");
+            }
+        }
+
+    }
+
+    return UFR_OK;
 }

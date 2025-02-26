@@ -168,7 +168,7 @@ int ufr_dcr_msgpack_array_get_nitems(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_msgpack_array_get_raw_ptr(link_t* link) {
+uint8_t* ufr_dcr_msgpack_array_get_rawptr(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     if ( decoder->object.type != MSGPACK_OBJECT_BIN ) {
         return NULL;
@@ -381,7 +381,7 @@ ufr_dcr_api_t ufr_dcr_msgpack_array_api = {
     .get_type = ufr_dcr_msgpack_array_get_type,
     .get_nbytes = ufr_dcr_msgpack_array_get_nbytes,
     .get_nitems = ufr_dcr_msgpack_array_get_nitems,
-    .get_raw_ptr = ufr_dcr_msgpack_array_get_raw_ptr,
+    .get_rawptr = ufr_dcr_msgpack_array_get_rawptr,
 
     .get_raw = ufr_dcr_msgpack_array_get_raw,
     .get_str = ufr_dcr_msgpack_array_get_str,
@@ -538,7 +538,7 @@ int ufr_dcr_msgpack_get_nitems(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_msgpack_get_raw_ptr(link_t* link) {
+uint8_t* ufr_dcr_msgpack_get_rawptr(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     if ( decoder->object.type != MSGPACK_OBJECT_BIN ) {
         return NULL;
@@ -845,7 +845,7 @@ ufr_dcr_api_t ufr_dcr_msgpack_api = {
     .get_type = ufr_dcr_msgpack_get_type,
     .get_nbytes = ufr_dcr_msgpack_get_nbytes,
     .get_nitems = ufr_dcr_msgpack_get_nitems,
-    .get_raw_ptr = ufr_dcr_msgpack_get_raw_ptr,
+    .get_rawptr = ufr_dcr_msgpack_get_rawptr,
 
     // 32 bits
     .get_u32 = ufr_dcr_msgpack_get_u32,

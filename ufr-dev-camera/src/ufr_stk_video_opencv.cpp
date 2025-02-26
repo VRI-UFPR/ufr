@@ -28,12 +28,12 @@ void ufr_dcr_opencv_close(link_t* link) {
 }
 
 static
-void ufr_dcr_opencv_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
+int ufr_dcr_opencv_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
 
 }
 
 static
-size_t ufr_dcr_opencv_get_size(link_t* link) {
+int ufr_dcr_opencv_get_size(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     return gtw->frame.total();
 }
@@ -85,7 +85,7 @@ ufr_dcr_api_t ufr_dcr_opencv_api = {
     .get_type = NULL,
     .get_nbytes = ufr_dcr_opencv_get_size,
     .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_opencv_get_str,

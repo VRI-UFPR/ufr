@@ -42,13 +42,8 @@ int ufr_enc_csv_new(link_t* link);
 // ============================================================================
 
 void test_simple() {
-    link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
-
-    ufr_args_t args = {.text="@sep ;"};  
-    ufr_enc_csv_new(&link);
-    ufr_boot_enc(&link, &args);
+    link_t link = ufr_publisher("@new %p @coder %p @sep ;", 
+        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
 
     // ufr_topic_message(&link, 3, "x", "y", "th")
     // ufr_server_register(&link, "add");
@@ -94,13 +89,8 @@ void test_simple() {
 }
 
 void test_simple_2() {
-    link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
-
-    ufr_args_t args = {.text="@sep ,"};  
-    ufr_enc_csv_new(&link);
-    ufr_boot_enc(&link, &args);
+    link_t link = ufr_publisher("@new %p @coder %p @sep ,", 
+        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
 
     // test 1
     {
@@ -141,13 +131,8 @@ void test_simple_2() {
 
 
 void test_simple_without_recv() {
-    link_t link;
-    ufr_gtw_posix_new_pipe(&link, 0);
-    ufr_boot_gtw(&link, NULL);
-
-    ufr_args_t args = {.text="@sep ,"};  
-    ufr_enc_csv_new(&link);
-    ufr_boot_enc(&link, &args);
+    link_t link = ufr_publisher("@new %p @coder %p @sep ;", 
+        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
 
     // test 1
     {

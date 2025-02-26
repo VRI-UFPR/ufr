@@ -1,6 +1,7 @@
 /* BSD 2-Clause License
  * 
- * Copyright (c) 2023, Felipe Bombardelli
+ * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
+ *  - Felipe Bombardelli <felipebombardelli@gmail.com>
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,67 +26,32 @@
  */
 
 // ============================================================================
-//  HEADER
+//  Header
 // ============================================================================
 
-#include <assert.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
-
-#include "ufr.h"
-#include "ufr_test.h"
-
-// ============================================================================
-//  Tests
-// ============================================================================
-
-void test_simple() {
-    link_t link = ufr_publisher("@new %p @coder %p", ufr_gtw_posix_new_pipe, ufr_enc_sys_new_std);
-
-    // test 1
-    {
-        char buffer[128];
-        ufr_put(&link, "iii\n", 10, 20, 30);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
-        buffer[nbytes] = '\0';
-        UFR_TEST_EQUAL_STR(buffer, "10 20 30\n");
-    }
-
-    // test 2
-    {
-        char buffer[128];
-        ufr_put(&link, "iii\n", 30, 20, 10);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
-        buffer[nbytes] = '\0';
-        UFR_TEST_EQUAL_STR(buffer, "30 20 10\n");
-
-    }
-
-    // test 3
-    {
-        char buffer[128];
-        ufr_put(&link, "sii\n", "string com espaco", 8759834, -712345);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 36 );
-        buffer[nbytes] = '\0';
-        UFR_TEST_EQUAL_STR(buffer, "\"string com espaco\" 8759834 -712345\n");
-    }
-
-    ufr_close(&link);
-}
+#include <ufr.h>
+#include <math.h>
 
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    test_simple();
-    ufr_test_print_result();
+    // configure the output
+    link_t link = ufr_client("@new posix:socket @coder http @host 127.0.0.1 @port 5000");
+
+    // for (int i=0; i<3; i++) {
+        char buffer[1024];
+        char body[1024];
+
+        ufr_put(&link, "ss\n\n", "GET", "/");
+        ufr_get(&link, "^ss", buffer, body);
+        printf("%s %s\n", buffer, body);
+    // }
+
+    // end
+    ufr_close(&link);
     return 0;
 }

@@ -238,6 +238,6 @@ ufr_gtw_api_t ufr_gtw_ssh_api = {
 // ============================================================================
 
 int ufr_gtw_ssh_new(link_t* link, int type) {
-    ufr_init_link(link, &ufr_gtw_ssh_api);
+    ufr_link_init(link, &ufr_gtw_ssh_api);
     return UFR_OK;
 }

@@ -43,11 +43,11 @@ int ufr_dcr_sys_new_std(link_t* link, int type);
 //  Fake Gateway
 // ============================================================================
 
-int    ufr_gtw_fake_type(const link_t* link) {
+int ufr_gtw_fake_type(const link_t* link) {
 	return 0;
 }
 
-int    ufr_gtw_fake_state(const link_t* link) {
+int ufr_gtw_fake_state(const link_t* link) {
 	return 0;
 }
 
@@ -55,11 +55,11 @@ size_t ufr_gtw_fake_size(const link_t* link, int type) {
 	return 0;
 }
 
-int  ufr_gtw_fake_boot(link_t* link, const ufr_args_t* args) {
+int ufr_gtw_fake_boot(link_t* link, const ufr_args_t* args) {
 	return UFR_OK;
 }
 
-int  ufr_gtw_fake_start(link_t* link, int type, const ufr_args_t* args) {
+int ufr_gtw_fake_start(link_t* link, int type, const ufr_args_t* args) {
 	return UFR_OK;
 }
 
@@ -67,7 +67,7 @@ void ufr_gtw_fake_stop(link_t* link, int type) {
 
 }
 
-int  ufr_gtw_fake_copy(link_t* link, link_t* out) {
+int ufr_gtw_fake_copy(link_t* link, link_t* out) {
 	return UFR_OK;
 }
 
@@ -138,6 +138,11 @@ void test_init_link() {
 	UFR_TEST_NULL( link.enc_obj );
 }
 
+// Try to keep the size of link_t as 256 bytes
+void test_size_of_link_as_256bytes() {
+	UFR_TEST_EQUAL_U64( sizeof(link_t), 256L );
+}
+
 void test_get_api_name() {
 	{
 		const char* name = ufr_api_name(NULL);
@@ -160,14 +165,8 @@ void test_get_api_name() {
 }
 
 void test_publisher() {
-	link_t link = ufr_publisher("@new %p", ufr_gtw_fake_new_std);
-	// UFR_TEST_OK( ufr_gtw_fake_new_std(&link, UFR_START_PUBLISHER) );
-	// UFR_TEST_EQUAL( link.gtw_api, &ufr_gtw_fake_api );
-
-	// const ufr_args_t args = {.text=""};
-	// UFR_TEST_OK( ufr_start_publisher(&link, &args) );
-
-
+	// link_t link = ufr_publisher("@new %p", ufr_gtw_fake_new_std);
+	// fazer os testes
 }
 
 
@@ -179,10 +178,8 @@ void test_writer() {
 int main() {
 	test_init_link();
 	test_get_api_name();
-
+	test_size_of_link_as_256bytes();
 	test_publisher();
-
     ufr_test_print_result();
-	// test_writer();
 	return 0;
 }

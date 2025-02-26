@@ -50,10 +50,25 @@ uint8_t g_dl_count = 0;
 void* g_dl_handles[G_DL_MAX];
 
 // ============================================================================
-//  Codigo
+//  Library Destructor
+// ============================================================================
+
+__attribute__((destructor))
+void ufr_linux_free_libraries() {
+    for (uint8_t i=0; i<g_dl_count; i++) {
+        if ( g_dl_handles[i] != NULL ) {
+            dlclose(g_dl_handles[i]);
+            g_dl_handles[i] = 0;
+        }
+    }
+}
+
+// ============================================================================
+//  Functions
 // ============================================================================
 
 void* ufr_linux_load_library(const char* type, const char* name) {
+printf("opa\n");
     // dl_file: ufr_[gtw,enc,dcr]_name.so
     char dl_file[512];
     snprintf(dl_file, sizeof(dl_file), "libufr_%s_%s.so", type, name);
@@ -61,18 +76,23 @@ void* ufr_linux_load_library(const char* type, const char* name) {
     // dl_funcname: ufr_gtw_mqtt_new, ufr_gtw_mqtt_new_topic
     char dl_funcname[1024];
     snprintf(dl_funcname, sizeof(dl_funcname), "ufr_%s_%s_new", type, name);
+printf("opa %s %s\n", dl_file, dl_funcname);
 
     // open the dinamic library handle
     void* dl_handle = dlopen(dl_file, RTLD_LAZY);
     if ( dl_handle == NULL ) {
-        ufr_fatal(link, 1, dlerror());
+        // ufr_fatal(link, 1, dlerror());
+        fprintf(stderr, "Error: %s\n", dlerror());
+        exit(1);
     }
 
     // get the function pointer
     // ufr_info(link, "getting function %s", dl_funcname);
     dl_func_new_t dl_func_new = (dl_func_new_t) dlsym(dl_handle, dl_funcname);
     if ( dl_func_new == NULL ) {
-        ufr_fatal(link, 1, dlerror());
+        // ufr_fatal(link, 1, dlerror());
+        fprintf(stderr, "Error: %s\n", dlerror());
+        exit(1);
     }
 
     // check if handle is already in the array g_dl_handles 
@@ -93,13 +113,4 @@ void* ufr_linux_load_library(const char* type, const char* name) {
     // success
     printf("c %p %d\n", dl_handle, g_dl_count);
     return (void*) dl_func_new;
-}
-
-void ufr_linux_close_libraries() {
-    for (uint8_t i=0; i<g_dl_count; i++) {
-        if ( g_dl_handles[i] != NULL ) {
-            dlclose(g_dl_handles[i]);
-            g_dl_handles[i] = 0;
-        }
-    }
 }

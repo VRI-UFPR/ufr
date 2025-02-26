@@ -60,7 +60,7 @@ size_t ufr_gtw_sqlite_size(const link_t* link, int type) {
 
 int ufr_gtw_sqlite_boot (link_t* link, const ufr_args_t* args) {
     const char* filename = ufr_args_gets(args, "@file", "sqlite3.db");
-link->log_level = 5;
+
     // create the shared object
     ufr_log_ini(link, "opening the database");
     sqlite3 *db;
@@ -365,7 +365,7 @@ ufr_gtw_api_t ufr_gtw_sqlite_client_api = {
 
 int ufr_gtw_sqlite_new(link_t* link, int type) {
     if (type == UFR_START_CLIENT ) {
-        ufr_init_link(link, &ufr_gtw_sqlite_client_api);
+        ufr_link_init(link, &ufr_gtw_sqlite_client_api);
     } else {
         ufr_fatal(link, 1, "Tipo invalido");
     }

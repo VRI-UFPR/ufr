@@ -215,7 +215,7 @@ ufr_dcr_api_t dcr_lidar_api = {
     .get_type = ufr_dcr_lidar_get_type,
     .get_nbytes = ufr_dcr_lidar_get_nbytes,
     .get_nitems = ufr_dcr_lidar_get_nitems,
-    .get_raw_ptr = ufr_dcr_lidar_get_raw_ptr,
+    .get_rawptr = ufr_dcr_lidar_get_raw_ptr,
 
 	.get_u32 = ufr_dcr_lidar_get_u32,
 	.get_i32 = ufr_dcr_lidar_get_i32,

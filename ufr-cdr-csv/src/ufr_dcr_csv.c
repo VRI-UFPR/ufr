@@ -228,7 +228,7 @@ ufr_dcr_api_t ufr_dcr_std_csv_api = {
     .close = ufr_dcr_csv_close,
 
     // Receive
-	.recv_cb = ufr_dcr_csv_recv_cb,
+    .recv_cb = ufr_dcr_csv_recv_cb,
     .recv_async_cb = ufr_dcr_csv_recv_cb,
 
     // ignore
@@ -238,17 +238,17 @@ ufr_dcr_api_t ufr_dcr_std_csv_api = {
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     // 32 bits
-	.get_u32 = ufr_dcr_csv_get_u32,
-	.get_i32 = ufr_dcr_csv_get_i32,
-	.get_f32 = ufr_dcr_csv_get_f32,
+    .get_u32 = ufr_dcr_csv_get_u32,
+    .get_i32 = ufr_dcr_csv_get_i32,
+    .get_f32 = ufr_dcr_csv_get_f32,
 
     // 64 bits
-	.get_u64 = ufr_dcr_csv_get_u64,
-	.get_i64 = ufr_dcr_csv_get_i64,
-	.get_f64 = ufr_dcr_csv_get_f64,
+    .get_u64 = ufr_dcr_csv_get_u64,
+    .get_i64 = ufr_dcr_csv_get_i64,
+    .get_f64 = ufr_dcr_csv_get_f64,
 
     // Binary and String
     .get_raw = ufr_dcr_csv_get_raw,

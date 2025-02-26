@@ -39,6 +39,11 @@
 
 #include "ufr_zmq_common.h"
 
+int ufr_gtw_zmq_new_topic(link_t* link, int type);
+
+// ============================================================================
+//  Private function
+// ============================================================================
 
 size_t ufr_zmq_socket_write(link_t* link, const char* buffer, size_t size) {
     ll_obj_t* gtw_obj = link->gtw_obj;
@@ -133,10 +138,6 @@ int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
     return 0;
 }
 
-// ============================================================================
-//  Socket Single Thread
-// ============================================================================
-
 static
 ufr_gtw_api_t ufr_zmq_socket_st_api = {
     .name = "zmq",
@@ -187,9 +188,9 @@ ufr_gtw_api_t ufr_zmq_socket_mt_api = {
 
 int ufr_gtw_zmq_new_socket(link_t* link, int type) {
     if ( type == UFR_START_SERVER_ST || type == UFR_START_CLIENT ) {
-	    ufr_init_link(link, &ufr_zmq_socket_st_api);
+	    ufr_link_init(link, &ufr_zmq_socket_st_api);
     } else if ( type == UFR_START_SERVER_MT ) {
-        ufr_init_link(link, &ufr_zmq_socket_mt_api);
+        ufr_link_init(link, &ufr_zmq_socket_mt_api);
     } else {
         return ufr_error(link, 1, "invalid type");
     }
@@ -198,13 +199,13 @@ int ufr_gtw_zmq_new_socket(link_t* link, int type) {
 
 int ufr_gtw_zmq_new(link_t* link, int type) {
     if ( type == UFR_START_SERVER_ST || type == UFR_START_CLIENT ) {
-	    ufr_init_link(link, &ufr_zmq_socket_st_api);
+	    ufr_link_init(link, &ufr_zmq_socket_st_api);
     } else if ( type == UFR_START_SERVER_MT ) {
-        ufr_init_link(link, &ufr_zmq_socket_mt_api);
+        ufr_link_init(link, &ufr_zmq_socket_mt_api);
     } else if ( type == UFR_START_PUBLISHER ) {
-        ufr_gtw_zmq_new_topic(link);
+        ufr_gtw_zmq_new_topic(link, type);
     } else if ( type == UFR_START_SUBSCRIBER ) {
-        ufr_gtw_zmq_new_topic(link);
+        ufr_gtw_zmq_new_topic(link, type);
     } else {
         return ufr_error(link, 1, "invalid type");
     }

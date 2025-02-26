@@ -37,25 +37,19 @@
 
 #include "ufr_webots.h"
 
+int ufr_gtw_webots_new(link_t* link, int type);
+
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    link_t motors;
-    ufr_gtw_webots_new(&motors, 0);
-    assert( ufr_boot_publisher(&motors, "@new webots @type motors") == UFR_OK );
-
-    link_t encoders;
-    ufr_gtw_webots_new(&encoders, 0);
-    assert( ufr_boot_subscriber(&encoders, "@new webots @type encoders") == UFR_OK );
-
-    link_t lidar;
-    ufr_gtw_webots_new(&lidar, 0);
-    assert( ufr_boot_subscriber(&lidar, "@new webots @type lidar") == UFR_OK );
+    link_t motors = ufr_publisher("@new %p @type motors", ufr_gtw_webots_new);
+    link_t encoders = ufr_subscriber("@new %p @type encoders", ufr_gtw_webots_new);
+    // link_t lidar = ufr_subscriber("@new %p @type lidar", ufr_gtw_webots_new);
 
     int count = 0;
-    float lidar_values[500];
+    // float lidar_values[500];
     float pos_x=0, pos_y=0, pos_th=0;
     float last_left=10, last_right=10;
     while ( ufr_loop_ok() ) {
@@ -67,15 +61,13 @@ int main() {
             count = 1;
             continue;
         }
-        
 
         const float diff_left = left - last_left;
         const float diff_right = right - last_right;
-        
 
-        pos_x += (diff_left + diff_right) * cos(pos_th);
-        pos_y += (diff_left + diff_right) * sin(pos_th);
-        pos_th += (diff_left - diff_right) * 0.3;
+        pos_x += (diff_left + diff_right) * (float) cos(pos_th);
+        pos_y += (diff_left + diff_right) * (float) sin(pos_th);
+        pos_th += (diff_left - diff_right) * 0.3f;
 
         printf("pose %f %f - %f %f %f\n", diff_left, diff_right, pos_x, pos_y, pos_th*180.0/3.141592);
 

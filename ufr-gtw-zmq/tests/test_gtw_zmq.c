@@ -42,36 +42,24 @@ int ufr_gtw_zmq_new_topic(link_t* link, const int type);
 //  Test 1
 // ============================================================================
 
-ufr_args_t g_test1_args = {.text="@host 127.0.0.1 @port 3000 @debug 0"};
-
 void test1_publisher() {
     printf("Starting publisher\n");
-    link_t link;
-    assert( ufr_gtw_zmq_new_topic(&link, UFR_START_PUBLISHER) == UFR_OK );  
-    assert( ufr_boot_gtw(&link,&g_test1_args) == UFR_OK );
-    assert( ufr_enc_sys_new_std(&link, 0) == UFR_OK );
-    assert( ufr_boot_enc(&link,&g_test1_args) == UFR_OK );
-    assert( ufr_start_publisher(&link,&g_test1_args) == UFR_OK );
+    link_t link = ufr_publisher("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
     ufr_put(&link, "iii\n", 10, 20, 30);
     ufr_close(&link);
 }
 
 void* test1_subscriber(void* ptr) {
     printf("Starting subscriber\n");
-    link_t link;
-    assert( ufr_gtw_zmq_new_topic(&link, UFR_START_SUBSCRIBER) == UFR_OK );
-    assert( ufr_boot_gtw(&link,&g_test1_args) == UFR_OK );
-    assert( ufr_dcr_sys_new_std(&link, 0) == UFR_OK );
-    assert( ufr_boot_dcr(&link,&g_test1_args) == UFR_OK );
-    assert( ufr_start_subscriber(&link,&g_test1_args) == UFR_OK );
+    link_t link = ufr_subscriber("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
 
     int a=0,b=0,c=0;
     ufr_get(&link, "^iii", &a, &b, &c);
-    printf("%d %d %d\n", a,b,c);
-    assert( a==10 );
-    assert( b==20 );
-    assert( c==30 );
+    UFR_TEST_EQUAL_I32( a, 10 );
+    UFR_TEST_EQUAL_I32( b, 20 );
+    UFR_TEST_EQUAL_I32( c, 30 );
 
+    ufr_close(&link);
     return NULL;
 }
 
@@ -88,5 +76,6 @@ void test1() {
 
 int main() {
     test1();
+    ufr_test_print_result();
 	return 0;
 }

@@ -314,19 +314,16 @@ ufr_gtw_api_t ufr_gtw_posix_stdin_api = {
 // ============================================================================
 
 int ufr_gtw_posix_new_file(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_file_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_file_api);
     return UFR_OK;
 }
 
 int ufr_gtw_posix_new_stdout(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_stdout_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_stdout_api);
     return UFR_OK;
 }
 
 int ufr_gtw_posix_new_stdin(link_t* link, int type) {
-    link->gtw_api = &ufr_gtw_posix_stdin_api;
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_stdin_api);
     return UFR_OK;
 }

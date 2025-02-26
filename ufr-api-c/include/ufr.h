@@ -223,7 +223,7 @@ typedef struct _link {
     };
 
     uint16_t put_count;
-    char errstr[180];
+    char errstr[172];
 } link_t;
 
 typedef struct {
@@ -237,6 +237,14 @@ typedef struct {
 
 const char* ufr_api_name(const link_t* link);
 link_t ufr_accept(link_t* link);
+
+size_t ufr_write(link_t* link, const char* buffer, size_t size);
+size_t ufr_read(link_t* link, char* buffer, size_t maxsize);
+
+bool ufr_send(link_t* link);
+
+int ufr_boot_enc(link_t* link, const ufr_args_t* args);
+int ufr_boot_dcr(link_t* link, const ufr_args_t* args);
 
 // ============================================================================
 //  UFR LINK
@@ -492,10 +500,12 @@ float  ufr_args_getf(const ufr_args_t* args, const char* noun, const float defau
 const void* ufr_args_getp(const ufr_args_t* args, const char* noun, const void* default_value);
 const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* default_value);
 
-void* ufr_args_getfunc(const ufr_args_t* args, const char* noun, void* default_value);
+void* ufr_args_getfunc(const ufr_args_t* args, const char* type, const char* noun, void* default_value);
 
 bool ufr_args_flex_div(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max, const char div);
 bool ufr_args_flex(const char* text, uint16_t* cursor_ini, char* token, const uint16_t token_max);
+
+int ufr_args_decrease_level(const char* src, char* dst);
 
 void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list);
 

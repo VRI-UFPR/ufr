@@ -198,7 +198,6 @@ ufr_gtw_api_t ufr_gtw_posix_timer_api = {
 // ============================================================================
 
 int ufr_gtw_posix_new_timer(link_t* link, int type) {
-    ufr_init_link(link, &ufr_gtw_posix_timer_api);
-    link->type_started = type;
+    ufr_link_init(link, &ufr_gtw_posix_timer_api);
     return UFR_OK;
 }

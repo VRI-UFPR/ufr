@@ -42,11 +42,8 @@
 // ============================================================================
 
 int main() {
-    link_t ssh;
-    ufr_gtw_ssh_new(&ssh, 0);
-
-    ufr_args_t args = {.text="@host teste.com.br @user fgbombardelli @password aaa"};
-    ufr_boot_gtw(&ssh, &args);
+    link_t ssh = ufr_client("@new %p @host teste.com.br @user usuario @password senha",
+        ufr_gtw_ssh_new);
 
     char buffer[1024];
     ufr_write(&ssh, "ls", 3);

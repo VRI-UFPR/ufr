@@ -15,7 +15,6 @@ add_library(ufr_gtw_webots SHARED
 
 target_compile_options(ufr_gtw_webots PUBLIC -O1)
 target_link_libraries(ufr_gtw_webots ufr Controller)
-
 install(TARGETS ufr_gtw_webots DESTINATION lib)
 
 # test

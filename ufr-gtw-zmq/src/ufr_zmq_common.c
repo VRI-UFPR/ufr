@@ -205,7 +205,6 @@ size_t ufr_zmq_write(link_t* link, const char* buffer, size_t size) {
     if ( sent != size ) {
         return ufr_error(link, 0, "%s", zmq_strerror(errno));
     }
-    ufr_info(link, "sent %ld bytes", sent);
     return sent;
 }
 
