@@ -264,7 +264,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     .get_raw = NULL,
     .get_str = NULL,

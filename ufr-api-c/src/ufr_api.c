@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -49,10 +49,10 @@ loop_callback g_callback_array[5] = {NULL, NULL, NULL, NULL, NULL};
 // ============================================================================
 
 const char* ufr_api_name(const link_t* link) {
-	if ( link == NULL || link->gtw_api == NULL ) {
-		return "None";
-	}
-	return link->gtw_api->name;
+    if ( link == NULL || link->gtw_api == NULL ) {
+        return "None";
+    }
+    return link->gtw_api->name;
 }
 
 // ============================================================================
@@ -240,7 +240,7 @@ size_t ufr_read(link_t* link, char* buffer, size_t maxsize) {
         }
     }
 
-	return link->gtw_api->read(link, buffer, maxsize);
+    return link->gtw_api->read(link, buffer, maxsize);
 }
 
 size_t ufr_write(link_t* link, const char* buffer, size_t size) {
