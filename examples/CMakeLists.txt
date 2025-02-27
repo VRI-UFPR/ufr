@@ -1,0 +1,3 @@
+add_executable(exemplo_publisher publisher.c)
+target_link_libraries(exemplo_publisher ufr)
+install(TARGETS exemplo_publisher DESTINATION examples)
