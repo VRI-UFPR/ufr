@@ -425,9 +425,13 @@ link_t ufr_subscriber(const char* format, ...) {
     va_end(list);
 
     // Prepare Gateway
+    ufr_log(&link, "preparing the Gateway");
     int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "gtw", "@new", NULL);
     if ( func_gtw_new == NULL ) {
         ufr_fatal(&link, 1, "erro1");
+    }
+    if ( link.gtw_api == NULL ) {
+        ufr_fatal(&link, 1, "erro2");
     }
     if ( func_gtw_new(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro2");
@@ -435,9 +439,10 @@ link_t ufr_subscriber(const char* format, ...) {
     if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro3");
     }
-printf("b1\n");
+
     // Prepare Decoder
     if ( link.dcr_api == NULL ) {
+        ufr_log(&link, "preparing the Decoder");
         int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
         if ( func_dcr_new == NULL ) {
             ufr_dcr_sys_new_std(&link, UFR_START_SUBSCRIBER);
@@ -452,8 +457,9 @@ printf("b1\n");
             }
         }
     }
-printf("b2\n");
+
     // start
+    ufr_log(&link, "starting the link");
     if ( link.gtw_api->start != NULL ) {
         if ( link.gtw_api->start(&link, UFR_START_SUBSCRIBER, &args) != UFR_OK ) {
             ufr_fatal(&link, 1, "erro6");

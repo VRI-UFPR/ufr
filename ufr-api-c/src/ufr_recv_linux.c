@@ -47,11 +47,11 @@ int ufr_recv_sy2(link_t* link0, link_t* link1, int time_ms) {
     const uint8_t max = 10;
     const int time_us = time_ms * 1000/max;
     for(; i<max; i++) {
-        if ( ufr_recv_as(link0) == UFR_OK ) {
+        if ( ufr_recv_async(link0) == UFR_OK ) {
             goto second;
         }
 
-        if ( ufr_recv_as(link1) == UFR_OK ) {
+        if ( ufr_recv_async(link1) == UFR_OK ) {
             goto first;
         }
 
@@ -62,7 +62,7 @@ int ufr_recv_sy2(link_t* link0, link_t* link1, int time_ms) {
 first:
     do {
         usleep(time_us);
-        if ( ufr_recv_as(link0) == UFR_OK ) {
+        if ( ufr_recv_async(link0) == UFR_OK ) {
             goto success;
         }
     } while ( i < max );
@@ -71,7 +71,7 @@ first:
 second:
     do {
         usleep(time_us);
-        if ( ufr_recv_as(link1) == UFR_OK ) {
+        if ( ufr_recv_async(link1) == UFR_OK ) {
             goto success;
         }
     } while ( i < max );
@@ -90,10 +90,10 @@ int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms) {
     const uint8_t max = 4;
     const int time_us = time_ms * 1000/max;
     for(; i<max; i++) {
-        if ( ufr_recv_as(link0) == UFR_OK ) {
+        if ( ufr_recv_async(link0) == UFR_OK ) {
             return 0;
         }
-        if ( ufr_recv_as(link1) == UFR_OK ) {
+        if ( ufr_recv_async(link1) == UFR_OK ) {
             return 1;
         }
         usleep(time_us);
@@ -107,13 +107,13 @@ int ufr_recv_as3(link_t* link0, link_t* link1, link_t* link2, int time_ms) {
     const uint8_t max = 4;
     const int time_us = time_ms * 1000/max;
     for(; i<max; i++) {
-        if ( ufr_recv_as(link0) == UFR_OK ) {
+        if ( ufr_recv_async(link0) == UFR_OK ) {
             return 0;
         }
-        if ( ufr_recv_as(link1) == UFR_OK ) {
+        if ( ufr_recv_async(link1) == UFR_OK ) {
             return 1;
         }
-        if ( ufr_recv_as(link2) == UFR_OK ) {
+        if ( ufr_recv_async(link2) == UFR_OK ) {
             return 2;
         }
         usleep(time_us);
