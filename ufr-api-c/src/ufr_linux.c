@@ -39,12 +39,6 @@
 
 #include "ufr.h"
 
-typedef struct {
-    void* handle;
-    size_t count;
-    char name[240];
-} ufr_library_t;
-
 #define G_DL_MAX  16
 uint8_t g_dl_count = 0;
 void* g_dl_handles[G_DL_MAX];
@@ -67,16 +61,18 @@ void ufr_linux_free_libraries() {
 //  Functions
 // ============================================================================
 
-void* ufr_linux_load_library(const char* type, const char* name) {
-printf("opa\n");
+void* ufr_linux_load_library(const char* type, const char* name, const char* classname) {
     // dl_file: ufr_[gtw,enc,dcr]_name.so
     char dl_file[512];
     snprintf(dl_file, sizeof(dl_file), "libufr_%s_%s.so", type, name);
 
     // dl_funcname: ufr_gtw_mqtt_new, ufr_gtw_mqtt_new_topic
     char dl_funcname[1024];
-    snprintf(dl_funcname, sizeof(dl_funcname), "ufr_%s_%s_new", type, name);
-printf("opa %s %s\n", dl_file, dl_funcname);
+    if ( classname[0] == '\0' ) {
+        snprintf(dl_funcname, sizeof(dl_funcname), "ufr_%s_%s_new", type, name);
+    } else {
+        snprintf(dl_funcname, sizeof(dl_funcname), "ufr_%s_%s_new_%s", type, name, classname);
+    }
 
     // open the dinamic library handle
     void* dl_handle = dlopen(dl_file, RTLD_LAZY);
@@ -111,6 +107,5 @@ printf("opa %s %s\n", dl_file, dl_funcname);
     }
 
     // success
-    printf("c %p %d\n", dl_handle, g_dl_count);
     return (void*) dl_func_new;
 }

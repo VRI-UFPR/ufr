@@ -66,7 +66,7 @@ int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
         int argc = 1;
         char* argv[] = {"node_2"};
         ros::init(argc, argv, "node_2");
-        ufr_put_loop_callback( ufr_ros_loop_cb );
+        ufr_loop_put_callback( ufr_ros_loop_cb );
     }
 
     g_ros_count += 1;
@@ -81,15 +81,12 @@ int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
 }
 
 int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
-    std::string msg = ufr_args_gets(args, "@msg", "");
-
+    /*std::string msg = ufr_args_gets(args, "@msg", "");
     if ( type == UFR_START_SUBSCRIBER ) {
-
         if ( msg == "i16" ) {
             sys_ufr_load(link, "dcr", "ros_melodic:i16", type, args);
             ufr_log(link, "loaded decoder ros_melodic:i16");
         }
-
     } else if ( type == UFR_START_PUBLISHER ) {
         if ( msg == "string" ) {
             // ufr_enc_ros_noetic_new_string(link, UFR_START_PUBLISHER);
@@ -106,7 +103,8 @@ int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
             sys_ufr_load(link, "enc", "ros_melodic:laserscan", type, args);
             ufr_log(link, "loaded ros_melodic:laserscan");
         }
-    }
+    }*/
+
     return UFR_OK;
 }
 
@@ -173,6 +171,7 @@ int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
     dcr->it = dcr->topics.begin();
 
     link->dcr_obj = dcr;
+    return UFR_OK;
 }
 
 static
@@ -199,7 +198,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_raw_ptr = NULL,
+    .get_rawptr = NULL,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_ros_humble_get_str,
@@ -247,12 +246,12 @@ ufr_gtw_api_t ufr_ros_melodic_socket_drv = {
 extern "C" {
 
 int ufr_gtw_ros_melodic_new_topic(link_t* out, int type) {
-    ufr_init_link(out, &ufr_ros_melodic_topic_drv);
+    ufr_link_init(out, &ufr_ros_melodic_topic_drv);
     return UFR_OK;
 }
 
 int ufr_gtw_ros_melodic_new_socket(link_t* out, int type) {
-    ufr_init_link(out, &ufr_ros_melodic_socket_drv);
+    ufr_link_init(out, &ufr_ros_melodic_socket_drv);
     return UFR_OK;
 }
 

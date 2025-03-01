@@ -32,19 +32,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ufr.h>
+#include <unistd.h>
+
+#include "opencv2/opencv.hpp"
+
+using namespace std;
+using namespace cv;
 
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @coder msgpack");
+    // abre um publicador
+    // link_t video = ufr_subscriber("@new video @id 0");
+    link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
 
-    // aaa
-    int a,b,c;
-    ufr_get(&sub, "^iii", &a, &b, &c);
+    while( ufr_loop_ok() ) {
+        if ( ufr_recv(&video) != UFR_OK ) {
+            break;
+        }
+        // printf("%d %p\n", ufr_get_nbytes(&video), ufr_get_rawptr(&video) );
 
-    // end
-    ufr_close(&sub);
+        void* data = (void*) ufr_get_rawptr(&video);
+        int size[2] = {480, 640};
+        Mat image(2, size, CV_8UC1, data, 0);
+        imshow("janela", image);
+        waitKey(1);
+    }
+
+    // fim
+    ufr_close(&video);
     return 0;
 }

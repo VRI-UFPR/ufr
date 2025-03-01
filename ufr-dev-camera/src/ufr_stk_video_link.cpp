@@ -109,12 +109,18 @@ void ufr_dcr_link_close(link_t* link) {
 
 static
 int ufr_dcr_link_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
-
+printf("aqui\n");
+    return 0;
 }
 
-int ufr_dcr_link_get_size(link_t* link) {
+int ufr_dcr_link_get_nbytes(link_t* link) {
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
     return gtw->frame.total();
+}
+
+int ufr_dcr_link_get_nitems(link_t* link) {
+    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    return gtw->frame.cols;
 }
 
 uint8_t* ufr_dcr_link_get_raw_ptr(link_t* link) {
@@ -156,12 +162,12 @@ ufr_dcr_api_t ufr_dcr_link_api = {
     .boot = ufr_dcr_link_boot,
     .close = ufr_dcr_link_close,
     .recv_cb = ufr_dcr_link_recv_cb,
-    .recv_async_cb = NULL,
+    .recv_async_cb = ufr_dcr_link_recv_cb,
     .next = NULL,
 
     .get_type = NULL,
-    .get_nbytes = ufr_dcr_link_get_size,
-    .get_nitems = NULL,
+    .get_nbytes = ufr_dcr_link_get_nbytes,
+    .get_nitems = ufr_dcr_link_get_nitems,
     .get_rawptr = ufr_dcr_link_get_raw_ptr,
 
     .get_raw = NULL,
@@ -198,24 +204,24 @@ size_t ufr_gtw_link_size(const link_t* link, int type) {
 
 int  ufr_gtw_link_boot(link_t* link, const ufr_args_t* args) {
     GatewayLink* gtw = new GatewayLink();
-
     char link_text[1024];
     ufr_args_decrease_level(args->text, link_text);
     // printf("%s\n", link_text);
-
     gtw->link = ufr_subscriber(link_text);
+
     // gtw->data = malloc(1024*1024);
     link->gtw_obj = (void*) gtw;
     link->gtw_shr = NULL;
+
+    link->dcr_api = &ufr_dcr_link_api;
+
     return UFR_OK;
 }
 
 int  ufr_gtw_link_start(link_t* link, int type, const ufr_args_t* args) {
     if ( type == UFR_START_SUBSCRIBER ) {
-        link->dcr_api = &ufr_dcr_link_api;
-        ufr_boot_dcr(link, args);
         GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
-        return ufr_start(&gtw->link, type, args);
+        return gtw->link.gtw_api->start(&gtw->link, type, args);
     }
 
     if ( type == UFR_START_PUBLISHER ) {
@@ -245,11 +251,23 @@ size_t ufr_gtw_link_write(link_t* link, const char* buffer, size_t length) {
 int ufr_gtw_link_recv(link_t* link) {
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
     ufr_recv(&gtw->link);
+    // const size_t size = ufr_get_nbytes(&gtw->link);
+    // gtw->buffer.resize(size);
+    
+    char format[16];
+    ufr_get(&gtw->link, "s", format, sizeof(format));
 
-    const size_t size = ufr_get_nbytes(&gtw->link);
-    gtw->buffer.resize(size);
-    ufr_get_raw(&gtw->link, gtw->buffer.data(), size);
-    gtw->frame = imdecode(gtw->buffer, cv::IMREAD_COLOR);
+    if ( strcmp(format, "mono8") == 0 ) {
+        int size[2] = {480, 640};
+        void* data = (void*) ufr_get_rawptr(&gtw->link);
+        if ( data == NULL ) {
+            return -1;
+        }
+        gtw->frame = Mat(2, size, CV_8UC1, data, 0);
+    }
+
+    // ufr_get_raw(&gtw->link, gtw->buffer.data(), size);
+    // gtw->frame = imdecode(gtw->buffer, cv::IMREAD_COLOR);
 
     return UFR_OK;
 }
