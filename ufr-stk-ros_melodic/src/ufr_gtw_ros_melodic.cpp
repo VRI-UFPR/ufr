@@ -41,12 +41,31 @@ int g_ros_count = 0;
 Gateway* g_gtw = NULL;
 
 // ======================================================================================
+//  Private
+// ======================================================================================
+
+
+const char* get_last_component(const char* path) {
+    // Encontra a última barra '/' no caminho
+    const char* last_slash = strrchr(path, '/');
+
+    // Se não houver barra, o caminho já é o nome do arquivo/diretório
+    if (last_slash == NULL) {
+        return path;
+    }
+
+    // Retorna a substring após a última barra
+    return &last_slash[1];
+}
+
+// ======================================================================================
 //  Topic
 // ======================================================================================
 
 static
 int ufr_ros_loop_cb(void) {
-    return ( ros::ok() ) ? UFR_OK : 1;
+    const bool res = ros::ok();
+    return (res) ? UFR_OK : 1;
 }
 
 int ufr_ros_topic_type(const link_t* link) {
@@ -63,10 +82,13 @@ size_t ufr_ros_topic_size(const link_t* link, int type) {
 
 int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
     if ( g_ros_count == 0 ) {
+        const char* command = getenv("_");
+        const char* command_name = get_last_component(command);
         int argc = 1;
-        char* argv[] = {"node_2"};
-        ros::init(argc, argv, "node_2");
+        const char* argv[] = {command};
+        ros::init(argc, (char**) argv, command_name);
         ufr_loop_put_callback( ufr_ros_loop_cb );
+        ufr_log(link, "ROS Node (%s) initialized", command_name);
     }
 
     g_ros_count += 1;
@@ -76,35 +98,11 @@ int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
     }
     link->gtw_obj = g_gtw;
 
-    // link->gtw_obj = new Gateway();
+    // success
     return UFR_OK;
 }
 
 int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
-    /*std::string msg = ufr_args_gets(args, "@msg", "");
-    if ( type == UFR_START_SUBSCRIBER ) {
-        if ( msg == "i16" ) {
-            sys_ufr_load(link, "dcr", "ros_melodic:i16", type, args);
-            ufr_log(link, "loaded decoder ros_melodic:i16");
-        }
-    } else if ( type == UFR_START_PUBLISHER ) {
-        if ( msg == "string" ) {
-            // ufr_enc_ros_noetic_new_string(link, UFR_START_PUBLISHER);
-            // ufr_boot_enc(link, args);
-            sys_ufr_load(link, "enc", "ros_melodic:string", type, args);
-            ufr_log(link, "loaded ros_melodic:string");
-        } else if ( msg == "image" ) {
-            sys_ufr_load(link, "enc", "ros_melodic:image", type, args);
-            ufr_log(link, "loaded ros_melodic:image");
-        } else if ( msg == "pose" ) {
-            sys_ufr_load(link, "enc", "ros_melodic:pose", type, args);
-            ufr_log(link, "loaded ros_melodic:pose");
-        } else if ( msg == "laserscan" ) {
-            sys_ufr_load(link, "enc", "ros_melodic:laserscan", type, args);
-            ufr_log(link, "loaded ros_melodic:laserscan");
-        }
-    }*/
-
     return UFR_OK;
 }
 
@@ -125,9 +123,9 @@ size_t ufr_ros_topic_write(link_t* link, const char* buffer, size_t length) {
 static
 int ufr_ros_topic_recv(link_t* link) {
     if ( link->dcr_api && link->dcr_api->recv_cb ) {
-        link->dcr_api->recv_cb(link, NULL, 0);
+        return link->dcr_api->recv_cb(link, NULL, 0);
     }
-    return UFR_OK;
+    return -1;
 }
 
 static
@@ -253,6 +251,10 @@ int ufr_gtw_ros_melodic_new_topic(link_t* out, int type) {
 int ufr_gtw_ros_melodic_new_socket(link_t* out, int type) {
     ufr_link_init(out, &ufr_ros_melodic_socket_drv);
     return UFR_OK;
+}
+
+int ufr_gtw_ros_melodic_new(link_t* out, int type) {
+    return ufr_gtw_ros_melodic_new_topic(out, type);
 }
 
 }

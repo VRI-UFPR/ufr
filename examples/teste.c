@@ -31,93 +31,37 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+#include <ufr.h>
 #include <unistd.h>
 
-#include "ufr.h"
-
 // ============================================================================
-//  UFR RECV
+//  Main
 // ============================================================================
 
-int ufr_recv_sy2(link_t* link0, link_t* link1, int time_ms) {
-    // check the 2 links
-    uint8_t i = 0;
-    const uint8_t max = 10;
-    const int time_us = time_ms * 1000/max;
-    for(; i<max; i++) {
-        if ( ufr_recv_async(link0) == UFR_OK ) {
-            goto second;
-        }
+int main() {
+    // link_t left = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic left_encoder");
+    // link_t right = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic right_encoder");
+    link_t scan = ufr_subscriber("@new ros_melodic @coder ros_melodic:laserscan @topic scan");
 
-        if ( ufr_recv_async(link1) == UFR_OK ) {
-            goto first;
-        }
+    int left_val, right_val;
+    float a,b,c,d,e,f;
+    while ( ufr_loop_ok() ) {
+        /*if ( ufr_recv_sy2(&left, &right, 100) == UFR_OK ) {
+            ufr_get(&left, "i", left_val);
+            ufr_get(&right, "i", right_val);
+            // printf("%d %d\n", left_val, right_val);
+        } else {
+            printf("opa\n");
+        }*/
 
-        usleep(time_us);
+        if ( ufr_recv_async(&scan) == UFR_OK ) {
+            ufr_get(&scan, "ffffff", &a,&b,&c,&d,&e,&f);
+            printf("opa %f %f %f %f %f %f\n", a,b,c,d,e,f);
+        }
     }
-    goto timeout;
 
-first:
-    do {
-        usleep(time_us);
-        if ( ufr_recv_async(link0) == UFR_OK ) {
-            goto success;
-        }
-    } while ( i < max );
-    goto timeout;
-
-second:
-    do {
-        usleep(time_us);
-        if ( ufr_recv_async(link1) == UFR_OK ) {
-            goto success;
-        }
-    } while ( i < max );
-    goto timeout;
-
-timeout:
-    return -1;
-
-success:
-    return UFR_OK;
+    ufr_close(&scan);
+    // ufr_close(&left);
+    // ufr_close(&right);
+    return 0;
 }
-
-int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms) {
-    // check the 2 links
-    uint8_t i = 0;
-    const uint8_t max = 4;
-    const int time_us = time_ms * 1000/max;
-    for(; i<max; i++) {
-        if ( ufr_recv_async(link0) == UFR_OK ) {
-            return 0;
-        }
-        if ( ufr_recv_async(link1) == UFR_OK ) {
-            return 1;
-        }
-        usleep(time_us);
-    }
-    return -1;
-}
-
-int ufr_recv_as3(link_t* link0, link_t* link1, link_t* link2, int time_ms) {
-    // check the 2 links
-    uint8_t i = 0;
-    const uint8_t max = 4;
-    const int time_us = time_ms * 1000/max;
-    for(; i<max; i++) {
-        if ( ufr_recv_async(link0) == UFR_OK ) {
-            return 0;
-        }
-        if ( ufr_recv_async(link1) == UFR_OK ) {
-            return 1;
-        }
-        if ( ufr_recv_async(link2) == UFR_OK ) {
-            return 2;
-        }
-        usleep(time_us);
-    }
-    return -1;
-}
-

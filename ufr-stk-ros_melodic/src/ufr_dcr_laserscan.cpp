@@ -45,16 +45,10 @@ struct Decoder {
 
     uint8_t m_head;
     uint8_t m_tail;
-    uint8_t m_size;
+    volatile uint8_t m_size;
 
     uint8_t index;
     uint32_t index2;
-
-    union {
-        uint64_t* val_u64;
-        int64_t* val_i64;
-        float* val_f32;
-    };
 
 
     Decoder(Gateway* gtw, const std::string topic_name, int buffer_size) {
@@ -106,11 +100,15 @@ int ufr_dcr_ros_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     while ( dcr->m_size == 0 ) {
         ros::spinOnce();
+        if ( ros::ok() == false ) {
+            return -1;
+        }
     }
 
     dcr->m_message = &dcr->m_stack[ dcr->m_tail ];
     dcr->m_tail = (dcr->m_tail + 1) % MAX;
     dcr->m_size -= 1;
+    dcr->index = 0;
     return UFR_OK;
 }
 
@@ -119,14 +117,17 @@ int ufr_dcr_ros_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
     Gateway* gtw = (Gateway*) link->gtw_obj;
 
+printf("a1\n");
     if ( dcr->m_size == 0 ) {
         ros::spinOnce();
         return -1;
     }
+printf("a2\n");
 
     dcr->m_message = &dcr->m_stack[ dcr->m_tail ];
     dcr->m_tail = (dcr->m_tail + 1) % MAX;
     dcr->m_size -= 1;
+    dcr->index = 0;
     return UFR_OK;
 }
 
@@ -193,10 +194,19 @@ int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val, int nitems) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
     if ( dcr ) {
         
-        
+        switch (dcr->index) {
+            case 0: *val = dcr->m_message->angle_min; dcr->index += 1; break;
+            case 1: *val = dcr->m_message->angle_max; dcr->index += 1; break;
+            case 2: *val = dcr->m_message->angle_increment; dcr->index += 1; break;
+            case 3: *val = dcr->m_message->time_increment; dcr->index += 1; break;
+            case 4: *val = dcr->m_message->scan_time; dcr->index += 1; break;
+            case 5: *val = dcr->m_message->range_min; dcr->index += 1; break;
+            case 6: *val = dcr->m_message->range_max; dcr->index += 1; break;
+            case 7: *val = dcr->m_message->ranges[dcr->index2++]; break;
+            case 8: *val = dcr->m_message->intensities[dcr->index2++]; break;
+            default: break;
+        }
 
-        // update the index
-        dcr->index += 1;
     }
     return 0;
 }
@@ -225,7 +235,7 @@ int ufr_dcr_ros_humble_get_f32(link_t* link, float* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_str(link_t* link, std::string& val) {
+int ufr_dcr_ros_humble_get_str(link_t* link, char* val, int maxbytes) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
     if ( dcr ) {
 
@@ -267,7 +277,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .get_rawptr = NULL,
 
     .get_raw = NULL,
-    .get_str = NULL,
+    .get_str = ufr_dcr_ros_humble_get_str,
 
     .get_u32 = ufr_dcr_ros_humble_get_u32,
     .get_i32 = ufr_dcr_ros_humble_get_i32,
@@ -283,25 +293,13 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 };
 
 // ============================================================================
-//  Image - Public
+//  LaserScan - Public
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_humble_new_laserscan(link_t* link, int type) {
+int ufr_dcr_ros_melodic_new_laserscan(link_t* link, int type) {
     link->dcr_api = &ufr_dcr_ros_driver;
     return UFR_OK;
 }
-
-/* 
-
-  ffffaiia
-      f  i
-      .  .
-      f  i
-
-
-*/
-
-
 
 

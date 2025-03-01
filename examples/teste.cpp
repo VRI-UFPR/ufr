@@ -36,6 +36,12 @@
 
 #include "opencv2/opencv.hpp"
 
+inline
+cv::Mat ufr_get_cv_mat(link_t* link) {
+    Mat image(2, size, CV_8UC1, data, 0);
+    return image;
+}
+
 using namespace std;
 using namespace cv;
 
