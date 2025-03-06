@@ -4,7 +4,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg tf)
 catkin_package()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
-
+include_directories(./src)
 
 # Gateway
 add_library(ufr_gtw_ros_melodic SHARED src/ufr_gtw_ros_melodic.cpp)
