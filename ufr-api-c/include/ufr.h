@@ -546,7 +546,7 @@ int  ufr_log_put_error(link_t* link, int error, const char* func_name, const cha
 #define ufr_log_error(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__);
 
 #define ufr_error(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__)
-#define ufr_fatal(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__); exit(1)
+#define ufr_fatal(link, error, ...) ufr_log_put_fatal(error, __func__, __VA_ARGS__);
 
 // ============================================================================
 //  UFR BUFFER

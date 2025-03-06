@@ -34,34 +34,49 @@
 #include <ufr.h>
 #include <unistd.h>
 
+int ufr_exec(link_t* link, const char* command) {
+    int code;
+    ufr_put(link, "s\n\n", command);
+    ufr_get(link, "^i", &code);
+    return code;
+}
+
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    // link_t left = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic left_encoder");
-    // link_t right = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic right_encoder");
-    link_t scan = ufr_subscriber("@new ros_melodic @coder ros_melodic:laserscan @topic scan");
+    link_t db = ufr_client("@new sqlite @file development.sqlite3 @table departments");
 
-    int left_val, right_val;
-    float a,b,c,d,e,f;
-    while ( ufr_loop_ok() ) {
-        /*if ( ufr_recv_sy2(&left, &right, 100) == UFR_OK ) {
-            ufr_get(&left, "i", left_val);
-            ufr_get(&right, "i", right_val);
-            // printf("%d %d\n", left_val, right_val);
-        } else {
-            printf("opa\n");
-        }*/
+    int res = ufr_exec(&db, "select * from departments");
 
-        if ( ufr_recv_async(&scan) == UFR_OK ) {
-            ufr_get(&scan, "ffffff", &a,&b,&c,&d,&e,&f);
-            printf("opa %f %f %f %f %f %f\n", a,b,c,d,e,f);
-        }
-    }
 
-    ufr_close(&scan);
-    // ufr_close(&left);
-    // ufr_close(&right);
-    return 0;
+    ufr_close(&db);
 }
+
+
+/*
+
+
+Shell de Base de Dados (python)
+  - ls, echo, 
+
+  HTTP e Shell
+       |
+       | ZMQ (Client)
+       |
+   IA da UFPR (recebe NL e converte para instrucoes) (python)
+       |
+       | ZMQ (login, socket)
+       |   - comandos simples e fixos.  
+       |   - crie departamento %s
+       |   - crie usuario
+       |   - 
+       |
+Aplicativo de Base de Dados (C)
+       |
+   PostgreSQL ou SQLite3
+
+
+
+*/

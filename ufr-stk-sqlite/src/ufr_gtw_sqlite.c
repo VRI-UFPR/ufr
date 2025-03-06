@@ -163,7 +163,7 @@ size_t ufr_gtw_sqlite_write(link_t* link, const char* buffer, size_t size) {
 
 static
 ufr_gtw_api_t ufr_gtw_sqlite_api = {
-    .name = "sqlite/client",
+    .name = "sqlite/topico",
 	.type = ufr_gtw_sqlite_type,
 	.state = ufr_gtw_sqlite_state,
 	.size = ufr_gtw_sqlite_size,
@@ -290,6 +290,7 @@ size_t ufr_gtw_sqlite_client_write(link_t* link, const char* buffer, size_t size
     char command[512];
     for (int ir=0; ir<512; ir++) {
         const char c = buffer[ir];
+printf("%c\n", c);
         if ( c == '\0' || c == '\n' || c == ' ' ) {
             command[iw++] = '\0';
             break;
@@ -326,7 +327,7 @@ size_t ufr_gtw_sqlite_client_write(link_t* link, const char* buffer, size_t size
 
     // Error
     } else {
-        return ufr_error(link, -1, "Command not valid");
+        return ufr_error(link, -1, "Command %s not valid", command);
     }
 
     /*

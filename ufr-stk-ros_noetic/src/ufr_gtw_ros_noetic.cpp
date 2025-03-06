@@ -31,17 +31,42 @@
 
 #include <memory>
 #include <ufr.h>
+#include <ros/ros.h>
+#include <ros/topic.h>
 
 #include "ufr_gtw_ros_noetic.hpp"
 
-size_t g_ros_count = 0;
+int g_ros_count = 0;
 
-// int sys_ufr_load (link_t* link, const char* library_type, 
-//    const char* class_path, int boot_type, const ufr_args_t* args);
+Gateway* g_gtw = NULL;
 
 // ======================================================================================
-//  Subscribe
+//  Private
 // ======================================================================================
+
+
+const char* get_last_component(const char* path) {
+    // Encontra a última barra '/' no caminho
+    const char* last_slash = strrchr(path, '/');
+
+    // Se não houver barra, o caminho já é o nome do arquivo/diretório
+    if (last_slash == NULL) {
+        return path;
+    }
+
+    // Retorna a substring [1] após a última barra
+    return &last_slash[1];
+}
+
+// ======================================================================================
+//  Topic
+// ======================================================================================
+
+static
+int ufr_ros_loop_cb(void) {
+    const bool res = ros::ok();
+    return (res) ? UFR_OK : 1;
+}
 
 int ufr_ros_topic_type(const link_t* link) {
     return 0;
@@ -57,54 +82,34 @@ size_t ufr_ros_topic_size(const link_t* link, int type) {
 
 int ufr_ros_topic_boot(link_t* link, const ufr_args_t* args) {
     if ( g_ros_count == 0 ) {
-        ufr_info(link, "ROS Noetic start");
+        const char* command = getenv("_");
+        const char* command_name = get_last_component(command);
         int argc = 1;
-        char *argv[] = {"./node", NULL};
-        ros::init(argc, argv, "node");
+        const char* argv[] = {command};
+        ros::init(argc, (char**) argv, command_name);
+        ufr_loop_put_callback( ufr_ros_loop_cb );
+        ufr_log(link, "ROS Node (%s) initialized", command_name);
+        g_gtw = new Gateway();
     }
+
     g_ros_count += 1;
+    link->gtw_obj = g_gtw;
 
-    Gateway* gtw = new Gateway();
-    link->gtw_obj = gtw;
-
+    // success
     return UFR_OK;
 }
 
 int ufr_ros_topic_start(link_t* link, int type, const ufr_args_t* args) {
-    std::string msg = ufr_args_gets(args, "@msg", "");
-
-    if ( type == UFR_START_SUBSCRIBER ) {
-
-    } else if ( type == UFR_START_PUBLISHER ) {
-        if ( msg == "string" ) {
-            ufr_enc_ros_noetic_new_string(link, UFR_START_PUBLISHER);
-            ufr_boot_enc(link, args);
-            // sys_ufr_load(link, "enc", "ros_noetic:string", UFR_START_PUBLISHER, args);
-            ufr_log(link, "loaded ros_noetic:string");
-        } else if ( msg == "twist" ) {
-            ufr_enc_ros_noetic_new_twist(link, UFR_START_PUBLISHER);
-            ufr_boot_enc(link, args);
-            ufr_log(link, "loaded ros_noetic:twist");
-        } else if ( msg == "laserscan" ) {
-            ufr_enc_ros_noetic_new_laserscan(link, UFR_START_PUBLISHER);
-            ufr_boot_enc(link, args);
-            ufr_log(link, "loaded ros_noetic:laserscan");
-        }
-    }
     return UFR_OK;
 }
 
 void ufr_ros_topic_stop(link_t* link, int type) {
-    if ( g_ros_count <= 1 ) {
-        g_ros_count = 0;
-    } else {
-        g_ros_count -= 1;
-    }
+    
 }
 
 static
 size_t ufr_ros_topic_read(link_t* link, char* buffer, size_t length) {
-	return 0;
+    return 0;
 }
 
 static
@@ -114,24 +119,30 @@ size_t ufr_ros_topic_write(link_t* link, const char* buffer, size_t length) {
 
 static
 int ufr_ros_topic_recv(link_t* link) {
-    link->dcr_api->recv_cb(link, NULL, 0U);
-    return true;
+    if ( link->dcr_api && link->dcr_api->recv_cb ) {
+        return link->dcr_api->recv_cb(link, NULL, 0);
+    }
+    return -1;
 }
 
 static
 int ufr_ros_topic_recv_async(link_t* link) {
-    link->dcr_api->recv_async_cb(link, NULL, 0U);
-    return true;
+    if ( link->dcr_api && link->dcr_api->recv_cb ) {
+        return link->dcr_api->recv_async_cb(link, NULL, 0);
+    }
+    return -1;
 }
 
+static
 ufr_gtw_api_t ufr_ros_noetic_topic_drv = {
-    .name = "ROS:Topic",
+    .name = "ROS/Noetic:Topic",
     .type = ufr_ros_topic_type,
     .state = ufr_ros_topic_state,
     .size = ufr_ros_topic_size,
     .boot = ufr_ros_topic_boot,
     .start = ufr_ros_topic_start,
     .stop = ufr_ros_topic_stop,
+    .copy = NULL,
     .read = ufr_ros_topic_read,
     .write = ufr_ros_topic_write,
     .recv = ufr_ros_topic_recv,
@@ -139,11 +150,18 @@ ufr_gtw_api_t ufr_ros_noetic_topic_drv = {
 };
 
 // ======================================================================================
-//  Constructors
+//  Public Constructors
 // ======================================================================================
 
-extern "C"
+extern "C" {
+
 int ufr_gtw_ros_noetic_new_topic(link_t* out, int type) {
-    out->gtw_api = &ufr_ros_noetic_topic_drv;
+    ufr_link_init(out, &ufr_ros_noetic_topic_drv);
     return UFR_OK;
+}
+
+int ufr_gtw_ros_noetic_new(link_t* out, int type) {
+    return ufr_gtw_ros_noetic_new_topic(out, type);
+}
+
 }

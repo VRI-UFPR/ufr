@@ -37,7 +37,7 @@
 
 #include "ufr.h"
 
-uint8_t g_default_log_level = 2;
+uint8_t g_default_log_level = 5;
 volatile bool g_is_ok = true;
 
 typedef int (*loop_callback)(void);
@@ -343,6 +343,9 @@ int ufr_app_open(link_t* link, const char* name, int type) {
 
         if ( strcmp(name, g_app_root[i].name) == 0 ) {
 printf("%s %s\n", name, g_app_root[i].args.text); // debug
+            /*if ( type == UFR_START_SUBSCRIBER ) {
+                
+            }*/
             // return sys_ufr_new_link(link, type, &g_app_root[i].args);
             return -1;
         }
@@ -410,12 +413,27 @@ int ufr_log_put_error(link_t* link, int error, const char* func_name, const char
     return error;
 }
 
+void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...) {
+    // copy the error message in the link buffer
+    va_list list;
+    va_start(list, format);
+
+    // show the debug
+    fprintf(stderr, "\x1B[31m# erro: %s\033[0m: ", func_name);
+    vfprintf(stderr, format, list);
+    fprintf(stderr, "\n");
+
+    va_end(list);
+    exit(error);
+}
+
 // ============================================================================
 //  UFR
 // ============================================================================
 
 link_t ufr_subscriber(const char* format, ...) {
     link_t link;
+    ufr_link_init(&link, NULL);
 
     // load variable arguments to args
     ufr_args_t args;
@@ -430,14 +448,14 @@ link_t ufr_subscriber(const char* format, ...) {
     if ( func_gtw_new == NULL ) {
         ufr_fatal(&link, 1, "erro1");
     }
-    if ( link.gtw_api == NULL ) {
-        ufr_fatal(&link, 1, "erro2");
-    }
     if ( func_gtw_new(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro2");
     }
-    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+    if ( link.gtw_api == NULL ) {
         ufr_fatal(&link, 1, "erro3");
+    }
+    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro4");
     }
 
     // Prepare Decoder
@@ -448,12 +466,12 @@ link_t ufr_subscriber(const char* format, ...) {
             ufr_dcr_sys_new_std(&link, UFR_START_SUBSCRIBER);
         } else {
             if ( func_dcr_new(&link, UFR_START_SUBSCRIBER) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro4");
+                ufr_fatal(&link, 1, "erro5");
             }
         }
         if ( link.dcr_api->boot != NULL ) {
             if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro5");
+                ufr_fatal(&link, 1, "erro6");
             }
         }
     }
@@ -462,7 +480,7 @@ link_t ufr_subscriber(const char* format, ...) {
     ufr_log(&link, "starting the link");
     if ( link.gtw_api->start != NULL ) {
         if ( link.gtw_api->start(&link, UFR_START_SUBSCRIBER, &args) != UFR_OK ) {
-            ufr_fatal(&link, 1, "erro6");
+            ufr_fatal(&link, 1, "erro7");
         }
     }
 
@@ -519,10 +537,126 @@ link_t ufr_publisher(const char* format, ...) {
 
 link_t ufr_client(const char* format, ...) {
     link_t link;
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Prepare Gateway
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "gtw", "@new", NULL);
+    if ( func_gtw_new == NULL ) {
+        ufr_fatal(&link, 1, "erro1");
+    }
+    if ( func_gtw_new(&link, UFR_START_CLIENT) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro2");
+    }
+    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    // Prepare Decoder
+    if ( link.dcr_api == NULL ) {
+        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
+        if ( func_dcr_new == NULL ) {
+            ufr_dcr_sys_new_std(&link, UFR_START_CLIENT);
+        } else {
+            if ( func_dcr_new(&link, UFR_START_CLIENT) != UFR_OK ) {
+                ufr_fatal(&link, 1, "erro4");
+            }
+        }
+
+        if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
+            ufr_fatal(&link, 1, "erro5");
+        }
+    }
+
+    // Prepare Encoder
+    if ( link.enc_api == NULL ) {
+        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(&args, "enc", "@coder", NULL);
+        if ( func_enc_new == NULL ) {
+            ufr_enc_sys_new_std(&link, UFR_START_CLIENT);
+        } else {
+            if ( func_enc_new(&link, UFR_START_CLIENT) != UFR_OK ) {
+                ufr_fatal(&link, 1, "erro4");
+            }
+        }
+
+        if ( link.enc_api->boot(&link, &args) != UFR_OK ) {
+            ufr_fatal(&link, 1, "erro5");
+        }
+    }
+
+    // start
+    if ( link.gtw_api->start(&link, UFR_START_CLIENT, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro6");
+    }
+
+    // success
     return link;
 }
 
 link_t ufr_server_st(const char* format, ...) {
     link_t link;
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Prepare Gateway
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "gtw", "@new", NULL);
+    if ( func_gtw_new == NULL ) {
+        ufr_fatal(&link, 1, "erro1");
+    }
+    if ( func_gtw_new(&link, UFR_START_SERVER) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro2");
+    }
+    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro3");
+    }
+
+    // Prepare Decoder
+    if ( link.dcr_api == NULL ) {
+        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
+        if ( func_dcr_new == NULL ) {
+            ufr_dcr_sys_new_std(&link, UFR_START_SERVER);
+        } else {
+            if ( func_dcr_new(&link, UFR_START_SERVER) != UFR_OK ) {
+                ufr_fatal(&link, 1, "erro4");
+            }
+        }
+
+        if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
+            ufr_fatal(&link, 1, "erro5");
+        }
+    }
+
+    // Prepare Encoder
+    if ( link.enc_api == NULL ) {
+        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(&args, "enc", "@coder", NULL);
+        if ( func_enc_new == NULL ) {
+            ufr_enc_sys_new_std(&link, UFR_START_SERVER);
+        } else {
+            if ( func_enc_new(&link, UFR_START_SERVER) != UFR_OK ) {
+                ufr_fatal(&link, 1, "erro4");
+            }
+        }
+
+        if ( link.enc_api->boot(&link, &args) != UFR_OK ) {
+            ufr_fatal(&link, 1, "erro5");
+        }
+    }
+
+    // start
+    if ( link.gtw_api->start(&link, UFR_START_SERVER, &args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro6");
+    }
+
+    // success
     return link;
 }

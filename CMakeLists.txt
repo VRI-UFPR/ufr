@@ -66,7 +66,7 @@ endif(BUILD_UFR_CDR_MSGPACK)
 
 if(BUILD_UFR_STK_SQLITE)
     # debian/ubuntu: sudo apt install libsqlite3-dev
-    # add_subdirectory(./ufr-stk-sqlite)
+    add_subdirectory(./ufr-stk-sqlite)
 endif(BUILD_UFR_STK_SQLITE)
 
 # Build examples

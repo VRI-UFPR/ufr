@@ -134,3 +134,23 @@ ufr_enc_api_t ufr_enc_sqlite_api = {
     .enter = ufr_enc_sqlite_enter,
     .leave = ufr_enc_sqlite_leave
 };
+
+
+/*
+
+database-client
+  int code = ufr_exec("select * from table id=%s", "sss")
+  if ( code != 0 ) {
+    error  
+  }
+
+  while() {
+    ufr_get("^s", buffer);
+    printf("%s\n", buffer);
+  }
+
+shell-client
+  ufr_exec("ls -l %s", "../")
+
+
+*/
