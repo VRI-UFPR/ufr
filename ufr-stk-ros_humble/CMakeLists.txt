@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(ufr-stk-ros_humble)
 
+include_directories(./src)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -39,11 +41,11 @@ install(TARGETS ufr_gtw_ros_humble DESTINATION lib)
 
 # Encoder
 add_library(ufr_enc_ros_humble SHARED 
-    src/ufr_enc_string.cpp
-    src/ufr_enc_pose.cpp
-    src/ufr_enc_image.cpp
-    src/ufr_enc_twist.cpp
-    src/ufr_enc_laserscan.cpp
+    src/std_msgs/ufr_enc_string.cpp
+    src/geometry_msgs/ufr_enc_pose.cpp
+    src/geometry_msgs/ufr_enc_twist.cpp
+    src/sensor_msgs/ufr_enc_image.cpp
+    src/sensor_msgs/ufr_enc_laserscan.cpp
     )
 ament_target_dependencies(ufr_enc_ros_humble rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
 target_link_libraries(ufr_enc_ros_humble ufr)
@@ -51,11 +53,11 @@ install(TARGETS ufr_enc_ros_humble DESTINATION lib)
 
 # Decoder
 add_library(ufr_dcr_ros_humble SHARED
-    src/ufr_dcr_string.cpp
-    src/ufr_dcr_pose.cpp
-    src/ufr_dcr_image.cpp
-    src/ufr_dcr_twist.cpp
-    src/ufr_dcr_laserscan.cpp
+    src/std_msgs/ufr_dcr_string.cpp
+    src/geometry_msgs/ufr_dcr_pose.cpp
+    src/geometry_msgs/ufr_dcr_twist.cpp
+    src/sensor_msgs/ufr_dcr_image.cpp
+    src/sensor_msgs/ufr_dcr_laserscan.cpp
     )
 ament_target_dependencies(ufr_dcr_ros_humble rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
 target_link_libraries(ufr_dcr_ros_humble ufr)

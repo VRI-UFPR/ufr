@@ -46,12 +46,19 @@ int ufr_exec(link_t* link, const char* command) {
 // ============================================================================
 
 int main() {
-    link_t db = ufr_client("@new sqlite @file development.sqlite3 @table departments");
-
+    /*link_t db = ufr_client("@new sqlite @file development.sqlite3 @table departments");
     int res = ufr_exec(&db, "select * from departments");
+    ufr_close(&db);*/
 
+    link_t motors = ufr_subscriber("@new ros_humble @coder ros_humble:twist @topic cmd_vel");
+    while ( ufr_loop_ok() ) {
+        float vel1, vel2;
+        ufr_get(&motors, "^ff", &vel1, &vel2);
+        printf("%f %f\n", vel1, vel2);
+    }
 
-    ufr_close(&db);
+    ufr_close(&motors);
+    return 0;
 }
 
 

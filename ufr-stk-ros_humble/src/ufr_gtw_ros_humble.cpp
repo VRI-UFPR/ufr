@@ -140,8 +140,10 @@ size_t ufr_ros_topic_write(link_t* link, const char* buffer, size_t length) {
 
 static
 int ufr_ros_topic_recv(link_t* link) {
-    link->dcr_api->recv_cb(link, NULL, 0U);
-    return UFR_OK;
+    if ( link && link->dcr_api && link->dcr_api->recv_cb ) {
+        return link->dcr_api->recv_cb(link, NULL, 0U);
+    }
+    return -1;
 }
 
 static
@@ -173,12 +175,12 @@ ufr_gtw_api_t ufr_ros_humble_topic_drv = {
 
 extern "C"
 int ufr_gtw_ros_humble_new_topic(link_t* out, int type) {
-    out->gtw_api = &ufr_ros_humble_topic_drv;
+    ufr_link_init(out, &ufr_ros_humble_topic_drv);
     return UFR_OK;
 }
 
 extern "C"
 int ufr_gtw_ros_humble_new(link_t* out, int type) {
-    out->gtw_api = &ufr_ros_humble_topic_drv;
+    ufr_link_init(out, &ufr_ros_humble_topic_drv);
     return UFR_OK;
 }
