@@ -362,6 +362,8 @@ int ufr_recv_sy3(link_t* link0, link_t* link1, link_t link2, int time_ms);
  * @param link 
  * @return int 
  */
+
+int ufr_recv_async(link_t* link);
 int ufr_recv_as(link_t* link);
 int ufr_recv_as1(link_t* link);
 int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms);
