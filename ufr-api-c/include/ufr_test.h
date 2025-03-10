@@ -2,6 +2,7 @@
  * 
  * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
  *  - Felipe Bombardelli <felipebombardelli@gmail.com>
+ *  - Dayane O. de Carvalho <dayaneoliveira.eng@gmail.com>
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

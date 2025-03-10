@@ -367,10 +367,14 @@ ufr_gtw_api_t ufr_gtw_sqlite_client_api = {
 int ufr_gtw_sqlite_new(link_t* link, int type) {
     if (type == UFR_START_CLIENT ) {
         ufr_link_init(link, &ufr_gtw_sqlite_client_api);
+    } else if (type == UFR_START_SUBSCRIBER ) {
+        ufr_link_init(link, &ufr_gtw_sqlite_api);
+        ufr_dcr_sqlite_new_table(link, type);
+    } else if (type == UFR_START_PUBLISHER ) {
+        ufr_link_init(link, &ufr_gtw_sqlite_api);
+        ufr_enc_sqlite_new(link, type);
     } else {
-        ufr_fatal(link, 1, "Tipo invalido");
+        return ufr_error(link, 1, "Tipo invalido");
     }
-    // link->dcr_api = &ufr_dcr_sqlite_api;
-    // link->enc_api = &ufr_enc_sqlite_api;
 	return UFR_OK;
 }
