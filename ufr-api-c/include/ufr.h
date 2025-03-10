@@ -71,6 +71,8 @@
 extern "C" {
 #endif
 
+struct _link;
+
 // ============================================================================
 //  UFR ARGS
 // ============================================================================
@@ -85,6 +87,7 @@ typedef union {
 	double      f64;
 	void*       ptr;
 	char const* str;
+    int         (*func)(struct _link*, int);
 } item_t;
 
 // 64 bytes for #64
@@ -96,8 +99,6 @@ typedef struct {
 // ============================================================================
 //  API
 // ============================================================================
-
-struct _link;
 
 typedef struct {
 	const char* name;
@@ -272,6 +273,7 @@ void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
  * @return link_t opened link
  */
 link_t ufr_publisher(const char* text, ...);
+int ufr_publisher_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new subscriber 
@@ -280,6 +282,7 @@ link_t ufr_publisher(const char* text, ...);
  * @return link_t 
  */
 link_t ufr_subscriber(const char* text, ...);
+int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a link as client

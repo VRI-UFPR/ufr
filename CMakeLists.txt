@@ -56,7 +56,7 @@ endif(BUILD_UFR_GTW_ZMQ)
 
 if(BUILD_UFR_GTW_MQTT)
     # debian/ubuntu: sudo apt install libmosquitto-dev
-    # add_subdirectory(./ufr-gtw-mqtt)
+    add_subdirectory(./ufr-gtw-mqtt)
 endif(BUILD_UFR_GTW_MQTT)
 
 if(BUILD_UFR_CDR_MSGPACK)

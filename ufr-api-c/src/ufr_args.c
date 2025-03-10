@@ -239,8 +239,8 @@ const void* ufr_args_getp(const ufr_args_t* args, const char* noun, const void* 
 
 const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* default_value) {
     static uint8_t shared_i = 0;
-    const uint8_t shared_max = 8;
-    static char shared_data[8][128];
+    const uint8_t shared_max = 4;
+    static char shared_data[4][64];
 
     char token[512];
     uint8_t  count_arg = 0;
@@ -299,12 +299,16 @@ void* ufr_args_getfunc(const ufr_args_t* args, const char* type, const char* nou
                     return default_value;
                 }
             } else {
+#if __linux__
                 char dl_name[512];
                 char dl_class[512];
                 uint16_t dl_cursor = 0;
                 ufr_args_flex_div(token, &dl_cursor, dl_name, sizeof(dl_name), ':');
                 ufr_args_flex_div(token, &dl_cursor, dl_class, sizeof(dl_class), ':');
                 return ufr_linux_load_library(type, dl_name, dl_class);
+#else
+                return NULL;
+#endif
             }
         }
     }
