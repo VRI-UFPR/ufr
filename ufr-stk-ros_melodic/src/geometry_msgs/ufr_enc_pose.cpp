@@ -54,9 +54,11 @@ struct Encoder {
 
 static
 int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
-    std::string frame_id = ufr_args_gets(args, "@frame", "frame");
-    std::string child_frame_id = ufr_args_gets(args, "@child", "child");
+    char buffer[UFR_ARGS_TOKEN];
+
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
+    std::string frame_id = ufr_args_gets(args, buffer, "@frame", "frame");
+    std::string child_frame_id = ufr_args_gets(args, buffer, "@child", "child");
 
     Encoder* enc = new Encoder();
     enc->frame_id = frame_id;

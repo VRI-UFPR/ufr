@@ -56,7 +56,8 @@ int ufr_enc_csv_boot(link_t* link, const ufr_args_t* args) {
     }
 
     // fill the encoder data
-    const char* sep = ufr_args_gets(args, "@sep", ",");
+    char buffer[UFR_ARGS_TOKEN];
+    const char* sep = ufr_args_gets(args, buffer, "@sep", ",");
     enc_obj->sep = sep[0];
     link->enc_obj = enc_obj;
     return UFR_OK;

@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -52,8 +52,10 @@ const size_t g_translation[6] = {
 
 static
 int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
+    char buffer[UFR_ARGS_TOKEN];
+
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_decoder_t* dcr_obj = new ll_decoder_t(gtw_obj, topic_name);
 
     link->dcr_obj = dcr_obj;

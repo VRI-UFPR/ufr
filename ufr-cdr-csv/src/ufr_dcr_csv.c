@@ -23,7 +23,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -91,7 +91,8 @@ int ufr_dcr_csv_boot(link_t* link, const ufr_args_t* args) {
     }
 
     // prepare the decoder
-    const char* sep = ufr_args_gets(args, "@sep", ",");
+    char buffer[UFR_ARGS_TOKEN];
+    const char* sep = ufr_args_gets(args, buffer, "@sep", ",");
     decoder->sep = sep[0];
     link->dcr_obj = (void*) decoder;
     return UFR_OK;

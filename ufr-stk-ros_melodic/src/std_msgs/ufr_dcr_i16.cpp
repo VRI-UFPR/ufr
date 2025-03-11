@@ -75,7 +75,8 @@ struct Decoder {
 
 static
 int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
-    const std::string topic_name = ufr_args_gets(args, "@topic", "topic");
+    char buffer[UFR_ARGS_TOKEN];
+    const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
 
     Gateway* gtw = (Gateway*) link->gtw_obj;
     Decoder* dcr = new Decoder(gtw, topic_name, 50);

@@ -39,16 +39,17 @@
 // ============================================================================
 
 int main() {
-    link_t left = ufr_subscriber("@new ros_noetic @coder ros_noetic:i16 @topic left_encoder");
-    link_t right = ufr_subscriber("@new ros_noetic @coder ros_noetic:i16 @topic right_encoder");
-    link_t scan = ufr_subscriber("@new ros_noetic @coder ros_noetic:laserscan @topic scan");
-    link_t us1 = ufr_subscriber("@new ros_noetic @coder ros_noetic:range @topic us1_urm");
+    link_t left = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic left_encoder");
+    link_t right = ufr_subscriber("@new ros_melodic @coder ros_melodic:i16 @topic right_encoder");
+    link_t scan = ufr_subscriber("@new ros_melodic @coder ros_melodic:laserscan @topic scan");
+    link_t us1 = ufr_subscriber("@new ros_melodic @coder ros_melodic:range @topic us1_urm");
 
-    link_t imu = ufr_subscriber("@new ros_noetic @coder ros_noetic:imu @topic imu/data");
-    link_t gps = ufr_subscriber("@new ros_noetic @coder ros_noetic:navsatfix @topic gps_neo8m");
+    link_t imu = ufr_subscriber("@new ros_melodic @coder ros_melodic:imu @topic imu/data");
+    link_t gps = ufr_subscriber("@new ros_melodic @coder ros_melodic:navsatfix @topic gps_neo8m");
 
-    link_t rgb = ufr_subscriber("@new ros_noetic @coder ros_noetic:image @topic /camera/rgb/image_color");
-    link_t depth = ufr_subscriber("@new ros_noetic @coder ros_noetic:image @topic /camera/depth/image");
+    // link_t rgb = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic /camera/rgb/image_color");
+    // link_t depth = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic /camera/depth/image");
+    // link_t saida = ufr_publisher("@new posix:file @coder csv @file saida.csv");
 
     int left_val, right_val;
     float a,b,c,d,e,f;
@@ -64,13 +65,15 @@ int main() {
             printf("opa\n");
         }*/
 
-        if ( ufr_recv_async(&gps) == UFR_OK ) {
+        /*if ( ufr_recv_async(&gps) == UFR_OK ) {
             int status, service;
             float lat, log, alt;
             ufr_get(&gps, "iifff", &status, &service, &lat, &log, &alt);
-            printf("gps %d %d %f %f %f\n", status, service, lat, log, alt);
-        }
+            // printf("gps %d %d %f %f %f\n", status, service, lat, log, alt);
+            printf("gps, %f, %f\n", lat, log);
+        }*/
 
+/*
         if ( ufr_recv_async(&rgb) == UFR_OK ) {
             int height, width, step;
             ufr_get(&rgb, "iii", &height, &width, &step);
@@ -83,34 +86,34 @@ int main() {
             ufr_get(&depth, "iii", &height, &width, &step);
             printf("depth %d %d %d\n", height, width, step);
             // salvar em jpeg
-        }
+        }*/
 
-        if ( ufr_recv_async(&imu) == UFR_OK ) {
+        /*if ( ufr_recv_async(&imu) == UFR_OK ) {
             float x,y,z,w;
             ufr_get(&imu, "ffff", &x,&y,&z,&w);
-            printf("imu %f %f %f %f\n", x, y, z, w);
+            printf("imu, %f, %f, %f, %f\n", x, y, z, w);
             // salvar em jpeg
-        }
+        }*/
 
         if ( ufr_recv_async(&left) == UFR_OK ) {
             ufr_get(&left, "i", &left_val);
-            // printf("left %d\n", left_val);
+            printf("left_encoder, %d\n", left_val);
         }
 
         if ( ufr_recv_async(&right) == UFR_OK ) {
             ufr_get(&right, "i", &right_val);
-            // printf("right %d\n", right_val);
+            printf("right_encoder, %d\n", right_val);
         }
 
         if ( ufr_recv_async(&scan) == UFR_OK ) {
             ufr_get(&scan, "ffffff", &a,&b,&c,&d,&e,&f);
-            // printf("scan %f %f %f %f %f %f\n", a,b,c,d,e,f);
+            printf("scan, %f, %f, %f, %f, %f, %f\n", a,b,c,d,e,f);
         }
 
         if ( ufr_recv_async(&us1) == UFR_OK ) {
             int type;
             ufr_get(&us1, "iffff", &type, &a, &b, &c, &d);
-            // printf("us1 %d %f %f %f %f\n", type, a, b, c, d);
+            printf("us1, %d, %f, %f, %f, %f\n", type, a, b, c, d);
         }
     }
 

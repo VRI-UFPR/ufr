@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -67,7 +67,8 @@ size_t ufr_zmq_size(const link_t* link, int type) {
 
 int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
     // get optional parameter context
-    const char* host = ufr_args_gets(args, "@host", "127.0.0.1");
+    char buffer[UFR_ARGS_TOKEN];
+    const char* host = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
 
     // get optional parameter context
     void* context = (void*) ufr_args_getp(args, "@context", NULL);
@@ -82,14 +83,14 @@ int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
     // get optional parameter port
     const uint32_t port = ufr_args_geti(args, "@port", 5000);
 
-	// prepare shared data with the socket parameters
-	const size_t host_str_len = strlen(host);
-	ll_shr_t* shr = malloc( sizeof(ll_shr_t) + host_str_len + 1 );
+    // prepare shared data with the socket parameters
+    const size_t host_str_len = strlen(host);
+    ll_shr_t* shr = malloc( sizeof(ll_shr_t) + host_str_len + 1 );
     if ( shr == NULL ) {
         return ufr_error(link, ENOMEM, "%s", strerror(ENOMEM));
     }
-	shr->context = context;
-	shr->port = port;
+    shr->context = context;
+    shr->port = port;
     strcpy(shr->host, host);
 
     // prepare the gateway object

@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -237,12 +237,8 @@ const void* ufr_args_getp(const ufr_args_t* args, const char* noun, const void* 
     return default_value;
 }
 
-const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* default_value) {
-    static uint8_t shared_i = 0;
-    const uint8_t shared_max = 4;
-    static char shared_data[4][64];
-
-    char token[512];
+const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun, const char* default_value) {
+    char token[UFR_ARGS_TOKEN];
     uint8_t  count_arg = 0;
     uint16_t cursor = 0;
     while( ufr_args_flex(args->text, &cursor, token, sizeof(token)) ) {
@@ -264,10 +260,8 @@ const char* ufr_args_gets(const ufr_args_t* args, const char* noun, const char* 
                     return default_value;
                 }
             } else {
-                char* retval = &shared_data[shared_i][0];
-                shared_i = (shared_i+1) % shared_max;
-                strcpy(retval, token);
-                return retval;
+                strcpy(buffer, token);
+                return buffer;
             }
         }
     }
