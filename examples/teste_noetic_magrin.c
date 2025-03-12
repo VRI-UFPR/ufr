@@ -47,8 +47,10 @@ int main() {
     link_t imu = ufr_subscriber("@new ros_melodic @coder ros_melodic:imu @topic imu/data");
     link_t gps = ufr_subscriber("@new ros_melodic @coder ros_melodic:navsatfix @topic gps_neo8m");
 
-    // link_t rgb = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic /camera/rgb/image_color");
-    // link_t depth = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic /camera/depth/image");
+    link_t rgb = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic camera_rgb");
+    link_t depth = ufr_subscriber("@new ros_melodic @coder ros_melodic:image @topic camera_depth");
+
+
     // link_t saida = ufr_publisher("@new posix:file @coder csv @file saida.csv");
 
     int left_val, right_val;
@@ -95,6 +97,7 @@ int main() {
             // salvar em jpeg
         }*/
 
+/*
         if ( ufr_recv_async(&left) == UFR_OK ) {
             ufr_get(&left, "i", &left_val);
             printf("left_encoder, %d\n", left_val);
@@ -115,6 +118,8 @@ int main() {
             ufr_get(&us1, "iffff", &type, &a, &b, &c, &d);
             printf("us1, %d, %f, %f, %f, %f\n", type, a, b, c, d);
         }
+*/
+
     }
 
     ufr_close(&scan);

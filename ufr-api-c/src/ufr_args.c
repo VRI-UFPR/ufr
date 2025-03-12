@@ -34,9 +34,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdarg.h>
 
-#include "ufr.h"
-
+#include "ufr_args.h"
 
 void* ufr_linux_load_library(const char* type, const char* name, const char* classname);
 
@@ -294,12 +294,15 @@ void* ufr_args_getfunc(const ufr_args_t* args, const char* type, const char* nou
                 }
             } else {
 #if __linux__
+/*
                 char dl_name[512];
                 char dl_class[512];
                 uint16_t dl_cursor = 0;
                 ufr_args_flex_div(token, &dl_cursor, dl_name, sizeof(dl_name), ':');
                 ufr_args_flex_div(token, &dl_cursor, dl_class, sizeof(dl_class), ':');
                 return ufr_linux_load_library(type, dl_name, dl_class);
+*/
+                return NULL;
 #else
                 return NULL;
 #endif

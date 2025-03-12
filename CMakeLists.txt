@@ -99,6 +99,7 @@ add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
 add_subdirectory(./ufr-dev-camera)
+add_subdirectory(./cv_mat)
 
 
 # install(FILES ./etc/init.bash DESTINATION .)

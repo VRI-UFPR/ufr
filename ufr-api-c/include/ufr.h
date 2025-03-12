@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -79,14 +79,14 @@ struct _link;
 
 // 8 bytes
 typedef union {
-	uint32_t    u32;
-	uint64_t    u64;
-	int32_t     i32;
-	int32_t     i64;
-	float       f32;
-	double      f64;
-	void*       ptr;
-	char const* str;
+    uint32_t    u32;
+    uint64_t    u64;
+    int32_t     i32;
+    int32_t     i64;
+    float       f32;
+    double      f64;
+    void*       ptr;
+    char const* str;
     int         (*func)(struct _link*, int);
 } item_t;
 
@@ -101,26 +101,26 @@ typedef struct {
 // ============================================================================
 
 typedef struct {
-	const char* name;
+    const char* name;
 
-	// incerto
-	int    (*type)(const struct _link* link);  // remover
-	int    (*state)(const struct _link* link); // remover
-	size_t (*size)(const struct _link* link, int type); // remover
+    // incerto
+    int    (*type)(const struct _link* link);  // remover
+    int    (*state)(const struct _link* link); // remover
+    size_t (*size)(const struct _link* link, int type); // remover
 
-	// certo
-	int  (*boot)(struct _link* link, const ufr_args_t* args);
-	int  (*start)(struct _link* link, int type, const ufr_args_t* args);
-	void (*stop)(struct _link* link, int type);
-	int  (*copy)(struct _link* link, struct _link* out);
+    // certo
+    int  (*boot)(struct _link* link, const ufr_args_t* args);
+    int  (*start)(struct _link* link, int type, const ufr_args_t* args);
+    void (*stop)(struct _link* link, int type);
+    int  (*copy)(struct _link* link, struct _link* out);
 
-	// certo
-	size_t (*read)(struct _link* link, char* buffer, size_t length);
-	size_t (*write)(struct _link* link, const char* buffer, size_t length);
+    // certo
+    size_t (*read)(struct _link* link, char* buffer, size_t length);
+    size_t (*write)(struct _link* link, const char* buffer, size_t length);
 
     // receive functions
-	int (*recv)(struct _link* link);
-	int (*recv_async)(struct _link* link);
+    int (*recv)(struct _link* link);
+    int (*recv_async)(struct _link* link);
     int (*recv_peer_name)(struct _link* link, char* buffer, size_t maxbuffer);
 
     // server multi-thread
@@ -136,7 +136,7 @@ typedef struct {
     void (*close)(struct _link* link);
 
     // receive callback
-	int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
+    int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
     int (*recv_async_cb)(struct _link* link, char* msg_data, size_t msg_size);
 
     // Next item
@@ -151,13 +151,13 @@ typedef struct {
     int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
     int (*get_str)(struct _link* link, char* out, int max_nbytes);
 
-	int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
-	int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
-	int (*get_f32)(struct _link* link, float* out, int max_nitems);
+    int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
+    int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
+    int (*get_f32)(struct _link* link, float* out, int max_nitems);
 
     int (*get_u64)(struct _link* link, uint64_t* out, int max_nitems);
-	int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
-	int (*get_f64)(struct _link* link, double* out, int max_nitems);
+    int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
+    int (*get_f64)(struct _link* link, double* out, int max_nitems);
 
     int (*enter)(struct _link* link);
     int (*leave)(struct _link* link);
@@ -169,14 +169,14 @@ typedef struct {
     void (*clear)(struct _link* link);
 
     // 32 bits
-	int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
-	int (*put_i32)(struct _link* link, const int32_t* val, int nitems);
-	int (*put_f32)(struct _link* link, const float* val, int nitems);
+    int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
+    int (*put_i32)(struct _link* link, const int32_t* val, int nitems);
+    int (*put_f32)(struct _link* link, const float* val, int nitems);
 
     // 64 bits
     int (*put_u64)(struct _link* link, const uint64_t* val, int nitems);
-	int (*put_i64)(struct _link* link, const int64_t* val, int nitems);
-	int (*put_f64)(struct _link* link, const double* val, int nitems);
+    int (*put_i64)(struct _link* link, const int64_t* val, int nitems);
+    int (*put_f64)(struct _link* link, const double* val, int nitems);
 
     // Single - 8 bits
     int (*put_cmd)(struct _link* link, char cmd);
