@@ -23,7 +23,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -38,8 +38,8 @@
 #include <ufr.h>
 
 typedef struct {
-	msgpack_sbuffer sbuf;
-	msgpack_packer pk;
+    msgpack_sbuffer sbuf;
+    msgpack_packer pk;
 } ll_encoder_t;
 
 // ============================================================================
@@ -48,22 +48,22 @@ typedef struct {
 
 static
 int ufr_enc_msgpack_boot(link_t* link, const ufr_args_t* args) {
-	ll_encoder_t* enc_obj = malloc( sizeof(ll_encoder_t) );
-	if ( enc_obj == NULL ) {
-		return ufr_error(link, ENOMEM, strerror(ENOMEM));
-	}
-	msgpack_sbuffer_init(&enc_obj->sbuf);
-	msgpack_packer_init(&enc_obj->pk, &enc_obj->sbuf, msgpack_sbuffer_write);
-	link->enc_obj = enc_obj;
-	return UFR_OK;
+    ll_encoder_t* enc_obj = malloc( sizeof(ll_encoder_t) );
+    if ( enc_obj == NULL ) {
+        return ufr_error(link, ENOMEM, strerror(ENOMEM));
+    }
+    msgpack_sbuffer_init(&enc_obj->sbuf);
+    msgpack_packer_init(&enc_obj->pk, &enc_obj->sbuf, msgpack_sbuffer_write);
+    link->enc_obj = enc_obj;
+    return UFR_OK;
 }
 
 static
 void ufr_enc_msgpack_close(link_t* link) {
-	if ( link->dcr_obj != NULL ) {
-		free(link->dcr_obj);
-		link->dcr_obj = NULL;
-	}
+    if ( link->dcr_obj != NULL ) {
+        free(link->dcr_obj);
+        link->dcr_obj = NULL;
+    }
 }
 
 static
@@ -93,13 +93,13 @@ int ufr_enc_msgpack_put_i32(link_t* link, const int32_t* val, int nitems) {
 static
 int ufr_enc_msgpack_put_f32(link_t* link, const float* val, int nitems) {
     int wrote = 0;
-	ll_encoder_t* enc_obj = link->enc_obj;
-	if ( enc_obj ) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
         for (; wrote<nitems; wrote++) {
-		    msgpack_pack_float(&enc_obj->pk, val[wrote]);
+            msgpack_pack_float(&enc_obj->pk, val[wrote]);
         }
-	}
-	return wrote;
+    }
+    return wrote;
 }
 
 static
@@ -129,44 +129,25 @@ int ufr_enc_msgpack_put_i64(link_t* link, const int64_t* val, int nitems) {
 static
 int ufr_enc_msgpack_put_f64(link_t* link, const double* val, int nitems) {
     int wrote = 0;
-	ll_encoder_t* enc_obj = link->enc_obj;
-	if ( enc_obj ) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
         for (; wrote<nitems; wrote++) {
-		    msgpack_pack_double(&enc_obj->pk, val[wrote]);
+            msgpack_pack_double(&enc_obj->pk, val[wrote]);
         }
-	}
-	return wrote;
+    }
+    return wrote;
 }
 
 
 static
 int ufr_enc_msgpack_put_str(link_t* link, const char* val) {
-	ll_encoder_t* enc_obj = link->enc_obj;
-	if ( enc_obj ) {
-		const size_t size = strlen(val);
-		msgpack_pack_str(&enc_obj->pk, size);
-		msgpack_pack_str_body(&enc_obj->pk, val, size);
-	}
-	return 0;
-}
-
-static
-int ufr_enc_msgpack_put_arr(link_t* link, const void* arr_ptr, char type, size_t arr_size) {
-	ll_encoder_t* enc_obj = link->enc_obj;
-	if ( type == 'i' ) {
-		const int* ai32_ptr = (int*) arr_ptr;
-		msgpack_pack_array(&enc_obj->pk, arr_size);
-		for (size_t i=0; i<arr_size; i++) {
-			msgpack_pack_int(&enc_obj->pk, ai32_ptr[i]);
-		}
-	} else if ( type == 'f' ) {
-		const float* af32_ptr = (float*) arr_ptr;
-		msgpack_pack_array(&enc_obj->pk, arr_size);
-		for (size_t i=0; i<arr_size; i++) {
-			msgpack_pack_float(&enc_obj->pk, af32_ptr[i]);
-		}
-
-	}
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
+        const size_t size = strlen(val);
+        msgpack_pack_str(&enc_obj->pk, size);
+        msgpack_pack_str_body(&enc_obj->pk, val, size);
+    }
+    return 0;
 }
 
 static
@@ -189,14 +170,14 @@ int ufr_enc_msgpack_put_cmd(link_t* link, char cmd) {
 
 static
 int ufr_enc_msgpack_put_raw(link_t* link, const uint8_t* buffer, int size) {
-	ll_encoder_t* enc_obj = link->enc_obj;
-	if ( enc_obj == NULL ) {
-		return -1;
-	}
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj == NULL ) {
+        return -1;
+    }
 
-	msgpack_pack_bin(&enc_obj->pk, size);
-	msgpack_pack_bin_body(&enc_obj->pk, buffer, size);
-	return size;
+    msgpack_pack_bin(&enc_obj->pk, size);
+    msgpack_pack_bin_body(&enc_obj->pk, buffer, size);
+    return size;
 }
 
 int ufr_enc_msgpack_enter(link_t* link, size_t maxsize) {
@@ -207,29 +188,28 @@ int ufr_enc_msgpack_enter(link_t* link, size_t maxsize) {
 
 
 int ufr_enc_msgpack_leave(link_t* link) {
-    ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     return UFR_OK;
 }
 
 static
 ufr_enc_api_t ufr_enc_msgpack_api = {
-	.boot = ufr_enc_msgpack_boot,
-	.close = ufr_enc_msgpack_close,
+    .boot = ufr_enc_msgpack_boot,
+    .close = ufr_enc_msgpack_close,
 
-	.put_u32 = ufr_enc_msgpack_put_u32,
-	.put_i32 = ufr_enc_msgpack_put_i32,
-	.put_f32 = ufr_enc_msgpack_put_f32,
+    .put_u32 = ufr_enc_msgpack_put_u32,
+    .put_i32 = ufr_enc_msgpack_put_i32,
+    .put_f32 = ufr_enc_msgpack_put_f32,
 
-	.put_u64 = ufr_enc_msgpack_put_u64,
-	.put_i64 = ufr_enc_msgpack_put_i64,
-	.put_f64 = ufr_enc_msgpack_put_f64,
+    .put_u64 = ufr_enc_msgpack_put_u64,
+    .put_i64 = ufr_enc_msgpack_put_i64,
+    .put_f64 = ufr_enc_msgpack_put_f64,
 
-	.put_cmd = ufr_enc_msgpack_put_cmd,
-	.put_str = ufr_enc_msgpack_put_str,
+    .put_cmd = ufr_enc_msgpack_put_cmd,
+    .put_str = ufr_enc_msgpack_put_str,
     .put_raw = ufr_enc_msgpack_put_raw,
-	
-	.enter = ufr_enc_msgpack_enter,
-	.leave = ufr_enc_msgpack_leave
+
+    .enter = ufr_enc_msgpack_enter,
+    .leave = ufr_enc_msgpack_leave
 };
 
 // ============================================================================
@@ -237,7 +217,7 @@ ufr_enc_api_t ufr_enc_msgpack_api = {
 // ============================================================================
 
 int ufr_enc_msgpack_new(link_t* link) {
-	link->enc_api = &ufr_enc_msgpack_api;
-	return UFR_OK;
+    link->enc_api = &ufr_enc_msgpack_api;
+    return UFR_OK;
 }
 

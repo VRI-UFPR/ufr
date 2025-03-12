@@ -543,6 +543,7 @@ void ufr_inoutput_init(const char* text);
 
 void ufr_log_put(link_t* link, uint8_t level, const char* func_name, const char* format, ...);
 int  ufr_log_put_error(link_t* link, int error, const char* func_name, const char* format, ...);
+void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...);
 
 #define ufr_warn(link, ...) ufr_log_put(link, 1, __func__, __VA_ARGS__)
 #define ufr_info(link, ...) ufr_log_put(link, 2, __func__, __VA_ARGS__)
