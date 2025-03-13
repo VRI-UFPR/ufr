@@ -36,11 +36,13 @@
 
 #include "opencv2/opencv.hpp"
 
+/*
 inline
 cv::Mat ufr_get_cv_mat(link_t* link) {
     Mat image(2, size, CV_8UC1, data, 0);
     return image;
 }
+*/
 
 using namespace std;
 using namespace cv;
@@ -51,8 +53,8 @@ using namespace cv;
 
 int main() {
     // abre um publicador
-    // link_t video = ufr_subscriber("@new video @id 0");
-    link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
+    link_t video = ufr_subscriber("@new video @id 0");
+    // link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
 
     while( ufr_loop_ok() ) {
         if ( ufr_recv(&video) != UFR_OK ) {

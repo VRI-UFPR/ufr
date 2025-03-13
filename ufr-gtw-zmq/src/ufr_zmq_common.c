@@ -181,11 +181,11 @@ size_t ufr_zmq_read(link_t* link, char* buffer, size_t max_size) {
     size_t copied = 0;
     const size_t rest_of_msg = msg_size - offset;
     if ( rest_of_msg > max_size ) {
-        strncpy(buffer, msg_data, max_size);
+        strncpy(buffer, (const char*) msg_data, max_size);
         local->idx += max_size;
         copied = max_size;
     } else {
-        strncpy(buffer, msg_data, rest_of_msg);
+        strncpy(buffer, (const char*) msg_data, rest_of_msg);
         local->idx += rest_of_msg;
         copied = rest_of_msg;
     }

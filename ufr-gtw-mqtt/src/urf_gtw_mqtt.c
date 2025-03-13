@@ -128,9 +128,11 @@ int urf_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
     }
     
     // get the arguments
-    const char* host = ufr_args_gets(args, "@host", "127.0.0.1");
+    char buffer_host[UFR_ARGS_TOKEN];
+    const char* host = ufr_args_gets(args, buffer_host, "@host", "127.0.0.1");
     const uint16_t port = ufr_args_geti(args, "@port", 1883);
-    const char* topic = ufr_args_gets(args, "@topic", "topic");
+    char buffer_topic[UFR_ARGS_TOKEN];
+    const char* topic = ufr_args_gets(args, buffer_topic, "@topic", "topic");
 
     // prepare the shared object
     ll_shr_t* shr = malloc(sizeof(ll_shr_t));
