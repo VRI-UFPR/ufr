@@ -462,9 +462,14 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     if ( func_gtw_new(link, UFR_START_SUBSCRIBER) != UFR_OK ) {
         ufr_fatal(link, 1, "erro2");
     }
+
+    // Case no API was defined by driver function
     if ( link->gtw_api == NULL ) {
         ufr_fatal(link, 1, "erro3");
     }
+
+    //
+    link->type_started = UFR_START_SUBSCRIBER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro4");
     }
@@ -525,6 +530,8 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
     if ( func_gtw_new(link, UFR_START_PUBLISHER) != UFR_OK ) {
         ufr_fatal(link, 1, "erro2");
     }
+
+    link->type_started = UFR_START_PUBLISHER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro3");
     }
@@ -573,6 +580,8 @@ link_t ufr_client(const char* format, ...) {
     if ( func_gtw_new(&link, UFR_START_CLIENT) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro2");
     }
+
+    link.type_started = UFR_START_CLIENT;
     if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro3");
     }
@@ -636,6 +645,8 @@ link_t ufr_server_st(const char* format, ...) {
     if ( func_gtw_new(&link, UFR_START_SERVER) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro2");
     }
+
+    link.type_started = UFR_START_SERVER;
     if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro3");
     }
@@ -679,4 +690,16 @@ link_t ufr_server_st(const char* format, ...) {
 
     // success
     return link;
+}
+
+
+void ufr_exit_if_error(link_t* link) {
+    if ( link == NULL ) {
+        printf("Link com error\n");
+        exit(1);
+    }
+    if ( link->type_started == 0 ) {
+        printf("Link com error\n");
+        exit(1);
+    }
 }

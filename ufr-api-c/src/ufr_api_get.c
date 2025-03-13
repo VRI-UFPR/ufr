@@ -94,6 +94,7 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
             switch (type) {
                 case 's': {
                     char* buffer = va_arg(list, char*);
+                    buffer[0] = '\0';
                     if ( link->dcr_api->get_str(link, buffer, 1024) >= 0 ) {
                         retval += 1;
                     }
@@ -257,6 +258,7 @@ double ufr_get_f64(link_t* link, double defval) {
 // Arrays
 
 int ufr_get_str(link_t* link, char* buffer, int maxlen) {
+    buffer[0] = '\0';
     const int is_ok = link->dcr_api->get_str(link, buffer, maxlen);
     return is_ok == UFR_OK;
 }

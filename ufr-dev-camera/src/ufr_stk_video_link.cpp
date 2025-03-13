@@ -26,39 +26,39 @@ int ufr_enc_link_boot(link_t* link, const ufr_args_t* args) {
 
 static
 void ufr_enc_link_close(link_t* link) {
-	if ( link->dcr_obj != NULL ) {
-		
-	}
+    if ( link->dcr_obj != NULL ) {
+        
+    }
 }
 
 static
 int ufr_enc_link_put_u32(link_t* link, const uint32_t val[], int nitems) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_link_put_i32(link_t* link, const int32_t val[], int nitems) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_link_put_f32(link_t* link, const float val[], int nitems) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_link_put_str(link_t* link, const char* val) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_link_put_cmd(link_t* link, char cmd) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_link_put_raw(link_t* link, const uint8_t* buffer, int size) {
-	return UFR_OK;
+    return UFR_OK;
 }
 
 int ufr_enc_link_enter(link_t* link, size_t maxsize) {
@@ -109,7 +109,7 @@ void ufr_dcr_link_close(link_t* link) {
 
 static
 int ufr_dcr_link_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
-printf("aqui\n");
+    link->dcr_obj_idx = 0;
     return 0;
 }
 
@@ -130,12 +130,28 @@ uint8_t* ufr_dcr_link_get_raw_ptr(link_t* link) {
 
 static
 int ufr_dcr_link_get_u32(link_t* link, uint32_t* val, int max_items) {
-    return UFR_OK;
+    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    switch (link->dcr_obj_idx) {
+        case 0: val[0] = gtw->frame.type();  break;
+        case 1: val[0] = gtw->frame.rows;  break;
+        case 2: val[0] = gtw->frame.cols;  break;
+        default: break;
+    }
+    link->dcr_obj_idx += 1;
+    return 1;
 }
 
 static
 int ufr_dcr_link_get_i32(link_t* link, int32_t* val, int max_items) {
-    return UFR_OK;
+    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    switch (link->dcr_obj_idx) {
+        case 0: val[0] = gtw->frame.type();  break;
+        case 1: val[0] = gtw->frame.rows;  break;
+        case 2: val[0] = gtw->frame.cols;  break;
+        default: break;
+    }
+    link->dcr_obj_idx += 1;
+    return 1;
 }
 
 static
@@ -190,11 +206,11 @@ ufr_dcr_api_t ufr_dcr_link_api = {
 //  Gateway Link
 // ============================================================================
 
-int    ufr_gtw_link_type(const link_t* link) {
+int ufr_gtw_link_type(const link_t* link) {
     return UFR_OK;
 }
 
-int    ufr_gtw_link_state(const link_t* link) {
+int ufr_gtw_link_state(const link_t* link) {
     return UFR_OK;
 }
 
@@ -250,12 +266,15 @@ size_t ufr_gtw_link_write(link_t* link, const char* buffer, size_t length) {
 
 int ufr_gtw_link_recv(link_t* link) {
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
-    ufr_recv(&gtw->link);
+    const int res = ufr_recv(&gtw->link);
+    if ( res != UFR_OK ) {
+        return res;
+    }
     // const size_t size = ufr_get_nbytes(&gtw->link);
     // gtw->buffer.resize(size);
     
     char format[16];
-    ufr_get(&gtw->link, "s", format, sizeof(format));
+    ufr_get(&gtw->link, "s", format);
 
     if ( strcmp(format, "mono8") == 0 ) {
         int size[2] = {480, 640};

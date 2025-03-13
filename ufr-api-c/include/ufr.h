@@ -204,7 +204,10 @@ typedef struct _link {
     
     // Decoder
     const ufr_dcr_api_t* dcr_api;
-    void* dcr_obj;
+    union {
+        void* dcr_obj;
+        int32_t dcr_obj_idx;
+    };
 
     // Decoder Stack
     const ufr_dcr_api_t* dcr_api_s0;
@@ -536,6 +539,9 @@ void ufr_input(const char* format, ...);
 bool ufr_input_recv();
 
 void ufr_inoutput_init(const char* text);
+
+
+void ufr_exit_if_error(link_t* link);
 
 // ============================================================================
 //  UFR LOG

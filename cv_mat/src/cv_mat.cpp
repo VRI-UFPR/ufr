@@ -43,13 +43,13 @@ using namespace cv;
 extern "C"
 cv_mat_t cv_mat_new(int rows, int cols, int type) {
     cv_mat_t mat;
-    cv_mat_init(&mat, cols, rows, type);
+    cv_mat_init(&mat, rows, cols, type);
     return mat;
 }
 
 extern "C"
 void cv_mat_init(cv_mat_t* mat_c, int rows, int cols, int type) {
-    new (mat_c) Mat(cols,rows,type);
+    new (mat_c) Mat(rows,cols,type);
 }
 
 extern "C"

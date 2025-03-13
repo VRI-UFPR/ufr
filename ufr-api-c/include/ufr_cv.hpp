@@ -34,34 +34,17 @@
 #include <ufr.h>
 #include <unistd.h>
 
-#include "ufr_cv.hpp"
+#include "opencv2/opencv.hpp"
 
-using namespace std;
-using namespace cv;
+inline
+cv::Mat ufr_cv_get_mat(link_t* link) {
+    // get the needed data
+    int type, rows, cols;
+    ufr_get(link, "iii", &type, &rows, &cols);
+    void* data = (void*) ufr_get_rawptr(link);
+    const int size[2] = {rows, cols};
 
-// ============================================================================
-//  Main
-// ============================================================================
-
-int main() {
-    // abre um publicador
-    link_t video = ufr_subscriber("@new video @id 0");
-    // link_t video = ufr_subscriber("@new video @file pioneer-p1_2.mp4");
-    // link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
-
-    ufr_exit_if_error(&video);
-
-    while( ufr_loop_ok() ) {
-        if ( ufr_recv(&video) != UFR_OK ) {
-            break;
-        }
-
-        Mat image = ufr_cv_get_mat(&video);
-        imshow("janela", image);
-        waitKey(1);
-    }
-
-    // fim
-    ufr_close(&video);
-    return 0;
+    // return cv::Mat
+    cv::Mat image(2, size, type, data, 0);
+    return image;
 }
