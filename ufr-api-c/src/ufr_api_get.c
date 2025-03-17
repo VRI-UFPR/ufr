@@ -69,9 +69,8 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
 
 		} else if ( type == '^' ) {
 			if ( ufr_recv(link) != UFR_OK ) {
-                retval = 0;
+                retval = -1;
                 ufr_log(link, "Error to receive data");
-                break;
             }
 
         } else if ( type == '\n' ) {
@@ -283,4 +282,24 @@ int ufr_get_leave(link_t* link) {
         return ufr_error(link, 1, "Function leave in Decoder is NULL");
     }
     return link->dcr_api->leave(link);
+}
+
+int ufr_get_af32(link_t* link, float buffer[], int max_items) {
+    if (link->dcr_api->leave == NULL ) {
+        return ufr_error(link, 1, "Function leave in Decoder is NULL");
+    }
+
+    const int res1 = link->dcr_api->enter(link);
+    if ( res1 != UFR_OK ) {
+        printf("error1\n");
+        return res1;
+    }
+    const int items_read = link->dcr_api->get_f32(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        printf("error2\n");
+    }
+    link->dcr_api->leave(link);
+
+
+    return items_read;
 }

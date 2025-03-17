@@ -441,7 +441,8 @@ int32_t  ufr_get_i32(link_t* link, int32_t defval);
 float    ufr_get_f32(link_t* link, float defval);
 
 // GET Vector - 64 bites
-int ufr_get_pf32(link_t* link, float buffer[], int max_nitems);
+// int ufr_get_pf32(link_t* link, float buffer[], int max_nitems);
+int ufr_get_af32(link_t* link, float buffer[], int max_items);
 
 // GET Scalar - 64 bites
 uint64_t ufr_get_u64(link_t* link, uint64_t defval);

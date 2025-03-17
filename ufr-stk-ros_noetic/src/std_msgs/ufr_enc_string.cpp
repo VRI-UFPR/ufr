@@ -52,7 +52,10 @@ static
 int ufr_enc_ros_string_boot(link_t* link, const ufr_args_t* args) {
     Gateway* gtw_obj = (Gateway*) link->gtw_obj;
 	Encoder* enc_obj = new Encoder();
-    enc_obj->publisher = gtw_obj->node.advertise<std_msgs::String>("topic", 100);
+
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
+    enc_obj->publisher = gtw_obj->node.advertise<std_msgs::String>(topic_name, 100);
 	link->enc_obj = enc_obj;
     return UFR_OK;
 }

@@ -53,6 +53,11 @@ void cv_mat_init(cv_mat_t* mat_c, int rows, int cols, int type) {
 }
 
 extern "C"
+void cv_mat_init_with_ptr(cv_mat_t* mat_c, int rows, int cols, int type, void* data) {
+    new (mat_c) Mat(rows,cols,type,data);
+}
+
+extern "C"
 void cv_mat_free(cv_mat_t* mat_c) {
     Mat* mat_cpp = (Mat*) mat_c;
     mat_cpp->~Mat();
@@ -90,16 +95,28 @@ cv_mat_t cv_imread(const char* filename) {
 }
 
 extern "C"
+void cv_imwrite(const char* filename, const cv_mat_t* src) {
+    Mat* mat_cpp = (Mat*) src;
+    imwrite(std::string(filename), *mat_cpp);
+}
+
+extern "C"
 void cv_imshow(const char* name, cv_mat_t* mat_c) {
     Mat* mat_cpp = (Mat*) mat_c;
     imshow(std::string(name), *mat_cpp);
 }
 
 extern "C"
-int  cv_waitkey(int time) {
+int cv_waitkey(int time) {
     return waitKey(time);
 }
 
+extern "C"
+void cv_cvtColor(cv_mat_t* src, cv_mat_t* dst, int type) {
+    Mat* src_cpp = (cv::Mat*) src;
+    Mat* dst_cpp = (cv::Mat*) dst;
+    cvtColor(*src_cpp, *dst_cpp, type);
+}
 
 
 

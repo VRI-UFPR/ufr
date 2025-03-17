@@ -71,7 +71,7 @@ static
 uint8_t* ufr_dcr_ros_humble_get_rawptr(link_t* link) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     if ( dcr == NULL ) {
-        return 0;
+        return NULL;
     }
     return &dcr->m_message.data[0];
 }

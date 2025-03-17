@@ -468,6 +468,10 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
         ufr_fatal(link, 1, "erro3");
     }
 
+    if ( link->gtw_api->boot == NULL ) {
+        ufr_fatal(link, 1, "erro3");
+    }
+
     //
     link->type_started = UFR_START_SUBSCRIBER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {

@@ -57,7 +57,8 @@ size_t ufr_posix_dir_size(const link_t* link, int type){
 
 static
 int ufr_posix_dir_boot(link_t* link, const ufr_args_t* args) {
-	const char* path_arg = ufr_args_gets(args, "@path", NULL);
+    char buffer[UFR_ARGS_TOKEN];
+	const char* path_arg = ufr_args_gets(args, buffer, "@path", NULL);
     if ( path_arg == NULL ) {
         return EINVAL;
     }

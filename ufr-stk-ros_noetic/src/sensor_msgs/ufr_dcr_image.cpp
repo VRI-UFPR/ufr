@@ -81,7 +81,8 @@ struct DecoderImage {
 
 static
 int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
-    const std::string topic_name = ufr_args_gets(args, "@topic", "topic");
+    char buffer[UFR_ARGS_TOKEN];
+    const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
 
     Gateway* gtw = (Gateway*) link->gtw_obj;
     DecoderImage* dcr = new DecoderImage(gtw, topic_name, 5);
@@ -161,13 +162,22 @@ size_t ufr_dcr_ros_get_nitems(link_t* link) {
 }
 
 static
+uint8_t* ufr_dcr_ros_get_rawptr(link_t* link) {
+    DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
+    if ( dcr ) {
+        return &dcr->m_message->data[0];
+    }
+    return 0;
+}
+
+static
 int ufr_dcr_ros_get_u32(link_t* link, uint32_t* val, int nitems) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
         switch (dcr->index) {
             case 0: val[0] = dcr->m_message->height; break;
             case 1: val[0] = dcr->m_message->width; break;
-            case 2: val[0] = dcr->m_message->header.seq; break;
+            case 2: val[0] = dcr->m_message->step; break;
             default: break;
         }
         dcr->index += 1;
@@ -183,7 +193,7 @@ int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int nitems) {
         switch (dcr->index) {
             case 0: val[0] = dcr->m_message->height; break;
             case 1: val[0] = dcr->m_message->width; break;
-            case 2: val[0] = dcr->m_message->header.seq; break;
+            case 2: val[0] = dcr->m_message->step; break;
             default: break;
         }
         dcr->index += 1;
@@ -238,7 +248,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_rawptr = NULL,
+    .get_rawptr = ufr_dcr_ros_get_rawptr,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_ros_get_str,

@@ -62,8 +62,12 @@ static
 int ufr_enc_ros_boot(link_t* link, const ufr_args_t* args) {
     Gateway* gtw_obj = (Gateway*) link->gtw_obj;
 	Encoder* enc_obj = new Encoder();
-    enc_obj->publisher = gtw_obj->node.advertise<sensor_msgs::LaserScan>("scan", 10);
-	link->enc_obj = enc_obj;
+
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic = ufr_args_gets(args, buffer, "@topic", "scan");
+    enc_obj->publisher = gtw_obj->node.advertise<sensor_msgs::LaserScan>(topic, 10);
+
+    link->enc_obj = enc_obj;
     return UFR_OK;
 }
 

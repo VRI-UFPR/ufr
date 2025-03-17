@@ -72,6 +72,7 @@ extern "C" {
 
 cv_mat_t cv_mat_new(int rows, int cols, int type);
 void cv_mat_init(cv_mat_t* mat, int rows, int cols, int type);
+void cv_mat_init_with_ptr(cv_mat_t* mat_c, int rows, int cols, int type, void* data);
 void cv_mat_free(cv_mat_t* mat);
 int  cv_mat_rows(const cv_mat_t* mat);
 int  cv_mat_cols(const cv_mat_t* mat);
@@ -82,8 +83,10 @@ uint8_t* cv_mat_data_u8(const cv_mat_t* mat);
 // ============================================================================
 
 cv_mat_t cv_imread(const char* filename);
+void cv_imwrite(const char* filename, const cv_mat_t* src);
 void cv_imshow(const char* name, cv_mat_t* mat);
 int  cv_waitkey(int time);
+void cv_cvtColor(cv_mat_t* src, cv_mat_t* dst, int type);
 
 // ============================================================================
 //  Footer

@@ -54,8 +54,10 @@ void test_laserscan_publisher() {
 
 
 void test_laserscan() {
-    /*link_t link = ufr_subscriber("@new ros_humble:topic @msg laserscan @topic scan");
+    link_t link = ufr_subscriber("@new %p @coder %p @topic scan", 
+        ufr_gtw_ros_humble_new, ufr_dcr_ros_humble_new_laserscan);
 
+    /*
     float angle_min, angle_max, angle_increment;
     float time_increment, scan_time;
     float range_min, range_max;

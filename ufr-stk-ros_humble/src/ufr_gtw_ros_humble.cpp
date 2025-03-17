@@ -181,6 +181,12 @@ int ufr_gtw_ros_humble_new_topic(link_t* out, int type) {
 
 extern "C"
 int ufr_gtw_ros_humble_new(link_t* out, int type) {
-    ufr_link_init(out, &ufr_ros_humble_topic_drv);
+    if ( type == UFR_START_PUBLISHER) {
+        ufr_gtw_ros_humble_new_topic(out, type);
+    } else if ( type == UFR_START_SUBSCRIBER) {
+        ufr_gtw_ros_humble_new_topic(out, type);
+    } else {
+        return ufr_error(out, 1, "Start type is invalid");
+    }
     return UFR_OK;
 }

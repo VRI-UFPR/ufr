@@ -42,10 +42,11 @@ endif(COVERAGE_TEST)
 
 # include UFR API
 include_directories(./ufr-api-c/include)
+include_directories(./cv_mat/include)
 
 # Build libraries with no dependencies
 add_subdirectory(./ufr-api-c)
-# add_subdirectory(./ufr-gtw-posix)
+add_subdirectory(./ufr-gtw-posix)
 add_subdirectory(./ufr-cdr-csv)
 
 # Build libraries with dependencies
@@ -96,9 +97,9 @@ endif(BUILD_TESTS)
 # add_subdirectory(ufr-stk-irrlicht)
 # add_subdirectory(./ufr-stk-ros_humble)
 # add_subdirectory(./ufr-stk-ros_melodic)
-# add_subdirectory(./ufr-stk-ros_noetic)
+add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
-add_subdirectory(./ufr-dev-camera)
+# add_subdirectory(./ufr-dev-camera)
 add_subdirectory(./cv_mat)
 
 

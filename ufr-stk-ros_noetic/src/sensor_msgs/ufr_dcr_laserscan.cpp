@@ -81,7 +81,8 @@ struct Decoder {
 
 static
 int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
-    const std::string topic_name = ufr_args_gets(args, "@topic", "topic");
+    char buffer[UFR_ARGS_TOKEN];
+    const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
 
     Gateway* gtw = (Gateway*) link->gtw_obj;
     Decoder* dcr = new Decoder(gtw, topic_name, 50);
@@ -169,7 +170,12 @@ size_t ufr_dcr_ros_get_nitems(link_t* link) {
 static
 int ufr_dcr_ros_get_u32(link_t* link, uint32_t* val, int nitems) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
-    if ( dcr ) {
+    if ( dcr == NULL ) {
+        return -1;
+    }
+
+    int i;
+    for (i=0; i<nitems; i++) {
         switch (dcr->index) {
             case 0: *val = dcr->m_message->angle_min; dcr->index += 1; break;
             case 1: *val = dcr->m_message->angle_max; dcr->index += 1; break;
@@ -182,17 +188,19 @@ int ufr_dcr_ros_get_u32(link_t* link, uint32_t* val, int nitems) {
             case 8: *val = dcr->m_message->intensities[dcr->index2++]; break;
             default: break;
         }
-        // update the index
-        dcr->index += 1;
     }
-    return 0;
+    return i;
 }
 
 static
 int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int nitems) {
     Decoder* dcr = (Decoder*) link->dcr_obj;
-    if ( dcr ) {
-        
+    if ( dcr == NULL ) {
+        return -1;
+    }
+
+    int i;
+    for (i=0; i<nitems; i++) {        
         switch (dcr->index) {
             case 0: *val = dcr->m_message->angle_min; dcr->index += 1; break;
             case 1: *val = dcr->m_message->angle_max; dcr->index += 1; break;
@@ -207,30 +215,57 @@ int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int nitems) {
         }
 
     }
-    return 0;
+    return i;
 }
 
 static
 int ufr_dcr_ros_get_f32(link_t* link, float* val, int nitems) {
     *val = 0.0;
     Decoder* dcr = (Decoder*) link->dcr_obj;
-    if ( dcr ) {
-        switch (dcr->index) {
-            case 0: *val = dcr->m_message->angle_min; dcr->index += 1; break;
-            case 1: *val = dcr->m_message->angle_max; dcr->index += 1; break;
-            case 2: *val = dcr->m_message->angle_increment; dcr->index += 1; break;
-            case 3: *val = dcr->m_message->time_increment; dcr->index += 1; break;
-            case 4: *val = dcr->m_message->scan_time; dcr->index += 1; break;
-            case 5: *val = dcr->m_message->range_min; dcr->index += 1; break;
-            case 6: *val = dcr->m_message->range_max; dcr->index += 1; break;
-            case 7: *val = dcr->m_message->ranges[ dcr->index2++ ]; break;
-            case 8: *val = dcr->m_message->intensities[ dcr->index2++ ]; break;
-            default: break;
-        }
-        // update the index
-        
+    if ( dcr == NULL ) {
+        return -1;
     }
-    return 0;
+
+    int i;
+    if ( dcr->index == 7 ) {
+        const int ranges_size = dcr->m_message->ranges.size();
+        const int index_diff = ranges_size - dcr->index2;
+        if ( index_diff < 0 ) {
+            return 0;
+        }
+        const int size = (nitems < index_diff) ? nitems : index_diff;
+        for (i=0; i<nitems; i++) {
+            val[i] = dcr->m_message->ranges[ dcr->index2++ ];
+        }
+
+    } else if ( dcr->index == 8 ) {
+        const int ranges_size = dcr->m_message->ranges.size();
+        const int index_diff = ranges_size - dcr->index2;
+        if ( index_diff < 0 ) {
+            return 0;
+        }
+        const int size = (nitems < index_diff) ? nitems : index_diff;
+        for (i=0; i<nitems; i++) {
+            val[i] = dcr->m_message->ranges[ dcr->index2++ ];
+        }
+
+    } else {
+
+        for (i=0; i<nitems; i++) {
+            switch (dcr->index) {
+                case 0: val[i] = dcr->m_message->angle_min; break;
+                case 1: val[i] = dcr->m_message->angle_max; break;
+                case 2: val[i] = dcr->m_message->angle_increment; break;
+                case 3: val[i] = dcr->m_message->time_increment; break;
+                case 4: val[i] = dcr->m_message->scan_time; break;
+                case 5: val[i] = dcr->m_message->range_min; break;
+                case 6: val[i] = dcr->m_message->range_max; break;
+                default: break;
+            }
+            dcr->index += 1;
+        }
+    }
+    return i;
 }
 
 static
@@ -249,7 +284,7 @@ int ufr_dcr_ros_enter(link_t* link) {
         dcr->index2 = 0;
         return UFR_OK;
     }
-    return -1;
+    return ufr_error(link, -1, "Index %d is not a array", dcr->index);
 }
 
 static 
@@ -259,7 +294,7 @@ int ufr_dcr_ros_leave(link_t* link) {
         dcr->index += 1;
         return UFR_OK;
     }
-    return -1;
+    return ufr_error(link, -1, "Index %d is not a array", dcr->index);
 }
 
 static

@@ -46,6 +46,16 @@ int ufr_exec(link_t* link, const char* command) {
 // ============================================================================
 
 int main() {
+    link_t link = ufr_client("@new zmq @coder msgpack");
+    ufr_exec(&link, "start");
+    /*
+        nome, text
+        nome, text
+        nome, text
+    */
+
+    link_t left = ufr_app_subscriber("left_encoder");
+
     /*link_t db = ufr_client("@new sqlite @file development.sqlite3 @table departments");
     int res = ufr_exec(&db, "select * from departments");
     ufr_close(&db);*/

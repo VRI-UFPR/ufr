@@ -35,12 +35,13 @@
 
 #include "ufr_gtw_ros_noetic.hpp"
 
-#define MAX 16
+#define MAX 1024
 
 struct DecoderI16 {
     ros::Subscriber m_sub;
     std_msgs::Int16* m_msg_cur;
     std_msgs::Int16 m_msg[MAX];
+    std::string m_topic_name;
 
     uint8_t m_head;
     uint8_t m_tail;
@@ -51,6 +52,7 @@ struct DecoderI16 {
         m_tail = 0;
         m_size = 0;
         m_msg_cur = &m_msg[0];
+        m_topic_name = topic_name;
 
         m_sub = gtw->node.subscribe (topic_name, buffer_size,
             &DecoderI16::callback, this);
@@ -58,7 +60,7 @@ struct DecoderI16 {
 
     void callback(const std_msgs::Int16::ConstPtr& msg) {
         if ( m_size >= MAX ) {
-            ROS_INFO("Stack full");
+            ROS_INFO("Stack of %s is full", m_topic_name.c_str());
             return;
         }
 
@@ -75,7 +77,8 @@ struct DecoderI16 {
 
 static
 int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "topic");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
     Gateway* gtw = (Gateway*) link->gtw_obj;
     if ( gtw == NULL ) {
         return ufr_error(link, 1, "Gateway is NULL");

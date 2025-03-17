@@ -1,6 +1,7 @@
 /* BSD 2-Clause License
  * 
- * Copyright (c) 2023, Felipe Bombardelli
+ * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
+ *  - Felipe Bombardelli <felipebombardelli@gmail.com>
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,67 +26,31 @@
  */
 
 // ============================================================================
-//  HEADER
+//  Header
 // ============================================================================
 
-#include <assert.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+#include <stdlib.h>
 #include <ufr.h>
+#include <unistd.h>
+#include <time.h>
 
-int ufr_gtw_sqlite_new(link_t* link, const ufr_args_t* args);
-
-// ============================================================================
-//  Tests
-// ============================================================================
-/*
-void test_select() {
-    link_t link;
-    ufr_args_t args_boot = {.text="@file test.db"};
-    ufr_new_gtw_sqlite_table(&link, &args_boot);
-
-    ufr_args_t args_subs = {.text="@sql %s", .arg[0].str="SELECT * FROM pessoa"};
-    ufr_start_subscriber(&link, &args_subs);
-
-    int id;
-    char name[64];
-    int score;
-
-    ufr_get(&link, "^is", &id, name);
-    printf("%d %s\n", id, name);
-
-    ufr_get(&link, "^is", &id, name);
-    printf("%d %s\n", id, name);
-
-    ufr_get(&link, "^is", &id, name);
-    printf("%d %s\n", id, name);
-
-    ufr_close(&link);
-}
-*/
-
-void test_insert() {
-    link_t link = ufr_publisher("@new %p @file test.db " 
-         " @sql 'INSERT INTO pessoa VALUES(?,?,?)'" 
-         " @oncreate 'CREATE TABLE IF NOT EXISTS pessoa ("
-         " id int, nome char[64], idade int)'"
-        , ufr_gtw_sqlite_new);
-
-    ufr_put(&link, "isi\n", 7, "trrr", 80);
-    ufr_put(&link, "isi\n", 4, "teste", 50);
-    ufr_put(&link, "isi\n", 5, "teste", 60);
-    ufr_put(&link, "isi\n", 6, "teste", 70);
-
-    ufr_close(&link);
-}
+// #include "cv_mat.h"
 
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    // test_select();
-    test_insert();
-	return 0;
+    link_t csv = ufr_subscriber("@new posix:file @coder csv @path saida.csv");
+    while ( ufr_loop_ok() ) {
+        int stamp;
+        int res = ufr_get(&csv, "^d", &stamp);
+        if ( res < 0 ) {
+            break;
+        }
+        printf("%d\n", stamp);
+    }
+    ufr_close(&csv);
+    return 0;
 }
