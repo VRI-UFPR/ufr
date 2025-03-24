@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <ufr.h>
 #include <unistd.h>
+#include <time.h>
 
 int ufr_exec(link_t* link, const char* command) {
     int code;
@@ -46,28 +47,14 @@ int ufr_exec(link_t* link, const char* command) {
 // ============================================================================
 
 int main() {
-    link_t link = ufr_client("@new zmq @coder msgpack");
-    ufr_exec(&link, "start");
-    /*
-        nome, text
-        nome, text
-        nome, text
-    */
-
-    link_t left = ufr_app_subscriber("left_encoder");
-
-    /*link_t db = ufr_client("@new sqlite @file development.sqlite3 @table departments");
-    int res = ufr_exec(&db, "select * from departments");
-    ufr_close(&db);*/
-
-    link_t motors = ufr_subscriber("@new ros_humble @coder ros_humble:twist @topic cmd_vel");
+    link_t loc = ufr_subscriber("@new mqtt @host 185.159.82.136 @topic location");
     while ( ufr_loop_ok() ) {
-        float vel1, vel2;
-        ufr_get(&motors, "^ff", &vel1, &vel2);
-        printf("%f %f\n", vel1, vel2);
+        char buffer[512];
+        ufr_get(&loc, "^s", buffer);
+        time_t stamp = time(0);
+        printf("%ld - %s\n", stamp, buffer);
     }
-
-    ufr_close(&motors);
+    ufr_close(&loc);
     return 0;
 }
 
