@@ -109,3 +109,49 @@ void* ufr_linux_load_library(const char* type, const char* name, const char* cla
     // success
     return (void*) dl_func_new;
 }
+
+
+int ufr_recv_2s(link_t* link0, link_t* link1, int time_ms) {
+    // check the 2 links
+    uint8_t i = 0;
+    const uint8_t max = 10;
+    const int time_us = time_ms * 1000/max;
+    for(; i<max; i++) {
+        if ( ufr_recv_async(link0) == UFR_OK ) {
+            goto second;
+        }
+
+        if ( ufr_recv_async(link1) == UFR_OK ) {
+            goto first;
+        }
+
+        usleep(time_us);
+    }
+    goto timeout;
+
+first:
+    do {
+        usleep(time_us);
+        if ( ufr_recv_async(link0) == UFR_OK ) {
+            goto success;
+        }
+        i += 1;
+    } while ( i < max );
+    goto timeout;
+
+second:
+    do {
+        usleep(time_us);
+        if ( ufr_recv_async(link1) == UFR_OK ) {
+            goto success;
+        }
+        i += 1;
+    } while ( i < max );
+    goto timeout;
+
+timeout:
+    return -1;
+
+success:
+    return UFR_OK;
+}

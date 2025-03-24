@@ -356,7 +356,7 @@ int  ufr_loop_put_callback( int (*loop_callback)(void)  );
 int ufr_recv(link_t* link);
 int ufr_recv_sy(link_t* link0, link_t* link1, int time_ms);
 int ufr_recv_sy1(link_t* link0, link_t* link1, int time_ms);
-int ufr_recv_sy2(link_t* link0, link_t* link1, int time_ms);
+int ufr_recv_2s(link_t* link0, link_t* link1, int time_ms);
 int ufr_recv_sy3(link_t* link0, link_t* link1, link_t link2, int time_ms);
 
 /**
