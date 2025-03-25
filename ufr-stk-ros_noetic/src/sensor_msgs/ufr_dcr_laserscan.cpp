@@ -241,7 +241,7 @@ int ufr_dcr_ros_get_f32(link_t* link, float* val, int nitems) {
     } else if ( dcr->index == 8 ) {
         const int ranges_size = dcr->m_message->ranges.size();
         const int index_diff = ranges_size - dcr->index2;
-        if ( index_diff < 0 ) {
+        if ( index_diff <= 0 ) {
             return 0;
         }
         const int size = (nitems < index_diff) ? nitems : index_diff;

@@ -43,165 +43,18 @@
 struct ll_encoder {
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher;
     sensor_msgs::msg::LaserScan message;
+    std::string frame_id;
     int index;
     int index2;
-    int frame_id;
 
     float def_angle_min;
     float def_angle_max;
 
-    ll_encoder() : index{0}, index2{0}, frame_id{0} {}
+    ll_encoder() : index{0}, index2{0} {}
 };
 
 extern "C"
 int ufr_enc_ros_humble_new_laser_scan(link_t* link, int type);
-
-// ============================================================================
-//  LaserScan Encoder for Ranges
-// ============================================================================
-
-static
-int ufr_enc_ros_humble_ranges_put_u32(link_t* link, const uint32_t* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.ranges[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_enc_ros_humble_ranges_put_i32(link_t* link, const int32_t* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.ranges[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_enc_ros_humble_ranges_put_f32(link_t* link, const float* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.ranges[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_ros_humble_ranges_leave(struct _link* link) {
-    return ufr_enc_ros_humble_new_laser_scan(link, 0);
-}
-
-static
-ufr_enc_api_t ufr_enc_ros_api_ranges = {
-    .boot = NULL,
-    .close = NULL,
-    .clear = NULL,
-
-    .put_u32 = ufr_enc_ros_humble_ranges_put_u32,
-    .put_i32 = ufr_enc_ros_humble_ranges_put_i32,
-    .put_f32 = ufr_enc_ros_humble_ranges_put_f32,
-
-    .put_u64 = NULL,
-    .put_i64 = NULL,
-    .put_f64 = NULL,
-
-    .put_cmd = NULL,
-    .put_str = NULL,
-    .put_raw = NULL,
-
-    .enter = NULL,
-    .leave = ufr_ros_humble_ranges_leave,
-};
-
-// ============================================================================
-//  LaserScan Encoder for Intensities
-// ============================================================================
-
-static
-int ufr_enc_ros_humble_intensities_put_u32(link_t* link, const uint32_t* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.intensities[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_enc_ros_humble_intensities_put_i32(link_t* link, const int32_t* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.intensities[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_enc_ros_humble_intensities_put_f32(link_t* link, const float* val, int nitems) {
-    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        return -1;
-    }
-
-    int i=0;
-    for (;i<nitems; i++) {
-        enc_obj->message.intensities[enc_obj->index2++] = val[i];
-    }
-    return i;
-}
-
-static
-int ufr_ros_humble_intensities_leave(struct _link* link) {
-    return ufr_enc_ros_humble_new_laser_scan(link, 0);
-}
-
-static
-ufr_enc_api_t ufr_enc_ros_api_intensities = {
-    .boot = NULL,
-    .close = NULL,
-    .clear = NULL,
-
-    .put_u32 = ufr_enc_ros_humble_intensities_put_u32,
-    .put_i32 = ufr_enc_ros_humble_intensities_put_i32,
-    .put_f32 = ufr_enc_ros_humble_intensities_put_f32,
-
-    .put_u64 = NULL,
-    .put_i64 = NULL,
-    .put_f64 = NULL,
-
-    .put_cmd = NULL,
-    .put_str = NULL,
-    .put_raw = NULL,
-
-    .enter = NULL,
-    .leave = ufr_ros_humble_intensities_leave,
-};
-
 
 // ============================================================================
 //  LaserScan Encoder
@@ -209,22 +62,37 @@ ufr_enc_api_t ufr_enc_ros_api_intensities = {
 
 static
 int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
+    char buffer[UFR_ARGS_TOKEN];
 
+    // New Encoder and set Parameters
     ll_encoder* enc_obj = new ll_encoder();
+    enc_obj->frame_id = ufr_args_gets(args, buffer, "@frame_id", "laser");
+
     // enc_obj->def_angle_max = ufr_args_getf(args, "@angle_max", 0.0);
     // @order angle_max,angle_min,ranges @default {range_min: 0, range_max: 10}
 
+    // Open the publisher
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "/scan");
     enc_obj->publisher = gtw_obj->m_node->create_publisher<sensor_msgs::msg::LaserScan>(topic_name, 10);
+
+    // Success
     link->enc_obj = enc_obj;
     ufr_info(link, "loaded encoder for sensor_msgs/LaserScan");
-
     return UFR_OK;
 }
 
 static
-int ufr_enc_ros_humble_clear(link_t* link) {
+void ufr_enc_ros_humble_close(link_t* link) {
+    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
+    if ( enc_obj != NULL ) {
+        delete(enc_obj);
+    }
+    link->enc_obj = NULL;
+}
+
+static
+void ufr_enc_ros_humble_clear(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     enc_obj->message.angle_min = 0;
     enc_obj->message.angle_max = 0;
@@ -235,7 +103,6 @@ int ufr_enc_ros_humble_clear(link_t* link) {
     enc_obj->message.range_min = 0;
     enc_obj->message.range_min = 0;
     enc_obj->message.range_max = 0;
-    return UFR_OK;
 }
 
 static
@@ -266,43 +133,77 @@ int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
 static
 int ufr_enc_ros_humble_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        for (int i=0; i<nitems; i++) {
-            switch(enc_obj->index) {
-                case 0: enc_obj->message.angle_min = val[i]; enc_obj->index += 1;break;
-                case 1: enc_obj->message.angle_max = val[i]; enc_obj->index += 1;break;
-                case 2: enc_obj->message.angle_increment = val[i]; enc_obj->index += 1;break;
-                case 3: enc_obj->message.time_increment = val[i]; enc_obj->index += 1;break;
-                case 4: enc_obj->message.scan_time = val[i]; enc_obj->index += 1;break;
-                case 5: enc_obj->message.range_min = val[i]; enc_obj->index += 1;break;
-                case 6: enc_obj->message.range_max = val[i]; enc_obj->index += 1;break;
-                case 7: enc_obj->message.ranges[enc_obj->index2++] = val[i];break;
-                case 8: enc_obj->message.intensities[enc_obj->index2++] = val[i];break;
-                default: break;
-            }
+    if ( enc_obj == NULL ) {
+        return -1;
+    }
+
+    for (int i=0; i<nitems; i++) {
+        switch(enc_obj->index) {
+            case 0: enc_obj->message.angle_min = val[i]; enc_obj->index += 1;break;
+            case 1: enc_obj->message.angle_max = val[i]; enc_obj->index += 1;break;
+            case 2: enc_obj->message.angle_increment = val[i]; enc_obj->index += 1;break;
+            case 3: enc_obj->message.time_increment = val[i]; enc_obj->index += 1;break;
+            case 4: enc_obj->message.scan_time = val[i]; enc_obj->index += 1;break;
+            case 5: enc_obj->message.range_min = val[i]; enc_obj->index += 1;break;
+            case 6: enc_obj->message.range_max = val[i]; enc_obj->index += 1;break;
+            case 7: enc_obj->message.ranges[enc_obj->index2++] = val[i];break;
+            case 8: enc_obj->message.intensities[enc_obj->index2++] = val[i];break;
+            default: break;
         }
     }
+
     return 0;
 }
 
 static
 int ufr_enc_ros_humble_put_f32(link_t* link, const float* val, int nitems) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( enc_obj ) {
-        switch(enc_obj->index) {
-            /*case 0: enc_obj->message.angle_min = val; enc_obj->index += 1;break;
-            case 1: enc_obj->message.angle_max = val; enc_obj->index += 1;break;
-            case 2: enc_obj->message.angle_increment = val; enc_obj->index += 1;break;
-            case 3: enc_obj->message.time_increment = val; enc_obj->index += 1;break;
-            case 4: enc_obj->message.scan_time = val; enc_obj->index += 1;break;
-            case 5: enc_obj->message.range_min = val; enc_obj->index += 1;break;
-            case 6: enc_obj->message.range_max = val; enc_obj->index += 1;break;
-            case 7: enc_obj->message.ranges[enc_obj->index2++] = val;break;
-            case 8: enc_obj->message.intensities[enc_obj->index2++] = val;break;
-            default: break;*/
+    if ( enc_obj == NULL ) {
+        return -1;
+    }
+
+    // Return count
+    int i;
+
+    // array Ranges
+    if ( enc_obj->index == 7 ) {
+        if ( ( (size_t) enc_obj->index2 + nitems) > enc_obj->message.intensities.size() ) {
+            nitems = enc_obj->message.intensities.size() - enc_obj->index2;
+        }
+        for (i=0; i<nitems; i++) {
+            enc_obj->message.ranges[enc_obj->index2++] = val[i];
+        }
+    
+    // array intensities
+    } else if ( enc_obj->index == 8 ) {
+        if ( ( (size_t) enc_obj->index2 + nitems ) > enc_obj->message.intensities.size() ) {
+            nitems = enc_obj->message.intensities.size() - enc_obj->index2;
+        }
+        for (i=0; i<nitems; i++) {
+            enc_obj->message.intensities[enc_obj->index2++] = val[i];
+        }
+
+    // others
+    } else {
+        for (i=0; i<nitems; i++) {
+            switch(enc_obj->index) {
+                case 0: enc_obj->message.angle_min = val[i]; break;
+                case 1: enc_obj->message.angle_max = val[i]; break;
+                case 2: enc_obj->message.angle_increment = val[i]; break;
+                case 3: enc_obj->message.time_increment = val[i]; break;
+                case 4: enc_obj->message.scan_time = val[i]; break;
+                case 5: enc_obj->message.range_min = val[i]; break;
+                case 6: enc_obj->message.range_max = val[i]; break;
+                case 7: enc_obj->message.ranges[0] = val[i]; break;
+                case 8: enc_obj->message.intensities[0] = val[i]; break;
+                default: break;
+            }
+            enc_obj->index += 1;
         }
     }
-    return 0;
+
+    // success
+    return i;
 }
 
 static
@@ -320,9 +221,8 @@ int ufr_ecr_ros_humble_put_cmd(link_t* link, char cmd) {
     if ( cmd == '\n' ) {
         enc_obj->publisher->publish(enc_obj->message);
         enc_obj->index = 0;
-        enc_obj->frame_id += 1;
-        // enc_obj->message.header.stamp = rclcpp::Time.now();
-        enc_obj->message.header.frame_id = std::to_string(enc_obj->frame_id);
+        enc_obj->message.header.stamp = rclcpp::Clock().now();
+        enc_obj->message.header.frame_id = enc_obj->frame_id;
         ufr_info(link, "sent message sensors/LaserScan");
     }
     return 0;
@@ -332,16 +232,15 @@ static
 int ufr_ros_topic_enter(struct _link* link, size_t maxsize) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj->index == 7 ) {
-        link->enc_api = &ufr_enc_ros_api_ranges;
         enc_obj->message.ranges.resize(maxsize);
         enc_obj->index2 = 0;
     } else if ( enc_obj->index == 8 ) {
         enc_obj->message.intensities.resize(maxsize);
         enc_obj->index2 = 0;
     } else {
-        printf("errooo\n");
-        return -1;
+        return ufr_error(link, -1, "Invalid index %d to enter", enc_obj->index);
     }
+
     return UFR_OK;
 }
 
@@ -351,7 +250,7 @@ int ufr_ros_topic_leave(struct _link* link) {
     if ( enc_obj->index == 7 || enc_obj->index == 8 ) {
         enc_obj->index += 1;
     } else {
-        return -1;
+        return ufr_error(link, -1, "Invalid index %d to leave", enc_obj->index);
     }
     return UFR_OK;
 }
@@ -359,8 +258,8 @@ int ufr_ros_topic_leave(struct _link* link) {
 static
 ufr_enc_api_t ufr_enc_ros_api = {
     .boot = ufr_enc_ros_humble_boot,
-    .close = NULL,
-    .clear = NULL,
+    .close = ufr_enc_ros_humble_close,
+    .clear = ufr_enc_ros_humble_clear,
 
     .put_u32 = ufr_enc_ros_humble_put_u32,
     .put_i32 = ufr_enc_ros_humble_put_i32,

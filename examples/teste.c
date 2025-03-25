@@ -47,13 +47,25 @@ int ufr_exec(link_t* link, const char* command) {
 // ============================================================================
 
 int main() {
-    link_t loc = ufr_subscriber("@new mqtt @host 185.159.82.136 @topic location");
+    // link_t loc = ufr_subscriber("@new mqtt @host 185.159.82.136 @topic location");
+    /* link_t loc = ufr_subscriber("@new mqtt @coder msgpack @host 10.0.0.4 @topic /odom");
     while ( ufr_loop_ok() ) {
         char buffer[512];
         ufr_get(&loc, "^s", buffer);
         time_t stamp = time(0);
         printf("%ld - %s\n", stamp, buffer);
     }
+    ufr_close(&loc);*/
+
+    link_t timer = ufr_publisher("@new posix:timer @time 100ms");
+    link_t loc = ufr_publisher("@new mqtt @coder msgpack @host 10.0.0.4 @topic /cmd_vel");
+
+    while(1) {
+        float vel;
+        scanf("%f", &vel);
+        ufr_put(&loc, "ff\n", vel, 0.0);
+    }
+
     ufr_close(&loc);
     return 0;
 }

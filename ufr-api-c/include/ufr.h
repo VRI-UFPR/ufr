@@ -269,6 +269,8 @@ void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
 //  UFR
 // ============================================================================
 
+int ufr_new(link_t* link, int type, const char* format, ...);
+
 /**
  * @brief Create a new publisher
  * 
@@ -496,6 +498,10 @@ int ufr_put_eof(link_t* link);
 
 int ufr_put_enter(link_t* link, int max_nitems);
 int ufr_put_leave(link_t* link);
+
+
+int ufr_put_af32(link_t* link, const float* array, int nitems);
+
 
 // ============================================================================
 //  UFR ARGS

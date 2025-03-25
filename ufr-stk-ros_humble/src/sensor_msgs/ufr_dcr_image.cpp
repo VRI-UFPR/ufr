@@ -43,7 +43,8 @@ typedef ufr_ros_decoder_t<sensor_msgs::msg::Image> ll_decoder_t;
 
 static 
 int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "camera");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "camera");
     ll_gateway_t* gtw = (ll_gateway_t*) link->gtw_obj;
     ll_decoder_t* decoder = new ll_decoder_t(gtw, topic_name);
     link->dcr_obj = decoder;

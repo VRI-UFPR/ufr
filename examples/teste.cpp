@@ -33,8 +33,9 @@
 #include <stdlib.h>
 #include <ufr.h>
 #include <unistd.h>
+#include <vector>
 
-#include "ufr_cv.hpp"
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
@@ -44,21 +45,21 @@ using namespace cv;
 // ============================================================================
 
 int main() {
-    // abre um publicador
-    link_t video = ufr_subscriber("@new video @id 0");
-    // link_t video = ufr_subscriber("@new video @file pioneer-p1_2.mp4");
-    // link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2");
-
+    link_t video = ufr_publisher("@new mqtt @coder msgpack @host 185.159.82.136 @topic camera");
     ufr_exit_if_error(&video);
 
+    cv::VideoCapture cap(0);
+    std::vector<uint8_t> buffer;
     while( ufr_loop_ok() ) {
-        if ( ufr_recv(&video) != UFR_OK ) {
-            break;
-        }
+        Mat frame;
+        cap.read(frame);
+        imencode(".jpg", frame, buffer);
 
-        Mat image = ufr_cv_get_mat(&video);
-        imshow("janela", image);
-        waitKey(1);
+        ufr_put(&video, "sii", ".jpg", frame.cols, frame.rows);
+        ufr_put_enter(&video, buffer.size());
+        ufr_put_raw(&video, &buffer[0], buffer.size());
+        ufr_put_leave(&video);
+        ufr_send(&video);
     }
 
     // fim

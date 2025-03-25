@@ -255,6 +255,10 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
             ufr_args_flex(args->text, &cursor, token, sizeof(token));
             if ( token[0] == '%' ) {
                 if ( token[1] == 's' ) {
+                    if ( args->arg[count_arg].str == NULL ) {
+                        ufr_warn(args, "Expected string pointer but received a NULL pointer");
+                        return default_value;
+                    }
                     return args->arg[count_arg].str;
                 } else {
                     return default_value;
@@ -318,10 +322,25 @@ void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list) {
 
     // for each word in the text
     while( ufr_args_flex(text, &cursor, token, sizeof(token)) ) {
-        if ( token[0] == '%' && token[1] == 'p' ) {               
-            void* ptr = va_arg(list, void*);
-            args->arg[ count_arg ].ptr = ptr;
-            count_arg += 1;
+        if ( token[0] == '%' ) {
+            const char c = token[1];
+            if ( c == 'p' ) {
+                void* ptr = va_arg(list, void*);
+                args->arg[ count_arg ].ptr = ptr;
+                count_arg += 1;
+            } else if ( c == 's' ) {
+                char* str = va_arg(list, char*);
+                args->arg[ count_arg ].str = str;
+                count_arg += 1;
+            } else if ( c == 'd' ) {
+                const int32_t val_i32 = va_arg(list, int32_t);
+                args->arg[ count_arg ].i32 = val_i32;
+                count_arg += 1;
+            } else if ( c == 'f' ) {
+                const float val_f32 = va_arg(list, float);
+                args->arg[ count_arg ].f32 = val_f32;
+                count_arg += 1;
+            }
         }
     }
 

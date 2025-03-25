@@ -39,7 +39,7 @@
 #include "ufr.h"
 
 int g_contador = 0;
-uint8_t g_default_log_level = 5;
+uint8_t g_default_log_level = 0;
 volatile bool g_is_ok = true;
 
 typedef int (*loop_callback)(void);
@@ -433,6 +433,28 @@ void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...
 // ============================================================================
 //  UFR
 // ============================================================================
+
+int ufr_new(link_t* link, int type, const char* format, ...) {
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+    
+    // open the link
+    int res = -1;
+    if ( type == UFR_START_SUBSCRIBER) {
+        res = ufr_subscriber_args(link, &args);
+    } else if ( type == UFR_START_PUBLISHER ) {
+        res = ufr_publisher_args(link, &args);
+    } else if ( type == UFR_START_CLIENT ) {
+
+    } else if ( type == UFR_START_SERVER ) {
+
+    }
+    return res;
+}
 
 link_t ufr_subscriber(const char* format, ...) {
     link_t link;

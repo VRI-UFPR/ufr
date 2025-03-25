@@ -25,14 +25,8 @@ class Link(ctypes.Structure):
     dll = ctypes.CDLL(f"libufr.so")
     # dll.urf_sys_set_ld_path( bytes(_base_path, 'utf-8') );
 
-    dll.ufr_link_with_type.argtypes = [ ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int32 ]
-    dll.ufr_link_with_type.restype = ctypes.c_int32
-
     dll.ufr_close.argtypes = [ ctypes.c_void_p ]
     dll.ufr_close.restype = ctypes.c_int32
-
-    dll.ufr_link.argtypes = [ ctypes.c_void_p, ctypes.c_char_p ]
-    dll.ufr_link.restype =  ctypes.c_int32
 
     # Meta
     dll.ufr_get_nbytes.argtypes = [ ctypes.c_void_p ]
@@ -82,21 +76,16 @@ class Link(ctypes.Structure):
 
         ('type_started', ctypes.c_ubyte),
         ('log_level', ctypes.c_ubyte),
-        ('log_ident', ctypes.c_ubyte),
         ('status', ctypes.c_ubyte),
         ('status2', ctypes.c_ubyte),
 
         ('put_count', ctypes.c_ushort),
 
-        ('slot_gtw', ctypes.c_ubyte),
-        ('slot_ecr', ctypes.c_ubyte),
-        ('slot_dcr', ctypes.c_ubyte),
-
-        ('errstr', ctypes.c_ubyte * 180)
+        ('errstr', ctypes.c_ubyte * 172)
     ]
 
     def __init__(self, text: str, type: int):
-        error = Link.dll.ufr_link_with_type( ctypes.pointer(self), bytes(text,'utf-8'), type )
+        error = Link.dll.ufr_new( ctypes.pointer(self), type, bytes(text,'utf-8') )
         if error != UFR_OK:
             error_msg = bytes(self.errstr).decode('utf-8').rstrip('\0')
             raise Exception(error_msg)

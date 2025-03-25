@@ -45,7 +45,8 @@ static
 int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
 
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_decoder_t* dcr = new ll_decoder_t(gtw_obj, topic_name);
     link->dcr_obj = dcr;
     ufr_info(link, "loaded encoder for geometry/twist");

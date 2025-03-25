@@ -40,7 +40,7 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new zmq @debug 4 @port 3000"); 
+    link_t pub = ufr_publisher("@new mqtt @debug 4 @host 10.0.0.4 @topic teste"); 
 
     for(int i=0; i<10; i++) {
         char buffer[1024];

@@ -231,6 +231,39 @@ int ufr_put_pf64(link_t* link, const double* array, int nitems) {
     return wrote_nitems;
 }
 
+
+int ufr_put_af32(link_t* link, const float* array, int nitems) {
+    if ( link->log_level > 0 ) {
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, 0, "Encoder is null");
+        }
+        if ( link->enc_api->enter == NULL ) {
+            return ufr_error(link, 0, "Function enter of encoder is null");
+        }
+        if ( link->enc_api->leave == NULL ) {
+            return ufr_error(link, 0, "Function leave of encoder is null");
+        }
+        if ( link->enc_api->put_f32 == NULL ) {
+            return ufr_error(link, 0, "Function put_f32 of encoder is null");
+        }
+    }
+
+    if ( link->enc_api->enter(link, nitems) != UFR_OK ) {
+        return -1;
+    }
+
+    const int wrote_nitems = link->enc_api->put_f32(link, array, nitems);
+    if ( wrote_nitems > 0 ) {
+        link->put_count += wrote_nitems;
+    }
+    if ( link->enc_api->leave(link) != UFR_OK ) {
+        ufr_warn(link, "Function leave returned with error");
+    }
+    return wrote_nitems;
+}
+
+
+
 int ufr_put_eof(link_t* link) {
     const int retval = link->enc_api->put_cmd(link, EOF);
     link->put_count = 0;
