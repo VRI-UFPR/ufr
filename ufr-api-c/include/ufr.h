@@ -269,6 +269,8 @@ void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
 //  UFR
 // ============================================================================
 
+int ufr_new(link_t* link, int type, const char* format, ...);
+
 /**
  * @brief Create a new publisher
  * 
