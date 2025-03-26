@@ -445,9 +445,9 @@ int ufr_new(link_t* link, int type, const char* format, ...) {
     // open the link
     int res = -1;
     if ( type == UFR_START_SUBSCRIBER) {
-        res = ufr_subscriber_args(&link, &args);
+        res = ufr_subscriber_args(link, &args);
     } else if ( type == UFR_START_PUBLISHER ) {
-        res = ufr_publisher_args(&link, &args);
+        res = ufr_publisher_args(link, &args);
     } else if ( type == UFR_START_CLIENT ) {
 
     } else if ( type == UFR_START_SERVER ) {

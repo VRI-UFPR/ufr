@@ -54,7 +54,8 @@ struct ll_encoder_twist {
 
 static
 int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_encoder_twist* enc_obj = new ll_encoder_twist();
 
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;

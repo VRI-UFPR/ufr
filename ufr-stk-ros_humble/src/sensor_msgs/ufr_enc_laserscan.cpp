@@ -209,7 +209,8 @@ ufr_enc_api_t ufr_enc_ros_api_intensities = {
 
 static
 int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
-    std::string topic_name = ufr_args_gets(args, "@topic", "topico");
+    char buffer[UFR_ARGS_TOKEN];
+    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
 
     ll_encoder* enc_obj = new ll_encoder();
     // enc_obj->def_angle_max = ufr_args_getf(args, "@angle_max", 0.0);
