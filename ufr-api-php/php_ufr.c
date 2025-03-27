@@ -349,16 +349,16 @@ PHP_FUNCTION(ufr_get) {
             }
 
         } else if ( c == 'b' ) {
-            const size_t val_size = ufr_get_size(link);
-            const char* val_str = ufr_get_raw_ptr(link);
+            const size_t val_size = ufr_get_nbytes(link);
+            const char* val_str = ufr_get_rawptr(link);
             add_next_index_stringl(return_value, val_str, val_size);
             count += 1;
 
         } else if ( c == 'a' ) {
             zval array;
             array_init(&array);
-            ufr_dcr_enter(link);
-            const size_t len = ufr_get_size(link);
+            ufr_get_enter(link);
+            const size_t len = ufr_get_nitems(link);
             for (int i=0; i<len; i++) {
                 float val;
                 ufr_get(link, "f", &val);

@@ -264,7 +264,7 @@ int ufr_get_str(link_t* link, char* buffer, int maxlen) {
 
 int ufr_get_raw(link_t* link, uint8_t* buffer, int max_nitems) {
     size_t arr_size = 0;
-    // link->dcr_api->copy_arr(link, 'b', maxsize, &arr_size, (void*) buffer);
+    link->dcr_api->get_raw(link, buffer, max_nitems);
     return arr_size;
 }
 
