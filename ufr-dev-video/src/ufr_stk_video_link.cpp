@@ -273,9 +273,34 @@ int ufr_gtw_link_recv(link_t* link) {
     // const size_t size = ufr_get_nbytes(&gtw->link);
     // gtw->buffer.resize(size);
     
+    //
+    link->dcr_obj_idx = 0;
+
+    //
+    char format[512];
+    int rows, cols;
+    ufr_get(&gtw->link, "sii", format, &rows, &cols);
+
+// printf("%s %d %d\n", format, rows, cols);
+    const int nbytes = ufr_get_nbytes(&gtw->link);
+// printf("%d\n", nbytes);
+
+    if ( nbytes == 0 ){
+        return ufr_error(link, -1, "Image has 0 bytes");
+    }
+
+    const uint8_t* rawptr = ufr_get_rawptr(&gtw->link);
+    if ( rawptr == 0 ){
+        return ufr_error(link, -1, "Image has NULL pointer for image");
+    }
+
+    std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
+    gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
+
+    // ROS
+    /*
     char format[16];
     ufr_get(&gtw->link, "s", format);
-
     if ( strcmp(format, "mono8") == 0 ) {
         int size[2] = {480, 640};
         void* data = (void*) ufr_get_rawptr(&gtw->link);
@@ -284,7 +309,7 @@ int ufr_gtw_link_recv(link_t* link) {
         }
         gtw->frame = Mat(2, size, CV_8UC1, data, 0);
     }
-
+    */
     // ufr_get_raw(&gtw->link, gtw->buffer.data(), size);
     // gtw->frame = imdecode(gtw->buffer, cv::IMREAD_COLOR);
 

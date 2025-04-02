@@ -291,12 +291,11 @@ int ufr_get_af32(link_t* link, float buffer[], int max_items) {
 
     const int res1 = link->dcr_api->enter(link);
     if ( res1 != UFR_OK ) {
-        printf("error1\n");
-        return res1;
+        return ufr_error(link, -1, "Error on Enter function");
     }
     const int items_read = link->dcr_api->get_f32(link, buffer, max_items);
     if ( items_read < 0 ) {
-        printf("error2\n");
+        return ufr_error(link, -1, "Error on get_f32 function");
     }
     link->dcr_api->leave(link);
 

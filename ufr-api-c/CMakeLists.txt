@@ -27,6 +27,7 @@ target_link_libraries(ufr dl)
 
 install(TARGETS ufr DESTINATION lib)
 install(FILES ./include/ufr.h DESTINATION include)
+install(FILES ./include/ufr_cv.hpp DESTINATION include)
 
 # test
 # if(CMAKE_BUILD_TYPE STREQUAL "Debug")

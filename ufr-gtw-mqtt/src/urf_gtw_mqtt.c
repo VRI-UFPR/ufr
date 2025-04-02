@@ -62,7 +62,7 @@ typedef struct {
 
 typedef struct {
     uint8_t start_type;
-    bool is_received;
+    volatile bool is_received;
     struct mosquitto* mosq;
     size_t msg_size;
     size_t msg_size_max;

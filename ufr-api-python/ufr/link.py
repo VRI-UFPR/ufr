@@ -51,6 +51,9 @@ class Link(ctypes.Structure):
     dll.ufr_get_str.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
     dll.ufr_get_str.restype =  ctypes.c_int32
 
+    dll.ufr_get_rawptr.argtypes = [ ctypes.c_void_p]
+    dll.ufr_get_rawptr.restype =  ctypes.c_void_p
+
     # Put - 32bits
     dll.ufr_put_u32.argtypes = [ ctypes.c_void_p, ctypes.c_uint32 ]
     dll.ufr_put_u32.restype =  ctypes.c_uint32
@@ -172,6 +175,9 @@ class Link(ctypes.Structure):
                 Link.dll.ufr_get_str( ctypes.pointer(self), ctypes.pointer(buffer), size)
                 text = bytes(buffer).decode('utf-8').rstrip('\0')
                 resp.append(text)
+            elif c == 'p':
+                ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
+                resp.append(ptr)
             elif c == '^':
                 Link.dll.ufr_recv(ctypes.pointer(self))
             elif c == '\n':
@@ -183,7 +189,35 @@ class Link(ctypes.Structure):
             return resp[0]
         else:
             return resp
+
+    def get_cv_image(self):
+        msg = self.get("iiip")
+
+        im_type = msg[0]
+        im_rows = msg[1]
+        im_cols = msg[2]
+        im_data = msg[3]
+        if im_type == 16:
+            im_canal = 3
+            image = np.ctypeslib.as_array(
+                ctypes.cast(im_data, ctypes.POINTER(ctypes.c_ubyte)),
+                shape=(im_rows, im_cols, im_canal)
+            )
+        elif im_type == 2:
+            im_canal = 1
+            image = np.ctypeslib.as_array(
+                ctypes.cast(im_data, ctypes.POINTER(ctypes.c_ushort)),
+                shape=(im_rows, im_cols, im_canal)
+            )
+
+        return image
     
+    def recv_cv_image(self):
+        self.recv()
+        return self.get_cv_image()
+
+
+
 def Subscriber(text: str):
     return Link(text, UFR_START_SUBSCRIBER)
 
@@ -195,10 +229,6 @@ def Server(text: str):
 
 def Client(text: str):
     return Link(text, UFR_START_CLIENT)
-
-
-
-
 
 
 def urf_input(format: str):
