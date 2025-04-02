@@ -18,9 +18,10 @@ int main() {
     //link_t video = ufr_subscriber("@new video @id 0");
     
     
+    link_t video = ufr_subscriber("@new video @@new mqtt @@coder msgpack @@host 10.0.0.6 @@topic camera1");
     // link_t video = ufr_subscriber("@new video @@new mqtt @@coder msgpack @@host 185.159.82.136 @@topic camera");
     // link_t video = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera_rgb");
-    link_t video = ufr_subscriber("@new video @file teste1.mp4");
+    // link_t video = ufr_subscriber("@new video @file teste1.mp4");
 
     while(1) {
         if ( ufr_recv(&video) != UFR_OK ) {

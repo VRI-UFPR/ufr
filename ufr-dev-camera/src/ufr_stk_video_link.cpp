@@ -273,6 +273,10 @@ int ufr_gtw_link_recv(link_t* link) {
     // const size_t size = ufr_get_nbytes(&gtw->link);
     // gtw->buffer.resize(size);
     
+    //
+    link->dcr_obj_idx = 0;
+
+    //
     char format[512];
     int rows, cols;
     ufr_get(&gtw->link, "sii", format, &rows, &cols);
