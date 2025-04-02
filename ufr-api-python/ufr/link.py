@@ -51,6 +51,9 @@ class Link(ctypes.Structure):
     dll.ufr_get_str.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
     dll.ufr_get_str.restype =  ctypes.c_int32
 
+    dll.ufr_get_rawptr.argtypes = [ ctypes.c_void_p]
+    dll.ufr_get_rawptr.restype =  ctypes.c_void_p
+
     # Put - 32bits
     dll.ufr_put_u32.argtypes = [ ctypes.c_void_p, ctypes.c_uint32 ]
     dll.ufr_put_u32.restype =  ctypes.c_uint32
@@ -172,6 +175,9 @@ class Link(ctypes.Structure):
                 Link.dll.ufr_get_str( ctypes.pointer(self), ctypes.pointer(buffer), size)
                 text = bytes(buffer).decode('utf-8').rstrip('\0')
                 resp.append(text)
+            elif c == 'p':
+                ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
+                resp.append(ptr)
             elif c == '^':
                 Link.dll.ufr_recv(ctypes.pointer(self))
             elif c == '\n':
