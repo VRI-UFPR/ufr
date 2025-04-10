@@ -39,7 +39,7 @@
 #include "ufr.h"
 
 int g_contador = 0;
-uint8_t g_default_log_level = 0;
+uint8_t g_default_log_level = 2;
 volatile bool g_is_ok = true;
 
 typedef int (*loop_callback)(void);
@@ -495,6 +495,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     }
 
     //
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_SUBSCRIBER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro4");
@@ -540,8 +541,6 @@ link_t ufr_publisher(const char* format, ...) {
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
 
-    link->log = ufr_args_geti();
-
     // open the link
     ufr_publisher_args(&link, &args);
 
@@ -559,6 +558,7 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
         ufr_fatal(link, 1, "erro2");
     }
 
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_PUBLISHER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro3");

@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ufr.h>
-#include <unistd.h>
 
 // ============================================================================
 //  Main
@@ -40,16 +39,17 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new mqtt @debug 4 @host 10.0.0.4 @topic teste"); 
+    link_t server = ufr_server_st("@new zmq @coder msgpack @log 4"); 
 
+    // loop principal
     for(int i=0; i<10; i++) {
-        char buffer[1024];
-        snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i);
-        ufr_put(&pub, "s\n", buffer);
-        sleep(1);
+        char command[1024];
+        ufr_get(&server, "^s\n", command);
+        ufr_put(&server, "s\n\n", "OK");
+        printf("recv: %s - OK\n", command);
     }
 
     // fim
-    ufr_close(&pub);
+    ufr_close(&server);
     return 0;
 }

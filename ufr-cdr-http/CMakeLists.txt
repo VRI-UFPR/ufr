@@ -12,5 +12,7 @@ target_compile_options(ufr_dcr_http PUBLIC -O1)
 install(TARGETS ufr_dcr_http DESTINATION lib)
 
 # test
-enable_testing()
-add_subdirectory(./tests)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(./tests)
+endif(BUILD_TESTS)

@@ -30,13 +30,15 @@ install(FILES ./include/ufr.h DESTINATION include)
 install(FILES ./include/ufr_cv.hpp DESTINATION include)
 
 # test
-# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(./tests)
-# endif()
+endif(BUILD_TESTS)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(./examples)
+endif(BUILD_EXAMPLES)
 
 add_custom_target(coverage
     COMMAND gcovr ${PROJECT_BINARY_DIR}
     )
-
-add_subdirectory(./examples)

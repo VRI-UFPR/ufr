@@ -20,5 +20,7 @@ target_compile_options(ufr_dcr_msgpack PUBLIC -O1)
 install(TARGETS ufr_dcr_msgpack DESTINATION lib)
 
 # test
-enable_testing()
-add_subdirectory(./tests)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(./tests)
+endif(BUILD_TESTS)

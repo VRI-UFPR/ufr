@@ -123,17 +123,17 @@ int ufr_zmq_topic_start(struct _link* link, int type, const ufr_args_t* args) {
 static
 ufr_gtw_api_t ufr_zmq_topic_api = {
     .name = "zmq/topic",
-	.type = ufr_zmq_topic_type,
-	.state = ufr_zmq_state,
-	.size = ufr_zmq_size,
-	.boot = ufr_zmq_boot,
-	.start = ufr_zmq_topic_start,
-	.stop = ufr_zmq_stop,
-	.copy = NULL,
-	.recv = ufr_zmq_recv,
-	.recv_async = ufr_zmq_recv_async,
-	.read = ufr_zmq_read,
-	.write = ufr_zmq_write,
+    .type = ufr_zmq_topic_type,
+    .state = ufr_zmq_state,
+    .size = ufr_zmq_size,
+    .boot = ufr_zmq_boot,
+    .start = ufr_zmq_topic_start,
+    .stop = ufr_zmq_stop,
+    .copy = NULL,
+    .recv = ufr_zmq_recv,
+    .recv_async = ufr_zmq_recv_async,
+    .read = ufr_zmq_read,
+    .write = ufr_zmq_write,
     .recv_peer_name = ufr_zmq_recv_peer_name
 };
 
@@ -143,5 +143,5 @@ ufr_gtw_api_t ufr_zmq_topic_api = {
 
 int ufr_gtw_zmq_new_topic(link_t* link) {
     ufr_link_init(link, &ufr_zmq_topic_api);
-	return UFR_OK;
+    return UFR_OK;
 }

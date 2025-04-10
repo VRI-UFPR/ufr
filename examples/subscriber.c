@@ -40,16 +40,18 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new mqtt @debug 4 @host 10.0.0.4 @topic teste"); 
+    link_t sub = ufr_subscriber("@new zmq @coder msgpack @log 5 @port 5000");
+    // link_t sub = ufr_publisher("@new mqtt @coder msgpack @log 5 @host 127.0.0.1 @topic teste");
 
+    // loop principal
     for(int i=0; i<10; i++) {
+        int num;
         char buffer[1024];
-        snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i);
-        ufr_put(&pub, "s\n", buffer);
-        sleep(1);
+        ufr_get(&sub, "^si", buffer, &num);
+        printf("recv: %s %d\n", buffer, num);
     }
 
     // fim
-    ufr_close(&pub);
+    ufr_close(&sub);
     return 0;
 }

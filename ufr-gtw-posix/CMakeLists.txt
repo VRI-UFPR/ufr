@@ -19,5 +19,7 @@ target_link_libraries(ufr_gtw_posix ufr)
 install(TARGETS ufr_gtw_posix DESTINATION lib)
 
 # test
-enable_testing()
-add_subdirectory(./tests)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(./tests)
+endif(BUILD_TESTS)
