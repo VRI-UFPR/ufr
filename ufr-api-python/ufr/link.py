@@ -223,11 +223,8 @@ class Link(ctypes.Structure):
                 ctypes.cast(im_data, ctypes.POINTER(ctypes.c_ushort)),
                 shape=(im_rows, im_cols, im_canal)
             )
-<<<<<<< HEAD
         else:
             raise Exception("Invalid im_type : ", im_type)
-=======
->>>>>>> ae875c4858199feea54f0c989736fbd4ce102e0d
 
         return image
     
@@ -235,13 +232,9 @@ class Link(ctypes.Structure):
         self.recv()
         return self.get_cv_image()
 
-<<<<<<< HEAD
     # @staticmethod
     # def loop_ok():
     #    return Link.dll.ufr_loop_ok()
-=======
-
->>>>>>> ae875c4858199feea54f0c989736fbd4ce102e0d
 
 def Subscriber(text: str):
     return Link(text, UFR_START_SUBSCRIBER)
