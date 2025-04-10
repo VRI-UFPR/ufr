@@ -1,11 +1,19 @@
 cmake_minimum_required(VERSION 3.5)
 project(ufr)
 
-# Check msgpack library
+# Check msgpack library <= Ubuntu 23
 set(HAVE_MSGPACK OFF)
 find_package(msgpack)
 if (msgpack_DIR)
     set(HAVE_MSGPACK ON)
+    set(MSGPACK_LIBS msgpack)
+endif()
+
+# Check msgpack library >= Ubuntu 24
+find_package(msgpack-c)
+if (msgpack-c_DIR)
+    set(HAVE_MSGPACK ON)
+    set(MSGPACK_LIBS msgpack-c)
 endif()
 
 # Check mosquitto library
@@ -23,14 +31,16 @@ if (ZMQ_FOUND)
     set(HAVE_ZMQ ON)
 endif()
 
+add_compile_options(-Wall)
+# add_compile_options(-DCMAKE_BUILD_TYPE=Release)
 
 # Configure compilation
 option(BUILD_UFR_GTW_ZMQ     "build the gateway for ZMQ"    ${HAVE_ZMQ})
 option(BUILD_UFR_GTW_MQTT    "build the gateway for MQTT"   ${HAVE_MOSQUITTO})
 option(BUILD_UFR_CDR_MSGPACK "build the coder for MsgPack"  ${HAVE_MSGPACK})
 option(BUILD_UFR_STK_SQLITE  "build the stack for Sqlite3"  OFF )
-option(BUILD_EXAMPLES        "build the examples"           ON )
-option(BUILD_TESTS           "build the tests"              ON )
+option(BUILD_EXAMPLES        "build the examples"           OFF )
+option(BUILD_TESTS           "build the tests"              OFF )
 option(COVERAGE_TEST         "coverage test"                OFF)
 # option(BUILD_APPLICATION        "build the applications"       ON )
 
@@ -95,7 +105,7 @@ endif(BUILD_TESTS)
 # add_subdirectory(./ufr-stk-ssh)
 
 # add_subdirectory(ufr-stk-irrlicht)
-add_subdirectory(./ufr-stk-ros_humble)
+# add_subdirectory(./ufr-stk-ros_humble)
 # add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)

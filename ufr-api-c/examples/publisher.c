@@ -40,7 +40,7 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new posix:teste @coder csv @debug 4 @port 3000"); 
+    link_t pub = ufr_publisher("@new zmq @coder csv @log 4 @port 3000"); 
 
     for(int i=0; i<40; i++) {
         char buffer[1024];

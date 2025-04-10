@@ -28,6 +28,12 @@ class Link(ctypes.Structure):
     dll.ufr_close.argtypes = [ ctypes.c_void_p ]
     dll.ufr_close.restype = ctypes.c_int32
 
+    dll.ufr_loop_ok.argtypes = [ ]
+    dll.ufr_loop_ok.restype = ctypes.c_bool
+
+    dll.ufr_recv_async.argtypes = [ ctypes.c_void_p ]
+    dll.ufr_recv_async.restype = ctypes.c_int32
+
     # Meta
     dll.ufr_get_nbytes.argtypes = [ ctypes.c_void_p ]
     dll.ufr_get_nbytes.restype =  ctypes.c_uint32
@@ -106,6 +112,14 @@ class Link(ctypes.Structure):
 
     def recv(self):
         Link.dll.ufr_recv( ctypes.pointer(self) )
+
+    def recv_with(self, link2, timeout_ms):
+        res = Link.dll.ufr_recv_2s( ctypes.pointer(self), ctypes.pointer(link2), timeout_ms )
+        return res == UFR_OK
+
+    def recv_async(self):
+        res = Link.dll.ufr_recv_async( ctypes.pointer(self) )
+        return res == UFR_OK
 
     def read(self):
         size = Link.dll.ufr_size_bytes( ctypes.pointer(self) )
@@ -209,6 +223,8 @@ class Link(ctypes.Structure):
                 ctypes.cast(im_data, ctypes.POINTER(ctypes.c_ushort)),
                 shape=(im_rows, im_cols, im_canal)
             )
+        else:
+            raise Exception("Invalid im_type : ", im_type)
 
         return image
     
@@ -216,7 +232,9 @@ class Link(ctypes.Structure):
         self.recv()
         return self.get_cv_image()
 
-
+    # @staticmethod
+    # def loop_ok():
+    #    return Link.dll.ufr_loop_ok()
 
 def Subscriber(text: str):
     return Link(text, UFR_START_SUBSCRIBER)

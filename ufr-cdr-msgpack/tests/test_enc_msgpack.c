@@ -86,7 +86,7 @@ void test_encoder_array() {
     {
         int vet[5] = {20,21,22,23,24};
         // ufr_put(&link, "ai\n", 5, vet);
-        ufr_put_i32(&link, vet, 5);
+        ufr_put_pi32(&link, vet, 5);
         ufr_put(&link, "\n");
         uint8_t buffer[8];
         assert( ufr_read(&link, buffer, sizeof(buffer)) == 7 );

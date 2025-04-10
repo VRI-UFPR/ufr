@@ -186,7 +186,7 @@ bool ufr_send(link_t* link) {
 
 void ufr_close(link_t* link) {
     if ( link == NULL ) {
-        ufr_warn(link, 1, "link is null");
+        ufr_warn(link, "link is null");
         return;
     }
 
@@ -519,7 +519,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     }
 
     // start
-    ufr_log(&link, "starting the link");
+    ufr_log(link, "starting the link");
     if ( link->gtw_api->start != NULL ) {
         if ( link->gtw_api->start(link, UFR_START_SUBSCRIBER, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro7");
@@ -539,6 +539,8 @@ link_t ufr_publisher(const char* format, ...) {
     va_start(list, format);
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
+
+    link->log = ufr_args_geti();
 
     // open the link
     ufr_publisher_args(&link, &args);

@@ -256,7 +256,7 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
             if ( token[0] == '%' ) {
                 if ( token[1] == 's' ) {
                     if ( args->arg[count_arg].str == NULL ) {
-                        ufr_warn(args, "Expected string pointer but received a NULL pointer");
+                        // ufr_warn(args, "Expected string pointer but received a NULL pointer");
                         return default_value;
                     }
                     return args->arg[count_arg].str;
