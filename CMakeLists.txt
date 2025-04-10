@@ -34,13 +34,20 @@ endif()
 add_compile_options(-Wall)
 # add_compile_options(-DCMAKE_BUILD_TYPE=Release)
 
+set(HAVE_OPENCV OFF)
+find_package(OpenCV)
+if (OPENCV_FOUND)
+    set(HAVE_OPENCV ON)
+endif()
+
 # Configure compilation
 option(BUILD_UFR_GTW_ZMQ     "build the gateway for ZMQ"    ${HAVE_ZMQ})
 option(BUILD_UFR_GTW_MQTT    "build the gateway for MQTT"   ${HAVE_MOSQUITTO})
 option(BUILD_UFR_CDR_MSGPACK "build the coder for MsgPack"  ${HAVE_MSGPACK})
 option(BUILD_UFR_STK_SQLITE  "build the stack for Sqlite3"  OFF )
-option(BUILD_EXAMPLES        "build the examples"           OFF )
-option(BUILD_TESTS           "build the tests"              OFF )
+option(BUILD_UFR_DEV_VIDEO   "build the stack for Video"    ${HAVE_OPENCV} )
+option(BUILD_EXAMPLES        "build the examples"           ON )
+option(BUILD_TESTS           "build the tests"              ON )
 option(COVERAGE_TEST         "coverage test"                OFF)
 # option(BUILD_APPLICATION        "build the applications"       ON )
 
@@ -52,7 +59,6 @@ endif(COVERAGE_TEST)
 
 # include UFR API
 include_directories(./ufr-api-c/include)
-include_directories(./cv_mat/include)
 
 # Build libraries with no dependencies
 add_subdirectory(./ufr-api-c)
@@ -92,8 +98,13 @@ if(BUILD_TESTS)
     # add_test(NAME test_gtw_zmq COMMAND ./tests/test_topic "@new zmq:topic @port 2000")
 endif(BUILD_TESTS)
 
+if(BUILD_UFR_DEV_VIDEO)
+    # debian/ubuntu: sudo apt install libopencv-dev
+    add_subdirectory(./ufr-dev-video)
+    # include_directories(./cv_mat/include)
+    # add_subdirectory(./cv_mat)
+endif(BUILD_UFR_DEV_VIDEO)
 
-# add_subdirectory(./rplidar_ros)
 # add_subdirectory(./ufr-app-filesystem)
 # add_subdirectory(./ufr-app-proxy)
 # add_subdirectory(./ufr-gtw-qt)
@@ -109,9 +120,7 @@ endif(BUILD_TESTS)
 # add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
-add_subdirectory(./ufr-dev-camera)
-add_subdirectory(./cv_mat)
-
+# add_subdirectory(./cv_mat)
 
 # install(FILES ./etc/init.bash DESTINATION .)
 # install(FILES ./etc/Makefile DESTINATION .)
