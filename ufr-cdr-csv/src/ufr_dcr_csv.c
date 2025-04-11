@@ -213,7 +213,7 @@ int ufr_dcr_csv_get_f64(link_t* link, double* val, int max_nitems) {
 
 static
 int ufr_dcr_csv_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
-	ll_decoder_t* decoder = link->dcr_obj;
+	// ll_decoder_t* decoder = link->dcr_obj;
 	return 0;
 }
 

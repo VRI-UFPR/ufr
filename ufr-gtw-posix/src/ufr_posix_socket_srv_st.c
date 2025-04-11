@@ -46,7 +46,7 @@
 #include "ufr_message.h"
 
 typedef struct {
-    int lenght;
+    uint32_t lenght;
     struct sockaddr address;
     int sockfd;
     ufr_buffer_t message;
@@ -126,7 +126,7 @@ void ufr_posix_socket_srv_stop(link_t* link, int type) {
 
 static
 size_t ufr_posix_socket_srv_read(link_t* link, char* buffer, size_t length) {
-	ll_srv_request_t* request = link->gtw_obj;
+	// ll_srv_request_t* request = link->gtw_obj;
 	// return read(request->message.ptr, buffer, length);
 
     return 0;

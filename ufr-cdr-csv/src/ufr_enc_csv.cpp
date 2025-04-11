@@ -80,16 +80,16 @@ int ufr_enc_csv_put_u32(link_t* link, const uint32_t* val, int nitems) {
 
     if ( nitems > 0 ) {
         if ( enc_obj->line.size() == 0 ) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%u", val[0]);
+            snprintf(buffer, sizeof(buffer), "%u", val[0]);
             enc_obj->line += buffer;
         } else {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%u", sep, val[0]);
+            snprintf(buffer, sizeof(buffer), "%c%u", sep, val[0]);
             enc_obj->line += buffer;
         }
         wrote += 1;
 
         for (; wrote<nitems; wrote++) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%u", sep, val[wrote]);
+            snprintf(buffer, sizeof(buffer), "%c%u", sep, val[wrote]);
             enc_obj->line += buffer;
             wrote += 1;
         }
@@ -106,16 +106,16 @@ int ufr_enc_csv_put_i32(link_t* link, const int32_t* val, int nitems) {
 
     if ( nitems > 0 ) {
         if ( enc_obj->line.size() == 0 ) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%d", val[0]);
+            snprintf(buffer, sizeof(buffer), "%d", val[0]);
             enc_obj->line += buffer;
         } else {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[0]);
+            snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[0]);
             enc_obj->line += buffer;
         }
         wrote += 1;
 
         for (; wrote<nitems; wrote++) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[wrote]);
+            snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[wrote]);
             enc_obj->line += buffer;
             wrote += 1;
         }
@@ -133,16 +133,16 @@ int ufr_enc_csv_put_f32(link_t* link, const float* val, int nitems) {
 
     if ( nitems > 0 ) {
         if ( enc_obj->line.size() == 0 ) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%f", val[0]);
+            snprintf(buffer, sizeof(buffer), "%f", val[0]);
             enc_obj->line += buffer;
         } else {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%f", sep, val[0]);
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[0]);
             enc_obj->line += buffer;
         }
         wrote += 1;
 
         for (; wrote<nitems; wrote++) {
-            const size_t size = snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
             enc_obj->line += buffer;
             wrote += 1;
         }

@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * DISCLAIMED. IN NO EVENT SHALL aTHE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -40,16 +40,17 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new mqtt @debug 4 @host 10.0.0.4 @topic teste"); 
+    link_t pub = ufr_publisher("@new zmq @coder msgpack @log 5 @port 5000");
+    // link_t pub = ufr_publisher("@new mqtt @coder msgpack @log 5 @host 127.0.0.1 @topic teste");
+    // link_t pub = ufr_publisher("@new posix:file @coder csv @log 5 @path saida.txt");
 
+    // loop principal
     for(int i=0; i<10; i++) {
-        char buffer[1024];
-        snprintf(buffer, 1024, "{\"x\": %d, \"y\": 20}", i);
-        ufr_put(&pub, "s\n", buffer);
+        ufr_put(&pub, "si\n", "opa", i);
         sleep(1);
     }
 
     // fim
-    ufr_close(&pub);
+    // ufr_close(&pub);
     return 0;
 }

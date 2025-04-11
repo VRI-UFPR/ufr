@@ -21,10 +21,10 @@ with open("README.md", "r") as fh:
 
 setup (
     name="ufr",
-    version="0.1.0",
+    version="0.6.2",
     author="Felipe Bombardelli",
     author_email="felipebombardelli@gmail.com",
-    url="https://github.com/bombark/ufr-api-python",
+    url="https://github.com/VRI-UFPR/ufr",
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",

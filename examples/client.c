@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * DISCLAIMED. IN NO EVENT SHALL aTHE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+	
 // ============================================================================
 //  Header
 // ============================================================================
@@ -33,34 +33,25 @@
 #include <stdlib.h>
 #include <ufr.h>
 #include <unistd.h>
-#include <vector>
-
-#include <opencv2/opencv.hpp>
-
-using namespace std;
-using namespace cv;
 
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    link_t video = ufr_publisher("@new mqtt @coder msgpack @host 185.159.82.136 @topic camera @debug 10");
-    ufr_exit_if_error(&video);
+    // abre um publicador
+    link_t client = ufr_client("@new zmq @coder msgpack @log 4"); 
 
-    cv::VideoCapture cap(0);
-    std::vector<uint8_t> buffer;
-    while( ufr_loop_ok() ) {
-        Mat frame;
-        cap.read(frame);
-        imencode(".jpg", frame, buffer);
-
-        ufr_put(&video, "sii", ".jpg", frame.cols, frame.rows);
-        ufr_put_raw(&video, &buffer[0], buffer.size());
-        ufr_send(&video);
+    // loop principal
+    for(int i=0; i<2; i++) {
+        char response[1024];
+        ufr_put(&client, "s\n\n", "ping");
+        ufr_get(&client, "^s\n", response);
+        printf("recv: %s\n", response);
+        sleep(1);
     }
 
     // fim
-    ufr_close(&video);
+    ufr_close(&client);
     return 0;
 }

@@ -93,11 +93,10 @@ int ufr_gtw_posix_file_boot(link_t* link, const ufr_args_t* args) {
     }
 
     // create shared data
-    const size_t size = strlen(path);
-    ll_shr_t* shr = malloc( sizeof(ll_shr_t) + size + 1 );
+    const size_t size_plus_zero = strlen(path) + 1;
+    ll_shr_t* shr = malloc( sizeof(ll_shr_t) + size_plus_zero);
     shr->count = 1;
-    strncpy(shr->path, path, size);
-    shr->path[size] = '\0';
+    strncpy(&shr->path[0], path, size_plus_zero);
     link->gtw_shr = shr;
 
     // start the link, case mode is present

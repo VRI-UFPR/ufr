@@ -84,7 +84,7 @@ ufr_enc_api_t ufr_enc_link_api = {
     .put_f64 = NULL,
 
     .put_cmd = ufr_enc_link_put_cmd,
-    .put_str = NULL,
+    .put_str = ufr_enc_link_put_str,
     .put_raw = ufr_enc_link_put_raw,
 
     .enter = ufr_enc_link_enter,
@@ -248,7 +248,7 @@ int  ufr_gtw_link_start(link_t* link, int type, const ufr_args_t* args) {
 }
 
 void ufr_gtw_link_stop(link_t* link, int type) {
-    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    // GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
     // ufr_stop(&gtw->link);
 }
 
@@ -317,6 +317,38 @@ int ufr_gtw_link_recv(link_t* link) {
 }
 
 int ufr_gtw_link_recv_async(link_t* link) {
+    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    const int res = ufr_recv_async(&gtw->link);
+    if ( res != UFR_OK ) {
+        return res;
+    }
+    // const size_t size = ufr_get_nbytes(&gtw->link);
+    // gtw->buffer.resize(size);
+    
+    //
+    link->dcr_obj_idx = 0;
+
+    //
+    char format[512];
+    int rows, cols;
+    ufr_get(&gtw->link, "sii", format, &rows, &cols);
+
+// printf("%s %d %d\n", format, rows, cols);
+    const int nbytes = ufr_get_nbytes(&gtw->link);
+// printf("%d\n", nbytes);
+
+    if ( nbytes == 0 ){
+        return ufr_error(link, -1, "Image has 0 bytes");
+    }
+
+    const uint8_t* rawptr = ufr_get_rawptr(&gtw->link);
+    if ( rawptr == 0 ){
+        return ufr_error(link, -1, "Image has NULL pointer for image");
+    }
+
+    std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
+    gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
+
     return UFR_OK;
 }
 

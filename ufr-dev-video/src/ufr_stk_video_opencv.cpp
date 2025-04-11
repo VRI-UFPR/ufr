@@ -233,11 +233,6 @@ int ufr_gtw_opencv_recv_async(link_t* link) {
 }
 
 static
-int ufr_gtw_opencv_send(link_t* link) {
-    return UFR_OK;
-}
-
-static
 int ufr_gtw_opencv_accept(link_t* link, link_t* out_client) {
     return UFR_OK;
 }

@@ -75,7 +75,7 @@ int ufr_dcr_sys_recv(link_t* link, char* msg_data, size_t msg_size) {
 }
 
 static
-int ufr_dcr_sys_get_type(link_t* link) {
+char ufr_dcr_sys_get_type(link_t* link) {
     return 0;
 }
 
@@ -177,7 +177,7 @@ ufr_dcr_api_t dcr_sys_api = {
 
     .next = NULL, 
 
-    .get_type = NULL,
+    .get_type = ufr_dcr_sys_get_type,
 
 	.get_u32 = ufr_dcr_sys_get_u32,
 	.get_i32 = ufr_dcr_sys_get_i32,

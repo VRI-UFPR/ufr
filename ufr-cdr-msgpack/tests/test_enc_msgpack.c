@@ -86,10 +86,10 @@ void test_encoder_array() {
     {
         int vet[5] = {20,21,22,23,24};
         // ufr_put(&link, "ai\n", 5, vet);
-        ufr_put_i32(&link, vet, 5);
+        ufr_put_pi32(&link, vet, 5);
         ufr_put(&link, "\n");
         uint8_t buffer[8];
-        assert( ufr_read(&link, buffer, sizeof(buffer)) == 7 );
+        assert( ufr_read(&link, (char*) buffer, sizeof(buffer)) == 7 );
         
         // assert( ufr_read(&link, buffer, sizeof(buffer)) == 5 );
         assert( buffer[0] == 0x95 );
@@ -121,7 +121,7 @@ void show_encoder_bytes() {
     ufr_put(&link, "\n");*/
 
     uint8_t buffer[1024];
-    size_t read = ufr_read(&link, buffer, 1024);
+    size_t read = ufr_read(&link, (char*) buffer, 1024);
     for (int i=0; i<read; i++ ){
         printf("%x ", buffer[i]);
     }

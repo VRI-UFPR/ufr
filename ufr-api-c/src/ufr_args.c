@@ -256,7 +256,7 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
             if ( token[0] == '%' ) {
                 if ( token[1] == 's' ) {
                     if ( args->arg[count_arg].str == NULL ) {
-                        ufr_warn(args, "Expected string pointer but received a NULL pointer");
+                        // ufr_warn(args, "Expected string pointer but received a NULL pointer");
                         return default_value;
                     }
                     return args->arg[count_arg].str;
@@ -337,7 +337,7 @@ void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list) {
                 args->arg[ count_arg ].i32 = val_i32;
                 count_arg += 1;
             } else if ( c == 'f' ) {
-                const float val_f32 = va_arg(list, float);
+                const float val_f32 = (float) va_arg(list, double);
                 args->arg[ count_arg ].f32 = val_f32;
                 count_arg += 1;
             }
@@ -353,7 +353,7 @@ void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list) {
 int ufr_args_decrease_level(const char* src, char* dst) {
     dst[0] = '\0';
     char token[512];
-    uint8_t count_arg = 0;
+    // uint8_t count_arg = 0;
     uint16_t cursor = 0;
     bool ignore = true;
     while( ufr_args_flex(src, &cursor, token, sizeof(token)) ) {

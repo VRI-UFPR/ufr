@@ -14,5 +14,7 @@ target_link_libraries(ufr_dcr_csv ufr)
 install(TARGETS ufr_dcr_csv DESTINATION lib)
 
 # test
-enable_testing()
-add_subdirectory(./tests)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(./tests)
+endif(BUILD_TESTS)

@@ -1,11 +1,19 @@
 cmake_minimum_required(VERSION 3.5)
 project(ufr)
 
-# Check msgpack library
+# Check msgpack library <= Ubuntu 23
 set(HAVE_MSGPACK OFF)
 find_package(msgpack)
 if (msgpack_DIR)
     set(HAVE_MSGPACK ON)
+    set(MSGPACK_LIBS msgpackc)
+else()
+    # Check msgpack library >= Ubuntu 24
+    find_package(msgpack-c)
+    if (msgpack-c_DIR)
+        set(HAVE_MSGPACK ON)
+        set(MSGPACK_LIBS msgpack-c)
+    endif()
 endif()
 
 # Check mosquitto library
@@ -23,6 +31,9 @@ if (ZMQ_FOUND)
     set(HAVE_ZMQ ON)
 endif()
 
+add_compile_options(-Wall)
+# add_compile_options(-DCMAKE_BUILD_TYPE=Release)
+
 set(HAVE_OPENCV OFF)
 find_package(OpenCV)
 if (OPENCV_FOUND)
@@ -35,7 +46,7 @@ option(BUILD_UFR_GTW_MQTT    "build the gateway for MQTT"   ${HAVE_MOSQUITTO})
 option(BUILD_UFR_CDR_MSGPACK "build the coder for MsgPack"  ${HAVE_MSGPACK})
 option(BUILD_UFR_STK_SQLITE  "build the stack for Sqlite3"  OFF )
 option(BUILD_UFR_DEV_VIDEO   "build the stack for Video"    ${HAVE_OPENCV} )
-option(BUILD_EXAMPLES        "build the examples"           ON )
+option(BUILD_EXAMPLES        "build the examples"           OFF )
 option(BUILD_TESTS           "build the tests"              ON )
 option(COVERAGE_TEST         "coverage test"                OFF)
 # option(BUILD_APPLICATION        "build the applications"       ON )
@@ -109,6 +120,7 @@ endif(BUILD_UFR_DEV_VIDEO)
 # add_subdirectory(./ufr-stk-ros_melodic)
 # add_subdirectory(./ufr-stk-ros_noetic)
 # add_subdirectory(./ufr-stk-webots)
+# add_subdirectory(./cv_mat)
 
 # install(FILES ./etc/init.bash DESTINATION .)
 # install(FILES ./etc/Makefile DESTINATION .)

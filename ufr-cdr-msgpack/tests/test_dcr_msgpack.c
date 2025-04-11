@@ -94,7 +94,7 @@ void test_decoded_2s() {
             0xa6, 0x61, 0x62, 0x63, 0x33, 0x34, 0x35, 
             '\n'
         };
-        ufr_write(&link, send, sizeof(send));
+        ufr_write(&link, (const char*) send, sizeof(send));
         ufr_recv(&link);
 
         char str[32];
@@ -114,7 +114,7 @@ void test_decoded_array() {
 
     {
         uint8_t send[] = {0x95, 0x13, 0x14, 0x1e, 0x28, 0x32, '\n'};
-        ufr_write(&link, send, sizeof(send));
+        ufr_write(&link, (const char*) send, sizeof(send));
         ufr_recv(&link);
 
         int num;

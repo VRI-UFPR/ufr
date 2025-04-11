@@ -39,7 +39,7 @@
 #include "ufr.h"
 
 int g_contador = 0;
-uint8_t g_default_log_level = 0;
+uint8_t g_default_log_level = 2;
 volatile bool g_is_ok = true;
 
 typedef int (*loop_callback)(void);
@@ -186,7 +186,7 @@ bool ufr_send(link_t* link) {
 
 void ufr_close(link_t* link) {
     if ( link == NULL ) {
-        ufr_warn(link, 1, "link is null");
+        ufr_warn(link, "link is null");
         return;
     }
 
@@ -391,7 +391,7 @@ void ufr_log_put(link_t* link, uint8_t level, const char* func_name, const char*
     }
     va_list list;
     va_start(list, format);
-    const char* name = ufr_api_name(link);
+    // adicionar depois : const char* name = ufr_api_name(link);
     fprintf(stderr, "# info: %s: ", func_name);
     vfprintf(stderr, format, list);
     fprintf(stderr, "\n");
@@ -495,6 +495,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     }
 
     //
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_SUBSCRIBER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro4");
@@ -519,7 +520,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     }
 
     // start
-    ufr_log(&link, "starting the link");
+    ufr_log(link, "starting the link");
     if ( link->gtw_api->start != NULL ) {
         if ( link->gtw_api->start(link, UFR_START_SUBSCRIBER, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro7");
@@ -557,6 +558,7 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
         ufr_fatal(link, 1, "erro2");
     }
 
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_PUBLISHER;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro3");

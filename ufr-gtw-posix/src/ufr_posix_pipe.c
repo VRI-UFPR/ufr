@@ -185,7 +185,7 @@ int ufr_posix_pipe_recv(link_t* link) {
     buffer->size = msg_size;
     if ( link->dcr_api != NULL ) {
         if ( link->dcr_api->recv_cb != NULL ) {
-            link->dcr_api->recv_cb(link, buffer->data, msg_size);
+            link->dcr_api->recv_cb(link, (char*) buffer->data, msg_size);
         } else {
             ufr_info(link, "Function recv_cb on Decoder API is NULL");
         }

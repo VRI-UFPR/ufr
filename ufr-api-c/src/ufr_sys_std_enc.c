@@ -143,7 +143,7 @@ int ufr_enc_sys_put_f64(link_t* link, const double* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
-        ufr_buffer_put_f32_as_str(buffer, val[wrote]);
+        ufr_buffer_put_f32_as_str(buffer, (float) val[wrote]);
     }
     return wrote;
 }
