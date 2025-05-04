@@ -77,12 +77,12 @@ void copy_str_replacing_symbols(ufr_buffer_t* buffer, const char* str, const siz
 //  Default Encoder
 // ============================================================================
 
-int ufr_enc_sys_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_text_boot(link_t* link, const ufr_args_t* args) {
     link->enc_obj = ufr_buffer_new();
     return UFR_OK;
 }
 
-void ufr_enc_sys_close(link_t* link) {
+void ufr_enc_text_close(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     if ( buffer != NULL ) {
         ufr_buffer_free(buffer);
@@ -91,12 +91,12 @@ void ufr_enc_sys_close(link_t* link) {
     }
 }
 
-void ufr_enc_sys_clear(link_t* link) {
+void ufr_enc_text_clear(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_clear(buffer);
 }
 
-int ufr_enc_sys_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_text_put_u32(link_t* link, const uint32_t* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -105,7 +105,7 @@ int ufr_enc_sys_put_u32(link_t* link, const uint32_t* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_text_put_i32(link_t* link, const int32_t* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -114,7 +114,7 @@ int ufr_enc_sys_put_i32(link_t* link, const int32_t* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_f32(link_t* link, const float* val, int nitems) {
+int ufr_enc_text_put_f32(link_t* link, const float* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -123,7 +123,7 @@ int ufr_enc_sys_put_f32(link_t* link, const float* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_u64(link_t* link, const uint64_t* val, int nitems) {
+int ufr_enc_text_put_u64(link_t* link, const uint64_t* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -132,7 +132,7 @@ int ufr_enc_sys_put_u64(link_t* link, const uint64_t* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_i64(link_t* link, const int64_t* val, int nitems) {
+int ufr_enc_text_put_i64(link_t* link, const int64_t* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -141,7 +141,7 @@ int ufr_enc_sys_put_i64(link_t* link, const int64_t* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_f64(link_t* link, const double* val, int nitems) {
+int ufr_enc_text_put_f64(link_t* link, const double* val, int nitems) {
     int wrote = 0;
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     for (; wrote<nitems; wrote++) {
@@ -150,22 +150,15 @@ int ufr_enc_sys_put_f64(link_t* link, const double* val, int nitems) {
     return wrote;
 }
 
-int ufr_enc_sys_put_str(link_t* link, const char* val) {
+int ufr_enc_text_put_str(link_t* link, const char* val) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
-    const size_t size = strlen(val);
-    if ( str_needs_quote(val, size) ) {
-        ufr_buffer_put_chr(buffer, '\"');
-        copy_str_replacing_symbols(buffer, val, size);
-        ufr_buffer_put_chr(buffer, '\"');
-    } else {
-        copy_str_replacing_symbols(buffer, val, size);
-        ufr_buffer_put_chr(buffer, ' ');
-    }
-    
+    // const size_t size = strlen(val);
+
+    ufr_buffer_put_str(buffer, val);    
     return UFR_OK;
 }
 
-int ufr_enc_sys_put_cmd(link_t* link, char cmd) {
+int ufr_enc_text_put_cmd(link_t* link, char cmd) {
     if ( cmd == '\n' ) {
         ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
         ufr_buffer_put_chr(buffer, '\n');
@@ -175,44 +168,44 @@ int ufr_enc_sys_put_cmd(link_t* link, char cmd) {
     return UFR_OK;
 }
 
-int ufr_enc_sys_enter(link_t* link, size_t maxsize) {
+int ufr_enc_text_enter(link_t* link, size_t maxsize) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_put_str(buffer, "[ ");
     return UFR_OK;
 }
 
-int ufr_enc_sys_leave(link_t* link) {
+int ufr_enc_text_leave(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_put_str(buffer, "] ");
     return UFR_OK;
 }
 
-ufr_enc_api_t ufr_enc_sys_api = {
-    .boot = ufr_enc_sys_boot,
-    .close = ufr_enc_sys_close,
-    .clear = ufr_enc_sys_clear,
+ufr_enc_api_t ufr_enc_text_api = {
+    .boot = ufr_enc_text_boot,
+    .close = ufr_enc_text_close,
+    .clear = ufr_enc_text_clear,
 
-    .put_u32 = ufr_enc_sys_put_u32,
-    .put_i32 = ufr_enc_sys_put_i32,
-    .put_f32 = ufr_enc_sys_put_f32,
+    .put_u32 = ufr_enc_text_put_u32,
+    .put_i32 = ufr_enc_text_put_i32,
+    .put_f32 = ufr_enc_text_put_f32,
 
-    .put_u64 = ufr_enc_sys_put_u64,
-    .put_i64 = ufr_enc_sys_put_i64,
-    .put_f64 = ufr_enc_sys_put_f64,
+    .put_u64 = ufr_enc_text_put_u64,
+    .put_i64 = ufr_enc_text_put_i64,
+    .put_f64 = ufr_enc_text_put_f64,
 
-    .put_cmd = ufr_enc_sys_put_cmd,
-    .put_str = ufr_enc_sys_put_str,
+    .put_cmd = ufr_enc_text_put_cmd,
+    .put_str = ufr_enc_text_put_str,
     .put_raw = NULL,
 
-    .enter = ufr_enc_sys_enter,
-    .leave = ufr_enc_sys_leave,
+    .enter = ufr_enc_text_enter,
+    .leave = ufr_enc_text_leave,
 };
 
 // ============================================================================
 //  Public Function
 // ============================================================================
 
-int ufr_enc_sys_new_std(link_t* link, int type) {
-    link->enc_api = &ufr_enc_sys_api;
+int ufr_enc_text_new(link_t* link, int type) {
+    link->enc_api = &ufr_enc_text_api;
     return UFR_OK;
 }

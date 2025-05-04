@@ -128,7 +128,6 @@ ufr_enc_api_t ufr_enc_ros_string = {
     .boot = ufr_enc_ros_string_boot,
     .close = ufr_enc_ros_string_close,
     .clear = NULL,
-    .set_header = NULL,
 
     .put_u8 = NULL,
     .put_i8 = NULL,

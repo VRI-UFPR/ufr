@@ -38,11 +38,11 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @coder msgpack");
+    link_t sub = ufr_subscriber("@new mqtt @host intercampi @host 185.159.82.136");
 
     // aaa
-    int a,b,c;
-    ufr_get(&sub, "^iii", &a, &b, &c);
+    char buffer[512];
+    ufr_get(&sub, "^s", &buffer);
 
     // end
     ufr_close(&sub);

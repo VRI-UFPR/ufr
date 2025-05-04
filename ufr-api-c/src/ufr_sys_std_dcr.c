@@ -80,6 +80,12 @@ char ufr_dcr_sys_get_type(link_t* link) {
 }
 
 static
+int ufr_dcr_sys_get_nbytes(link_t* link) {
+    decoder_t* dcr = link->dcr_obj;
+    return dcr->msg_size;
+}
+
+static
 int ufr_dcr_sys_get_u32(link_t* link, uint32_t* val, int nitems) {
     decoder_t* dcr = link->dcr_obj;
     if ( dcr == NULL || dcr->msg_cur >= dcr->msg_end ) {
@@ -149,7 +155,7 @@ int ufr_dcr_sys_get_str(link_t* link, char* ret_val, int maxbytes) {
     }
 
     char* saveptr;
-    const char* val_str = strtok_r( dcr->msg_cur, " \n", &saveptr );
+    const char* val_str = strtok_r( dcr->msg_cur, "\n", &saveptr );
     if ( val_str == NULL ) {
         return -1;
     }
@@ -175,9 +181,12 @@ ufr_dcr_api_t dcr_sys_api = {
 	.recv_cb = ufr_dcr_sys_recv,
     .recv_async_cb = NULL,
 
-    .next = NULL, 
+    .next = NULL,
 
     .get_type = ufr_dcr_sys_get_type,
+    .get_nbytes = ufr_dcr_sys_get_nbytes,
+    .get_nitems = NULL,
+    .get_rawptr = NULL,
 
 	.get_u32 = ufr_dcr_sys_get_u32,
 	.get_i32 = ufr_dcr_sys_get_i32,

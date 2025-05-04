@@ -40,13 +40,13 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new zmq @coder msgpack @log 5 @port 5000");
-    // link_t pub = ufr_publisher("@new mqtt @coder msgpack @log 5 @host 127.0.0.1 @topic teste");
+    // link_t pub = ufr_publisher("@new zmq @coder msgpack @log 5 @port 5000");
+    link_t pub = ufr_publisher("@new mqtt @coder text @log 5 @host 185.159.82.136 @topic intercampi");
     // link_t pub = ufr_publisher("@new posix:file @coder csv @log 5 @path saida.txt");
 
     // loop principal
     for(int i=0; i<10; i++) {
-        ufr_put(&pub, "si\n", "opa", i);
+        ufr_put(&pub, "s\n", "{\"rota\": \"intercampi\"}");
         sleep(1);
     }
 

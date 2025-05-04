@@ -16,7 +16,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL aTHE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -24,7 +24,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -32,26 +32,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ufr.h>
-#include <unistd.h>
 
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
-    // abre um publicador
-    link_t sub = ufr_subscriber("@new zmq @coder msgpack @log 5 @port 5000");
-    // link_t sub = ufr_publisher("@new mqtt @coder msgpack @log 5 @host 127.0.0.1 @topic teste");
+    link_t sub = ufr_subscriber("@new mqtt @topic intercampi @host 185.159.82.136");
 
-    // loop principal
-    for(int i=0; i<10; i++) {
-        int num;
-        char buffer[1024];
-        ufr_get(&sub, "^si", buffer, &num);
-        printf("recv: %s %d\n", buffer, num);
-    }
+    // aaa
+    char buffer[512];
+    ufr_get(&sub, "^s", &buffer);
+    printf("%s\n", buffer);
 
-    // fim
+    ufr_get(&sub, "^s", &buffer);
+    printf("%s\n", buffer);
+
+    ufr_get(&sub, "^s", &buffer);
+    printf("%s\n", buffer);
+
+    // end
     ufr_close(&sub);
     return 0;
 }

@@ -21,7 +21,7 @@ with open("README.md", "r") as fh:
 
 setup (
     name="ufr",
-    version="0.6.2",
+    version="0.6.3",
     author="Felipe Bombardelli",
     author_email="felipebombardelli@gmail.com",
     url="https://github.com/VRI-UFPR/ufr",

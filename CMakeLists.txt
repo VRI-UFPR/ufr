@@ -64,6 +64,7 @@ include_directories(./ufr-api-c/include)
 add_subdirectory(./ufr-api-c)
 add_subdirectory(./ufr-gtw-posix)
 add_subdirectory(./ufr-cdr-csv)
+add_subdirectory(./ufr-cdr-text)
 
 # Build libraries with dependencies
 if(BUILD_UFR_GTW_ZMQ)
