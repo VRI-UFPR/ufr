@@ -5,6 +5,9 @@
 #include <ufr.h>
 #include "opencv2/opencv.hpp"
 
+#define PROTOCOL_BASIC  0
+#define PROTOCOL_ROS    1
+
 using namespace std;
 using namespace cv;
 
@@ -13,6 +16,7 @@ struct GatewayLink {
     link_t link;
     std::vector<uint8_t> buffer;
     Mat frame;
+    uint8_t protocol;
 };
 
 // ============================================================================
@@ -223,7 +227,19 @@ int  ufr_gtw_link_boot(link_t* link, const ufr_args_t* args) {
     char link_text[1024];
     ufr_args_decrease_level(args->text, link_text);
     // printf("%s\n", link_text);
-    gtw->link = ufr_subscriber(link_text);
+
+    char buffer[1024];
+    ufr_args_t sub_args = {.text=link_text};
+    std::string new_value = ufr_args_gets(&sub_args, buffer, "@new", "");
+    if ( new_value == "" ) {
+        gtw->protocol = PROTOCOL_BASIC;
+    } else if ( new_value == "ros_humble" ) {
+        gtw->protocol = PROTOCOL_ROS;
+    } else {
+        gtw->protocol = PROTOCOL_BASIC;
+    }
+
+    ufr_subscriber_args(&gtw->link, &sub_args);
 
     // gtw->data = malloc(1024*1024);
     link->gtw_obj = (void*) gtw;
@@ -265,54 +281,64 @@ size_t ufr_gtw_link_write(link_t* link, const char* buffer, size_t length) {
 }
 
 int ufr_gtw_link_recv(link_t* link) {
+    // recebe os dados
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
     const int res = ufr_recv(&gtw->link);
     if ( res != UFR_OK ) {
         return res;
     }
-    // const size_t size = ufr_get_nbytes(&gtw->link);
-    // gtw->buffer.resize(size);
-    
-    //
+
+    // limpa o index
     link->dcr_obj_idx = 0;
 
-    //
-    char format[512];
-    int rows, cols;
-    ufr_get(&gtw->link, "sii", format, &rows, &cols);
+    // protocolo A
+    if ( gtw->protocol == PROTOCOL_BASIC ) {
+        char format[512];
+        int rows, cols;
+        ufr_get(&gtw->link, "sii", format, &rows, &cols);
 
-// printf("%s %d %d\n", format, rows, cols);
-    const int nbytes = ufr_get_nbytes(&gtw->link);
-// printf("%d\n", nbytes);
-
-    if ( nbytes == 0 ){
-        return ufr_error(link, -1, "Image has 0 bytes");
-    }
-
-    const uint8_t* rawptr = ufr_get_rawptr(&gtw->link);
-    if ( rawptr == 0 ){
-        return ufr_error(link, -1, "Image has NULL pointer for image");
-    }
-
-    std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
-    gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
-
-    // ROS
-    /*
-    char format[16];
-    ufr_get(&gtw->link, "s", format);
-    if ( strcmp(format, "mono8") == 0 ) {
-        int size[2] = {480, 640};
-        void* data = (void*) ufr_get_rawptr(&gtw->link);
-        if ( data == NULL ) {
-            return -1;
+        const int nbytes = ufr_get_nbytes(&gtw->link);
+        if ( nbytes == 0 ){
+            return ufr_error(link, -1, "Image has 0 bytes");
         }
-        gtw->frame = Mat(2, size, CV_8UC1, data, 0);
-    }
-    */
-    // ufr_get_raw(&gtw->link, gtw->buffer.data(), size);
-    // gtw->frame = imdecode(gtw->buffer, cv::IMREAD_COLOR);
 
+        const uint8_t* rawptr = ufr_get_rawptr(&gtw->link);
+        if ( rawptr == 0 ){
+            return ufr_error(link, -1, "Image has NULL pointer for image");
+        }
+
+        std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
+        gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
+
+    // protocolo para mensagem do ROS
+    } else if ( gtw->protocol == PROTOCOL_ROS ) {
+        char format[16];
+        ufr_get(&gtw->link, "s", format);
+
+        // printf("aaa %s\n", format);
+        // mono8
+        if ( strcmp(format, "mono8") == 0 ) {
+            int size[2] = {480, 640};
+            void* data = (void*) ufr_get_rawptr(&gtw->link);
+            if ( data == NULL ) {
+                return ufr_error(link, -1, "Image has NULL pointer for image");
+            }
+            gtw->frame = Mat(2, size, CV_8UC1, data, 0);
+
+        // rgb8
+        } else if ( strcmp(format, "rgb8") == 0 ) {
+            int size[2] = {480, 640};
+            void* data = (void*) ufr_get_rawptr(&gtw->link);
+            if ( data == NULL ) {
+                return ufr_error(link, -1, "Image has NULL pointer for image");
+            }
+
+            gtw->frame = Mat(2, size, CV_8UC3, data, 0);
+            cvtColor(gtw->frame, gtw->frame, COLOR_RGB2BGR);
+        }
+    }
+
+    // Success
     return UFR_OK;
 }
 

@@ -45,6 +45,8 @@ option(BUILD_UFR_GTW_ZMQ     "build the gateway for ZMQ"    ${HAVE_ZMQ})
 option(BUILD_UFR_GTW_MQTT    "build the gateway for MQTT"   ${HAVE_MOSQUITTO})
 option(BUILD_UFR_CDR_MSGPACK "build the coder for MsgPack"  ${HAVE_MSGPACK})
 option(BUILD_UFR_STK_SQLITE  "build the stack for Sqlite3"  OFF )
+option(BUILD_UFR_STK_ROS1    "build the stack for ROS1"     OFF )
+option(BUILD_UFR_STK_ROS2    "build the stack for ROS2"     OFF )
 option(BUILD_UFR_DEV_VIDEO   "build the stack for Video"    ${HAVE_OPENCV} )
 option(BUILD_EXAMPLES        "build the examples"           OFF )
 option(BUILD_TESTS           "build the tests"              ON )
@@ -115,11 +117,17 @@ endif(BUILD_UFR_DEV_VIDEO)
 
 # debian/ubuntu: sudo apt install libssh-dev
 # add_subdirectory(./ufr-stk-ssh)
-
 # add_subdirectory(ufr-stk-irrlicht)
-# add_subdirectory(./ufr-stk-ros_humble)
-# add_subdirectory(./ufr-stk-ros_melodic)
-# add_subdirectory(./ufr-stk-ros_noetic)
+
+
+if(BUILD_UFR_STK_ROS1)
+    add_subdirectory(./ufr-stk-ros1)
+endif(BUILD_UFR_STK_ROS1)
+
+if(BUILD_UFR_STK_ROS2)
+    add_subdirectory(./ufr-stk-ros2)
+endif(BUILD_UFR_STK_ROS2)
+
 # add_subdirectory(./ufr-stk-webots)
 # add_subdirectory(./cv_mat)
 
