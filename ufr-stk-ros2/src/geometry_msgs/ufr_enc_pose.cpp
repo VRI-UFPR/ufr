@@ -33,7 +33,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 // #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 #include "turtlesim/msg/pose.hpp"
 
 struct ll_enc_obj {
@@ -179,7 +179,7 @@ ufr_enc_api_t ufr_enc_ros_driver = {
 // ============================================================================
 
 extern "C"
-int ufr_enc_ros_humble_new_pose(link_t* link, int type) {
+int ufr_enc_ros2_new_pose(link_t* link, int type) {
     link->enc_api = &ufr_enc_ros_driver;
     return UFR_OK;
 }

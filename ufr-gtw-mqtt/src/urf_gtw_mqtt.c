@@ -52,25 +52,11 @@ erros:
 #include <mosquitto.h>
 #include <ufr.h>
 
-#define MQTT_QOS_0 0
-
-typedef struct {
-    char broker_hostname[128];
-    char topic_name[128];
-    uint16_t broker_port;
-} ll_shr_t;
-
-typedef struct {
-    uint8_t start_type;
-    volatile bool is_received;
-    struct mosquitto* mosq;
-    size_t msg_size;
-    size_t msg_size_max;
-    size_t msg_read_idx;
-    char* msg_data;
-} ll_obj_t;
+#include "ufr_gtw_mqtt.h"
 
 size_t g_mosq_count = 0;
+
+extern volatile bool g_is_ok;
 
 // ============================================================================
 //  Subscriber Receive Callback
@@ -183,10 +169,12 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
         }
 
         // connect the mosquitto client
+        ufr_info(link, "connecting on %s:%d", shr->broker_hostname, shr->broker_port);
         if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 60) != MOSQ_ERR_SUCCESS) {
             return ufr_error(link, 1, "connecting to MQTT broker failed");
         }
-        ufr_info(link, "connected");
+        ufr_info(link, "MQTT connected");
+        
         obj->start_type = UFR_START_PUBLISHER;
 
     } else if ( type == UFR_START_SUBSCRIBER ) {
@@ -199,6 +187,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
         }
 
         // connect the mosquitto client
+        ufr_info(link, "connecting on %s:%d", shr->broker_hostname, shr->broker_port);
         if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 60) != MOSQ_ERR_SUCCESS) {
             return ufr_error(link, 1, "connecting to MQTT broker failed");
         }
@@ -206,7 +195,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
         // configure the subscriber
         mosquitto_subscribe(obj->mosq, NULL, shr->topic_name, 0);
         mosquitto_message_callback_set(obj->mosq, urf_gtw_mqtt_recv_cb);
-        ufr_info(link, "connected");
+        ufr_info(link, "MQTT connected");
         obj->start_type = UFR_START_SUBSCRIBER;
     }
 
@@ -245,10 +234,11 @@ int urf_gtw_mqtt_recv(link_t* link) {
 
     // wait for the message
     while( obj->is_received == false ) {
+        if ( g_is_ok == false ) {return -1;}
         mosquitto_loop(obj->mosq, 1, 1);
     }
-    obj->is_received = false;
 
+    obj->is_received = false;
     // decoder the message
     if ( link->dcr_api != NULL ) {
         link->dcr_api->recv_cb(link, obj->msg_data, obj->msg_size);
@@ -355,6 +345,15 @@ int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
 }
 
 int ufr_gtw_mqtt_new(link_t* link, int type) {
-    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    if ( type == UFR_START_PUBLISHER ) {
+        ufr_gtw_mqtt_new_topic(link, type);
+    } else if ( type == UFR_START_SUBSCRIBER ) {
+        ufr_gtw_mqtt_new_topic(link, type);
+    } else if ( type == UFR_START_CLIENT ) {
+        ufr_gtw_mqtt_new_client(link, type);
+    } else if ( type == UFR_START_SERVER ) {
+        ufr_gtw_mqtt_new_server(link, type);
+    }
+
     return UFR_OK;
 }

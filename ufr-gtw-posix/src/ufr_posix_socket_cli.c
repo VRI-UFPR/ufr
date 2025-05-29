@@ -103,26 +103,42 @@ size_t ufr_posix_socket_cli_read(link_t* link, char* buffer, size_t length) {
 
 static
 size_t ufr_posix_socket_cli_write(link_t* link, const char* buffer, size_t length) {
+    // Begin
     ll_conn_t* conn = link->gtw_obj;
     size_t wrote = 0;
-    if ( length == 0 ) {
-        close(conn->sockfd);
+
+    // Send the last Message
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        ufr_log(link, "sending last message");
+        if ( length > 0 ) {
+            wrote = send(conn->sockfd, buffer, length, 0);
+        }
+
+
+        ufr_log(link, "closing the socket for writing");
+        shutdown(conn->sockfd, SHUT_WR);
+        // close(conn->sockfd);
+
+    // Send a Message
     } else {
+        ufr_log(link, "sending a message");
         wrote = send(conn->sockfd, buffer, length, 0);
     }
+
+    // Return number of bytes sent
     return wrote;
 }
 
 static
 int ufr_posix_socket_cli_recv(link_t* link) {
     ll_conn_t* conn = link->gtw_obj;
+
     // message_write_from_fd(&conn->message, conn->sockfd);
-
-    conn->message.size = recv(conn->sockfd, conn->message.ptr, conn->message.max, 0);
-
+    // conn->message.size = recv(conn->sockfd, conn->message.ptr, conn->message.max, 0);
     if ( link->dcr_api != NULL ) {
-        link->dcr_api->recv_cb(link, conn->message.ptr, conn->message.size);
+        // link->dcr_api->recv_cb(link, conn->message.ptr, conn->message.size);
     }
+
     return UFR_OK;
 }
 

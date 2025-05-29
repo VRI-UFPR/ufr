@@ -30,6 +30,9 @@ Development of an interface for different communication protocols inspired by th
 # Building
 
 ```
+sudo apt install pkg-config libmsgpack-dev libmosquitto-dev libzmq3-dev libcurl4-gnutls-dev
+
+
 mkdir build
 cmake ..
 make

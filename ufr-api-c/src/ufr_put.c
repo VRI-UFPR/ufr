@@ -33,6 +33,9 @@
 #include <stdlib.h>
 #include "ufr.h"
 
+
+int ufr_put_begin_package(link_t* link);
+
 // ============================================================================
 //  PUT
 // ============================================================================
@@ -55,27 +58,45 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             if ( link->enc_api->put_f32 == NULL ) {
                 ufr_fatal(link, -1, "Function put_f32 is NULL");
             }
+            if ( link->state != UFR_STATE_PUT ) {
+                ufr_log_error(link, -1, "Link is not in PUT state");
+            }
         }
     } else {
         ufr_fatal(link, -1, "Link is NULL");
     }
 
     int count = 0;
-	char type;
 	while( format != NULL ) {
-		type = *format;
+		const char type = *format;
         format += 1;
-		// end of string
+
+        // end of string
 		if ( type == '\0' ) {
 			break;
 
+		// EOF
+        } else if ( type == '#' ) {
+            ufr_put_eof(link);
+
 		// new line
 		} else if ( type == '\n' ) {
-            if ( link->put_count == 0 ) {
+
+            // case \n\n together
+            if ( *format == '\n' ) {
                 ufr_put_eof(link);
+                format += 1;
+
+            // case just one \n and no data in the link
+            } else if ( link->put_count == 0 ) {
+                ufr_put_eof(link);
+
+            // case just one \n and there is data in the link to send
             } else {
+                link->state = UFR_STATE_SEND;
 			    link->enc_api->put_cmd(link, '\n');
                 link->put_count = 0;
+                ufr_put_begin_package(link);
             }
 
 		} else if ( type == 'a' ) {
@@ -265,12 +286,17 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
 
 
 int ufr_put_eof(link_t* link) {
+    if ( link->type_started == UFR_START_SUBSCRIBER ) {
+        return ufr_error(link, -1, "Link is a subscriber");
+    }
+
+    // send the last message
+    link->state = UFR_STATE_SEND_LAST;
     const int retval = link->enc_api->put_cmd(link, EOF);
-    link->put_count = 0;
-    if ( link->type_started == UFR_START_CLIENT ) {
-        link->state = UFR_STATE_RECV;
-    } else if ( link->type_started == UFR_START_SERVER ) { 
-        link->state = UFR_STATE_READY;
+
+    // update the state of the link
+    if ( retval == UFR_OK ) {
+        ufr_set_state_ready(link);
     }
     return retval;
 }
@@ -310,4 +336,24 @@ int ufr_put_leave(link_t* link) {
     }
 
     return link->enc_api->leave(link);
+}
+
+
+int ufr_put_begin_package(link_t* link) {
+    // call the ready state
+    // link->state = UFR_STATE_READY;
+    link->put_count = 0;
+    if ( link->gtw_api->ready != NULL ) {
+        link->gtw_api->ready(link);
+    }
+
+    // set next state
+    /*if ( link->type_started == UFR_START_PUBLISHER || link->type_started == UFR_START_CLIENT ) {
+        link->state = UFR_STATE_PUT;
+    } else if ( link->type_started == UFR_START_SUBSCRIBER || link->type_started == UFR_START_SERVER ) {
+        link->state = UFR_STATE_RECV;
+    }*/
+
+    // sucess
+    return UFR_OK;
 }

@@ -38,7 +38,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 struct ll_encoder_t {
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
@@ -136,7 +136,7 @@ ufr_enc_api_t ufr_enc_ros_string = {
 // ============================================================================
 
 extern "C"
-int ufr_ecr_ros_humble_new_string(link_t* link, const int type) {
+int ufr_ecr_ros2_new_string(link_t* link, const int type) {
     link->enc_api = &ufr_enc_ros_string;
     return 0;
 }

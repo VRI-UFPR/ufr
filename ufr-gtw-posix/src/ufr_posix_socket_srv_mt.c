@@ -153,7 +153,7 @@ int ufr_posix_socket_srv_recv(link_t* link) {
     return UFR_OK;
 }
 
-ufr_gtw_api_t ufr_posix_socket_srv = {
+ufr_gtw_api_t ufr_posix_socket_srv_mt = {
     .name = "PosixSocketServerMt",
 	.type = ufr_posix_socket_type,
 	.state = ufr_posix_socket_state,

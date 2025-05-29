@@ -35,86 +35,26 @@
 #include <ufr.h>
 #include <ufr_test.h>
 
-int ufr_dcr_csv_new(link_t* link);
+int ufr_enc_text_new(link_t* link);
 
 // ============================================================================
 //  Tests
 // ============================================================================
 
 void test_simple() {
-    link_t link = ufr_subscriber("@new %p @coder %p @sep ;", 
-        ufr_gtw_posix_new_pipe, ufr_dcr_csv_new);
+    link_t link = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_text_new);
 
     // test 1
     {
-        int a=0,b=0,c=0;
-        const char* buffer = "10;20;30\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^iii", &a, &b, &c);
-        UFR_TEST_EQUAL_I32(a, 10);
-        UFR_TEST_EQUAL_I32(b, 20);
-        UFR_TEST_EQUAL_I32(c, 30);
+        char buffer[128];
+        UFR_TEST_EQUAL_I32( ufr_put(&link, "iii\n", 10, 20, 30), 3 );
+        UFR_TEST_OK( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        UFR_TEST_EQUAL_I32( nbytes, 9 );
+        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_STR(buffer, "10 20 30\n");
     }
-
-    // test 2
-    {
-        float a=0,b=0,c=0;
-        const char* buffer = "10.5;20.125;30.5\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^fff", &a, &b, &c);
-        UFR_TEST_EQUAL_F32(a, 10.5);
-        UFR_TEST_EQUAL_F32(b, 20.125);
-        UFR_TEST_EQUAL_F32(c, 30.5);
-    }
-
-    ufr_close(&link);
-}
-
-void test_simple_2() {
-    link_t link = ufr_subscriber("@new %p @coder %p @sep ,", 
-        ufr_gtw_posix_new_pipe, ufr_dcr_csv_new);
-
-    // test 1
-    {
-        int a=0,b=0,c=0;
-        const char* buffer = "10,20,30\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^iii", &a, &b, &c);
-        UFR_TEST_EQUAL_I32(a, 10);
-        UFR_TEST_EQUAL_I32(b, 20);
-        UFR_TEST_EQUAL_I32(c, 30);
-    }
-
-    // test 2
-    {
-        float a=0,b=0,c=0;
-        const char* buffer = "10.5,20.125,30.5\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^fff", &a, &b, &c);
-        UFR_TEST_EQUAL_F32(a, 10.5);
-        UFR_TEST_EQUAL_F32(b, 20.125);
-        UFR_TEST_EQUAL_F32(c, 30.5);
-    }
-
-    // test 3
-    {
-        char text[512];
-        const char* buffer = "abcde\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^s", text);
-        UFR_TEST_EQUAL_STR(text, "abcde");
-    }
-
-    // test 4 - max size on buffer
-    /*
-    {
-        char text[8];
-        const char* buffer = "aaabbbcccddd\n";
-        ufr_write(&link, buffer, strlen(buffer));
-        ufr_get(&link, "^s", text);
-        assert( strcmp(text, "aaabbbc") == 0 );
-    }
-    */
 
     ufr_close(&link);
 }
@@ -125,7 +65,6 @@ void test_simple_2() {
 
 int main() {
     test_simple();
-    test_simple_2();
     ufr_test_print_result();
-	return 0;
+    return 0;
 }

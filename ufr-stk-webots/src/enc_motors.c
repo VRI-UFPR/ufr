@@ -50,13 +50,17 @@ typedef struct {
 
 static
 int ufr_enc_motors_boot(link_t* link, const ufr_args_t* args) {
-    const char* dev_tag1_name = ufr_args_gets(args, "@tag1", "left wheel");
-    const char* dev_tag2_name = ufr_args_gets(args, "@tag2", "right wheel");
+    char buffer1[UFR_ARGS_TOKEN];
+    char buffer2[UFR_ARGS_TOKEN];
+    const char* dev_tag1_name = ufr_args_gets(args, buffer1, "@tag1", "left wheel");
+    const char* dev_tag2_name = ufr_args_gets(args, buffer2, "@tag2", "right wheel");
 
     // Prepare encoder
+    ufr_log_ini(link, "Inicializando encoder para motores (%s, %s)", dev_tag1_name, dev_tag2_name);
     enc_motors_t* enc = malloc(sizeof(enc_motors_t));
     enc->left = wb_robot_get_device( dev_tag1_name );
     enc->right = wb_robot_get_device( dev_tag2_name );
+
     enc->vel = 0.0;
     enc->rotvel = 0.0;
     enc->index = 0;    
@@ -69,6 +73,7 @@ int ufr_enc_motors_boot(link_t* link, const ufr_args_t* args) {
 
     // Success
     link->enc_obj = enc;
+    ufr_log_end(link, "Inicializado encoder para motores (%s, %s)", dev_tag1_name, dev_tag2_name);
     return UFR_OK;
 }
 
@@ -99,7 +104,7 @@ int ufr_enc_motors_put_u32(link_t* link, const uint32_t val[], int nitems) {
         }
         enc->index += 1;
     }
-    return UFR_OK;
+    return wrote;
 }
 
 static
@@ -114,7 +119,7 @@ int ufr_enc_motors_put_i32(link_t* link, const int32_t val[], int nitems) {
         }
         enc->index += 1;
     }
-    return UFR_OK;
+    return wrote;
 }
 
 static
@@ -196,9 +201,9 @@ int ufr_enc_motors_put_cmd(link_t* link, char cmd) {
     if ( cmd == '\n' ) {
         const double speed_left = enc->vel - enc->rotvel * 0.125; // HALF_DISTANCE_BETWEEN_WHEELS
         const double speed_right = enc->vel + enc->rotvel * 0.125; // HALF_DISTANCE_BETWEEN_WHEELS
-// printf("%f %f\n", speed_left, speed_right);
         wb_motor_set_velocity(enc->left, speed_left);
         wb_motor_set_velocity(enc->right, speed_right);
+        ufr_log(link, "Motor vel: %f, rotvel: %f", enc->vel, enc->rotvel);
         ufr_enc_motors_clear(link);
     }
     return UFR_OK;

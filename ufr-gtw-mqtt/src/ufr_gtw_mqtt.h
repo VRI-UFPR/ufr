@@ -1,7 +1,7 @@
 /* BSD 2-Clause License
  * 
- * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
- *  - Felipe Bombardelli <felipebombardelli@gmail.com>
+ * Copyright (c) 2025, Visao Robotica Imagem (VRI)
+ *   Felipe Bombardelli
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -23,35 +23,42 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * */
 
-// ======================================================================================
+// ============================================================================
 //  Header
-// ======================================================================================
+// ============================================================================
 
 #pragma once
 
-#include <ufr.h>
-#include "ros/ros.h"
+#define MQTT_QOS_0 0
+
+typedef struct {
+    uint16_t broker_port;
+    char broker_hostname[128];
+    char topic_name[128];
+} ll_shr_t;
+
+typedef struct {
+    uint16_t broker_port;
+    char broker_hostname[128];
+    char topic1_name[128];
+    char topic2_name[128];
+} ll_shr_socket_t;
+
+typedef struct {
+    uint8_t start_type;
+    volatile bool is_received;
+    struct mosquitto* mosq;
+    size_t msg_size;
+    size_t msg_size_max;
+    size_t msg_read_idx;
+    char* msg_data;
+    int32_t socket_msg_id;
+} ll_obj_t;
+
+extern size_t g_mosq_count;
 
 
-struct Gateway {
-    ros::NodeHandle node;
-};
-
-
-// Public Functions
-extern "C" {
-    // gateway
-    int ufr_gtw_ros_noetic_new_topic(link_t* out, int type);
-
-    // encoders
-    int ufr_enc_ros_noetic_new_twist(link_t* link, int type);
-    int ufr_enc_ros_noetic_new_string(link_t* link, int type);
-    int ufr_enc_ros_noetic_new_laserscan(link_t* link, int type);
-
-    // decoders
-    int ufr_dcr_ros_noetic_new_pose(link_t* link, int type);
-    int ufr_dcr_ros_noetic_new_twist(link_t* link, int type);
-    int ufr_dcr_ros_noetic_new_string(link_t* link, int type);
-}
+int ufr_gtw_mqtt_new_client(link_t* link, int type);
+int ufr_gtw_mqtt_new_server(link_t* link, int type);

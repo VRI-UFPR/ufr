@@ -54,27 +54,33 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
             if ( link->dcr_api->get_str == NULL ) {
                 ufr_fatal(link, -1, "Function get_str is NULL");
             }
+            /*if ( link->state != UFR_STATE_GET ) {
+                ufr_log_error(link, -1, "Link is not in GET state");
+            }*/
         }
     } else {
         ufr_fatal(link, -1, "Link is NULL");
     }
 
     int retval = 0;
-	while( format != NULL ) {	
-		const char type = *format;
+    while( format != NULL ) {	
+        const char type = *format;
         format += 1;
 
-		if ( type == '\0' ) {
-			break;
+        if ( type == '\0' ) {
+            break;
 
-		} else if ( type == '^' ) {
-			if ( ufr_recv(link) != UFR_OK ) {
+        } else if ( type == '^' ) {
+            if ( ufr_recv(link) != UFR_OK ) {
                 retval = -1;
                 ufr_log(link, "Error to receive data");
             }
 
         } else if ( type == '\n' ) {
             ufr_get_eof(link);
+
+        } else if ( type == '-' ) {
+            link->dcr_api->next(link);
 
         } else if ( type == 'a' ) {
             const char arr_type = *format;
@@ -155,11 +161,16 @@ int ufr_get(link_t* link, const char* format, ...) {
 }
 
 void ufr_get_eof(link_t* link) {
-    while (1) {
+    uint8_t count;
+    for (count=0; count<32; count++) {
         if ( ufr_recv(link) != UFR_OK ) {
             break;
         }
     }
+    if ( count == 32 ) {
+        ufr_fatal(link, -1, "Error to get EOF");
+    }
+    ufr_set_state_ready(link);
 }
 
 char ufr_get_type(link_t* link) {

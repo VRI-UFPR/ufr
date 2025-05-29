@@ -40,20 +40,29 @@ public:
 
 public:
     ll_gateway_t() {
+        // Normalize the name of the command argv
         const char* sys_env_name = getenv("_");
-        std::string node_name;
-        for (int i=0; 1; i++) {
-            const char c = sys_env_name[i];
-            if ( c == '\0') {
-                break;
-            } else if ( 
-                (c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z') || 
-                (c >= '0' && c <= '9') || c == '_' ) {
-                    node_name += c;
+        std::string node_name_str;
+
+        // Copy the argv[0] to node_name_str
+        if ( sys_env_name != NULL ) {
+            for (int i=0; 1; i++) {
+                const char c = sys_env_name[i];
+                if ( c == '\0') {
+                    break;
+                } else if ( 
+                    (c >= 'a' && c <= 'z') || ( c >= 'A' && c <= 'Z') || 
+                    (c >= '0' && c <= '9') || c == '_' ) {
+                        node_name_str += c;
+                }
             }
+        } else {
+            node_name_str = "ros_node2";
         }
 
-        rclcpp::Node* node = new rclcpp::Node(node_name);
+        // create ROS 2 Node
+        printf("Inicializing %s\n", node_name_str.c_str());
+        rclcpp::Node* node = new rclcpp::Node(node_name_str);
         m_node.reset(node);
     }
 };
@@ -132,17 +141,16 @@ public:
 
 extern "C" {
     // gateway
-    int ufr_gtw_ros_humble_new(link_t* out, int type);
-    int ufr_gtw_ros_humble_new_topic(link_t* out, int type);
+    int ufr_gtw_ros2_new(link_t* out, int type);
+    int ufr_gtw_ros2_new_topic(link_t* out, int type);
 
     // encoders
-    int ufr_enc_ros_humble_new_twist(link_t* link, int type);
-    int ufr_enc_ros_humble_new_twist(link_t* link, int type);
-    int ufr_enc_ros_humble_new_string(link_t* link, int type);
+    int ufr_enc_ros2_new_twist(link_t* link, int type);
+    int ufr_enc_ros2_new_string(link_t* link, int type);
 
     // decoders
-    int ufr_dcr_ros_humble_new_pose(link_t* link, int type);
-    int ufr_dcr_ros_humble_new_twist(link_t* link, int type);
-    int ufr_dcr_ros_humble_new_string(link_t* link, int type);
-    int ufr_dcr_ros_humble_new_laserscan(link_t* link, int type);
+    int ufr_dcr_ros2_new_pose(link_t* link, int type);
+    int ufr_dcr_ros2_new_twist(link_t* link, int type);
+    int ufr_dcr_ros2_new_string(link_t* link, int type);
+    int ufr_dcr_ros2_new_laserscan(link_t* link, int type);
 }

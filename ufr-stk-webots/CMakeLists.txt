@@ -8,6 +8,7 @@ include_directories(./src)
 add_library(ufr_gtw_webots SHARED
     ./src/gtw_webots.c
     ./src/enc_motors.c
+    ./src/enc_motors_drone.c
     ./src/dcr_encoders.c
     ./src/dcr_lidar.c
     ./src/dcr_pose.c
@@ -20,3 +21,7 @@ install(TARGETS ufr_gtw_webots DESTINATION lib)
 # test
 enable_testing()
 add_subdirectory(./tests)
+
+# Examples
+add_executable(e02_pioneer ./examples/e02_pioneer.c)
+target_link_libraries(e02_pioneer ufr)

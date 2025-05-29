@@ -1,5 +1,5 @@
 #include <ufr.h>
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 void test_twist() {
     /*link_t topic;
@@ -55,7 +55,7 @@ void test_laserscan_publisher() {
 
 void test_laserscan() {
     link_t link = ufr_subscriber("@new %p @coder %p @topic scan", 
-        ufr_gtw_ros_humble_new, ufr_dcr_ros_humble_new_laserscan);
+        ufr_gtw_ros2_new, ufr_dcr_ros2_new_laserscan);
 
     /*
     float angle_min, angle_max, angle_increment;

@@ -31,8 +31,9 @@
 
 #pragma once
 
-int ufr_gtw_webots_new(link_t* link, int type);
+int ufr_gtw_webots_new(link_t* link, int type, const ufr_args_t* args);
 int ufr_enc_webots_new_motors(link_t* link, int type);
+int ufr_enc_webots_new_motors_drone(link_t* link, int type);
 int ufr_dcr_webots_new_encoders(link_t* link, int type);
 int ufr_dcr_webots_new_lidar(link_t* link, int type);
 int ufr_dcr_webots_new_pose(link_t* link, int type);

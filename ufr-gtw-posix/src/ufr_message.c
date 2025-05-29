@@ -55,10 +55,10 @@ bool message_write_from_fd(ufr_buffer_t* message, int fd) {
     const uint32_t part_len = 1024;
     while(1) {
         ufr_buffer_check_size(message, part_len);
-
         const size_t bytes = read(fd, &message->ptr[ message->size ], part_len-1);
         if ( bytes == 0 ) {
             message->size += bytes;
+            is_ok = false;
             break;
 
         } else if ( bytes > 0 ) {
@@ -70,7 +70,7 @@ bool message_write_from_fd(ufr_buffer_t* message, int fd) {
             break;
         }
     }
-
+printf("fim1\n");
     message->ptr[message->size] = '\0';
     return is_ok;
 }

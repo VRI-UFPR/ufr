@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ufr-stk-ros_noetic)
+project(ufr-stk-ros1)
 
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg tf)
@@ -14,11 +14,11 @@ include_directories(./src/)
 catkin_package()
 
 
-add_library(ufr_gtw_ros_noetic SHARED src/ufr_gtw_ros_noetic.cpp)
-target_link_libraries(ufr_gtw_ros_noetic ${catkin_LIBRARIES})
-install(TARGETS ufr_gtw_ros_noetic DESTINATION lib)
+add_library(ufr_gtw_ros1 SHARED src/ufr_gtw_ros1.cpp)
+target_link_libraries(ufr_gtw_ros1 ${catkin_LIBRARIES})
+install(TARGETS ufr_gtw_ros1 DESTINATION lib)
 
-add_library(ufr_enc_ros_noetic SHARED
+add_library(ufr_enc_ros1 SHARED
     # src/std_msgs/ufr_enc_string.cpp
     src/std_msgs/ufr_enc_tf.cpp
     # src/geometry_msgs/ufr_enc_twist.cpp
@@ -27,7 +27,7 @@ add_library(ufr_enc_ros_noetic SHARED
     )
 target_link_libraries(ufr_enc_ros_noetic ${catkin_LIBRARIES})
 
-add_library(ufr_dcr_ros_noetic SHARED
+add_library(ufr_dcr_ros1 SHARED
     # src/std_msgs/ufr_dcr_string.cpp
     src/sensor_msgs/ufr_dcr_laserscan.cpp 
     src/sensor_msgs/ufr_dcr_range.cpp 
@@ -36,8 +36,8 @@ add_library(ufr_dcr_ros_noetic SHARED
     src/sensor_msgs/ufr_dcr_imu.cpp
     src/std_msgs/ufr_dcr_i16.cpp
     )
-target_link_libraries(ufr_dcr_ros_noetic ${catkin_LIBRARIES})
-install(TARGETS ufr_dcr_ros_noetic DESTINATION lib)
+target_link_libraries(ufr_dcr_ros1 ${catkin_LIBRARIES})
+install(TARGETS ufr_dcr_ros1 DESTINATION lib)
 
 # add_library(ufr_enc_ros_noetic SHARED src/ufr_enc_string.cpp)
 # target_link_libraries(ufr_enc_ros_noetic ${catkin_LIBRARIES})
