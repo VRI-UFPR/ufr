@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "ufr.h"
 
@@ -43,9 +44,31 @@
 uint8_t g_dl_count = 0;
 void* g_dl_handles[G_DL_MAX];
 
+extern uint8_t g_callback_array_count;
+extern loop_callback g_callback_array[5];
+
 // ============================================================================
 //  Library Destructor
 // ============================================================================
+
+#include <signal.h>
+
+extern volatile bool g_is_ok;
+
+void ufr_linux_int_handler(int dummy) {
+    printf("# CTRL-C Interruption\n");
+    if ( g_is_ok ) {
+        ufr_loop_set_end();
+    } else {
+        exit(1);
+    }
+}
+
+__attribute__((constructor))
+void ufr_linux_constructor() {
+    printf("# Init UFR\n");
+    signal(SIGINT, ufr_linux_int_handler);
+}
 
 __attribute__((destructor))
 void ufr_linux_free_libraries() {
@@ -154,4 +177,52 @@ timeout:
 
 success:
     return UFR_OK;
+}
+
+static
+uint64_t ufr_linux_timestamp_ms() {
+    struct timespec now;
+    timespec_get(&now, TIME_UTC);
+    return ((uint64_t) now.tv_sec) * 1000 + ((uint64_t) now.tv_nsec) / 1000000;
+}
+
+bool ufr_linux_loop_rt(int32_t total_ms) {
+    static int64_t last_ms = 0;
+
+    // first execution
+    if ( last_ms == 0 ) {
+        last_ms = ufr_linux_timestamp_ms();
+        return true;
+    }
+
+    // check if continue
+    for (uint8_t i=0; i<g_callback_array_count; i++) {
+        if ( g_callback_array[i]() != UFR_OK ) {
+            return false;
+        }
+    }
+
+    // sleep by 100ms
+    int64_t current_ms = ufr_linux_timestamp_ms();
+    int32_t diff_ms = current_ms - last_ms;
+    int32_t sleep_ms = total_ms - diff_ms;
+    if ( sleep_ms > 2 ) {
+        // printf("dormiu %ld\n", (sleep_ms-1) * 1000 );
+        usleep( (sleep_ms-1) * 1000 );
+    }
+
+    if ( sleep_ms < 0 ) {
+        printf("real time error %d\n", sleep_ms);
+    } else {
+        // polling the time
+        do {
+            current_ms = ufr_linux_timestamp_ms();
+            diff_ms = current_ms - last_ms;
+        } while( diff_ms < total_ms );
+        // printf("opa %ld\n", current_ms);
+    }
+
+    // end
+    last_ms = current_ms;
+    return g_is_ok;
 }

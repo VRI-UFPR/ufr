@@ -38,7 +38,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 struct ll_encoder_twist {
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher;
@@ -53,7 +53,7 @@ struct ll_encoder_twist {
 // ============================================================================
 
 static
-int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_boot(link_t* link, const ufr_args_t* args) {
     char buffer[UFR_ARGS_TOKEN];
     std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_encoder_twist* enc_obj = new ll_encoder_twist();
@@ -67,7 +67,7 @@ int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-int ufr_enc_ros_twist_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_ros2_put_u32(link_t* link, const uint32_t* val, int nitems) {
     ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -90,7 +90,7 @@ int ufr_enc_ros_twist_put_u32(link_t* link, const uint32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_twist_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_ros2_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -113,7 +113,7 @@ int ufr_enc_ros_twist_put_i32(link_t* link, const int32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_twist_put_f32(link_t* link, const float* val, int nitems) {
+int ufr_enc_ros2_put_f32(link_t* link, const float* val, int nitems) {
     ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -136,7 +136,7 @@ int ufr_enc_ros_twist_put_f32(link_t* link, const float* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_twist_put_str(link_t* link, const char* val) {
+int ufr_enc_ros2_put_str(link_t* link, const char* val) {
 	ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
 	if ( enc_obj ) {
 
@@ -145,7 +145,7 @@ int ufr_enc_ros_twist_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_ecr_ros_humble_put_cmd(link_t* link, char cmd) {
+int ufr_ecr_ros2_put_cmd(link_t* link, char cmd) {
 	ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
 	if ( cmd == '\n' ) {
 		enc_obj->publisher->publish(enc_obj->message);
@@ -157,20 +157,20 @@ int ufr_ecr_ros_humble_put_cmd(link_t* link, char cmd) {
 
 static
 ufr_enc_api_t ufr_enc_ros_api = {
-    .boot = ufr_enc_ros_humble_boot,
+    .boot = ufr_enc_ros2_boot,
     .close = NULL,
     .clear = NULL,
 
-    .put_u32 = ufr_enc_ros_twist_put_u32,
-    .put_i32 = ufr_enc_ros_twist_put_i32,
-    .put_f32 = ufr_enc_ros_twist_put_f32,
+    .put_u32 = ufr_enc_ros2_put_u32,
+    .put_i32 = ufr_enc_ros2_put_i32,
+    .put_f32 = ufr_enc_ros2_put_f32,
 
     .put_u64 = NULL,
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_ecr_ros_humble_put_cmd,
-    .put_str = ufr_enc_ros_twist_put_str,
+    .put_cmd = ufr_ecr_ros2_put_cmd,
+    .put_str = ufr_enc_ros2_put_str,
     .put_raw = NULL,
 
     .enter = NULL,
@@ -182,7 +182,7 @@ ufr_enc_api_t ufr_enc_ros_api = {
 // ============================================================================
 
 extern "C"
-int ufr_enc_ros_humble_new_twist(link_t* link, int type) {
+int ufr_enc_ros2_new_twist(link_t* link, int type) {
     link->enc_api = &ufr_enc_ros_api;
 	return UFR_OK;
 }

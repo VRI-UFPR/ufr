@@ -9,9 +9,9 @@ include_directories(./include)
 
 add_library(ufr SHARED
     # core
-    ./src/ufr_api_get.c
-    ./src/ufr_api_put.c
-    ./src/ufr_api.c
+    ./src/ufr.c
+    ./src/ufr_get.c
+    ./src/ufr_put.c
     ./src/ufr_sys.c
     ./src/ufr_linux.c
     ./src/ufr_sys_std_enc.c
@@ -20,6 +20,7 @@ add_library(ufr SHARED
     ./src/ufr_buffer.c
     ./src/ufr_args.c
     ./src/ufr_recv_linux.c
+    ./src/ufr_meta.c
     )
 
 target_compile_options(ufr PUBLIC -O3 -Wall -Wfloat-conversion)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(ufr-stk-ros_humble)
+project(ufr-stk-ros2)
 
 include_directories(./src)
 
@@ -32,36 +32,38 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(turtlesim REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 # Gateway
-add_library(ufr_gtw_ros_humble SHARED src/ufr_gtw_ros_humble.cpp)
-ament_target_dependencies(ufr_gtw_ros_humble rclcpp std_msgs sensor_msgs)
-target_link_libraries(ufr_gtw_ros_humble ufr)
-install(TARGETS ufr_gtw_ros_humble DESTINATION lib)
+add_library(ufr_gtw_ros2 SHARED src/ufr_gtw_ros2.cpp)
+ament_target_dependencies(ufr_gtw_ros2 rclcpp std_msgs sensor_msgs)
+target_link_libraries(ufr_gtw_ros2 ufr)
+install(TARGETS ufr_gtw_ros2 DESTINATION lib)
 
 # Encoder
-add_library(ufr_enc_ros_humble SHARED 
+add_library(ufr_enc_ros2 SHARED 
     src/std_msgs/ufr_enc_string.cpp
+    src/std_msgs/ufr_enc_tf.cpp
     src/geometry_msgs/ufr_enc_pose.cpp
     src/geometry_msgs/ufr_enc_twist.cpp
     src/sensor_msgs/ufr_enc_image.cpp
     src/sensor_msgs/ufr_enc_laserscan.cpp
     )
-ament_target_dependencies(ufr_enc_ros_humble rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
-target_link_libraries(ufr_enc_ros_humble ufr)
-install(TARGETS ufr_enc_ros_humble DESTINATION lib)
+ament_target_dependencies(ufr_enc_ros2 rclcpp std_msgs geometry_msgs sensor_msgs turtlesim tf2_ros)
+target_link_libraries(ufr_enc_ros2 ufr)
+install(TARGETS ufr_enc_ros2 DESTINATION lib)
 
 # Decoder
-add_library(ufr_dcr_ros_humble SHARED
+add_library(ufr_dcr_ros2 SHARED
     src/std_msgs/ufr_dcr_string.cpp
     src/geometry_msgs/ufr_dcr_pose.cpp
     src/geometry_msgs/ufr_dcr_twist.cpp
     src/sensor_msgs/ufr_dcr_image.cpp
     src/sensor_msgs/ufr_dcr_laserscan.cpp
     )
-ament_target_dependencies(ufr_dcr_ros_humble rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
-target_link_libraries(ufr_dcr_ros_humble ufr)
-install(TARGETS ufr_dcr_ros_humble DESTINATION lib)
+ament_target_dependencies(ufr_dcr_ros2 rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
+target_link_libraries(ufr_dcr_ros2 ufr)
+install(TARGETS ufr_dcr_ros2 DESTINATION lib)
 
 # Tests
 enable_testing()

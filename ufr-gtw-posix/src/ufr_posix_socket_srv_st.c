@@ -128,19 +128,28 @@ static
 size_t ufr_posix_socket_srv_read(link_t* link, char* buffer, size_t length) {
 	// ll_srv_request_t* request = link->gtw_obj;
 	// return read(request->message.ptr, buffer, length);
-
-    return 0;
+    return -1;
 }
 
 static
 size_t ufr_posix_socket_srv_write(link_t* link, const char* buffer, size_t length) {
-	ll_srv_request_t* request = link->gtw_obj;
+    // Begin
+    ll_srv_request_t* request = link->gtw_obj;
     size_t wrote = 0;
-    if ( length == 0 ) {
+
+    // Last message
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        if ( length > 0 ) {
+            wrote = send(request->sockfd, buffer, length, 0);
+        }
         close(request->sockfd);
+
+    // Send a message
     } else {
         wrote = send(request->sockfd, buffer, length, 0);
     }
+
+    // Return bytes sent
     return wrote;
 }
 
@@ -156,6 +165,7 @@ int ufr_posix_socket_srv_recv(link_t* link) {
     ll_srv_request_t* request = link->gtw_obj;
     ll_shr_t* shr = link->gtw_shr;
 
+    ufr_log(link, "waiting for requisition");
     request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
     if ( request->sockfd < 0 ) {
         ufr_fatal(link, 1, strerror(errno) );
@@ -165,6 +175,7 @@ int ufr_posix_socket_srv_recv(link_t* link) {
     // Read the requisition
     int ret1 = 0;
     do {
+        ufr_log(link, "reading the message");
         if ( !message_write_from_fd(&request->message, request->sockfd) ) {
             break;  // case of error, exit
         }
@@ -173,6 +184,8 @@ int ufr_posix_socket_srv_recv(link_t* link) {
             ret1 = link->dcr_api->recv_cb(link, request->message.ptr, request->message.size);
         }
     } while ( ret1 == -2 );
+
+
 
     return UFR_OK;
 }

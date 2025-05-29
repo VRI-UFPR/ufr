@@ -67,6 +67,12 @@ void ufr_enc_msgpack_close(link_t* link) {
 }
 
 static
+void ufr_enc_msgpack_clear(link_t* link) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    msgpack_sbuffer_clear(&enc_obj->sbuf);
+}
+
+static
 int ufr_enc_msgpack_put_u32(link_t* link, const uint32_t* val, int nitems) {
     int wrote = 0;
     ll_encoder_t* enc_obj = link->enc_obj;
@@ -153,13 +159,10 @@ int ufr_enc_msgpack_put_str(link_t* link, const char* val) {
 static
 int ufr_enc_msgpack_put_cmd(link_t* link, char cmd) {
     ll_encoder_t* enc_obj = link->enc_obj;
-    if ( cmd == '\n' ) {
+    if ( cmd == '\n' || cmd == (char) EOF ) {
         const size_t size = enc_obj->sbuf.size;
         const char* data = enc_obj->sbuf.data;
         ufr_write(link, data, size);
-        msgpack_sbuffer_clear(&enc_obj->sbuf);
-    } else if ( cmd == (char) EOF ) {
-        ufr_write(link, NULL, 0);
         msgpack_sbuffer_clear(&enc_obj->sbuf);
     } else {
         return ufr_error(link, 1, "Command %d not found", cmd);
@@ -195,6 +198,7 @@ static
 ufr_enc_api_t ufr_enc_msgpack_api = {
     .boot = ufr_enc_msgpack_boot,
     .close = ufr_enc_msgpack_close,
+    .clear = ufr_enc_msgpack_clear,
 
     .put_u32 = ufr_enc_msgpack_put_u32,
     .put_i32 = ufr_enc_msgpack_put_i32,

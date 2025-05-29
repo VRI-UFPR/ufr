@@ -14,12 +14,12 @@ target_include_directories(ufr_gtw_video PUBLIC "${OPENCV_INCLUDE_DIR}")
 install(TARGETS ufr_gtw_video DESTINATION lib)
 
 # Example
-if (BUILD_EXAMPLES)
+# if (BUILD_EXAMPLES)
     add_executable(ufr_dev_video_example1 ./examples/example1.cpp)
     target_compile_options(ufr_dev_video_example1 PUBLIC -O1)
     target_link_libraries(ufr_dev_video_example1  ufr ${OpenCV_LIBS})
     target_include_directories(ufr_dev_video_example1 PUBLIC "${OPENCV_INCLUDE_DIR}")
-endif(BUILD_EXAMPLES)
+# endif(BUILD_EXAMPLES)
 
 # test
 # enable_testing()

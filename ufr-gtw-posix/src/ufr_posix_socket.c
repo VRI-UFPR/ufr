@@ -102,7 +102,7 @@ int ufr_posix_socket_copy(link_t* link, link_t* out) {
 //  Public Functions
 // ============================================================================
 
-int ufr_gtw_posix_new_socket(link_t* link, int type) {
+int ufr_gtw_posix_new_socket(link_t* link, int type, const ufr_args_t* args) {
     if ( type == UFR_START_CLIENT ) {
         ufr_link_init(link, &ufr_posix_socket_cli);
     } else if ( type == UFR_START_SERVER ) {
@@ -111,5 +111,17 @@ int ufr_gtw_posix_new_socket(link_t* link, int type) {
         return 1;
     }
 
-	return UFR_OK;
+    return UFR_OK;
+}
+
+int ufr_gtw_socket_new(link_t* link, int type, const ufr_args_t* args) {
+    if ( type == UFR_START_CLIENT ) {
+        ufr_link_init(link, &ufr_posix_socket_cli);
+    } else if ( type == UFR_START_SERVER ) {
+        ufr_link_init(link, &ufr_posix_socket_srv);
+    } else {
+        return 1;
+    }
+
+    return UFR_OK;
 }

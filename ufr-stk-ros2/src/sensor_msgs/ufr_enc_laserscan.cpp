@@ -38,7 +38,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 struct ll_encoder {
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher;
@@ -282,7 +282,7 @@ ufr_enc_api_t ufr_enc_ros_api = {
 // ============================================================================
 
 extern "C"
-int ufr_enc_ros_humble_new_laser_scan(link_t* link, int type) {
+int ufr_enc_ros2_new_laser_scan(link_t* link, int type) {
     link->enc_api = &ufr_enc_ros_api;
     return UFR_OK;
 }

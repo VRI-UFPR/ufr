@@ -44,6 +44,7 @@
 #include "ufr_zmq_common.h"
 
 void* g_context = NULL;
+extern volatile bool g_is_ok;
 
 // ============================================================================
 //  Topic
@@ -111,22 +112,47 @@ int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
 }
 
 void ufr_zmq_stop(link_t* link, int type) {
-    if ( type == UFR_STOP_CLOSE ) {
-        ll_obj_t* obj = link->gtw_obj;
-        if ( obj ) {
-            zmq_close(obj->socket);
-            free(obj);
-            link->gtw_obj = NULL;
+    ll_obj_t* obj = link->gtw_obj;
+    if ( obj ) {
+        if (obj->socket) {
+            // zmq_close(obj->socket);   // dah algum erro ao fechar o cliente
+            obj->socket = NULL;
         }
+        free(obj);
+        link->gtw_obj = NULL;
     }
 }
 
 int ufr_zmq_recv(link_t* link) {
+
     // read the message
     ll_obj_t* local = link->gtw_obj;
-    const int msg_size = zmq_msg_recv (&local->recv_msg, local->socket, 0);
-    if ( msg_size < 0 ) {
-        return -1;
+    const int timeout_ms = 500;
+    const int rc = zmq_setsockopt(local->socket, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
+
+    while (1) {
+        // If is OK
+        if ( g_is_ok == false ) {return -1;}
+
+        // receive the message
+        const int msg_size = zmq_msg_recv (&local->recv_msg, local->socket, 0);
+        const int msg_error = errno;  // keep this line soon after zmq_msg_recv
+
+        // received message, leave of the loop
+        if ( msg_size >= 0 ) {
+            break;
+        }
+
+        // Timeout, continue. Other error, break
+        if ( msg_error == 11 ) {
+            continue;
+        } else if (msg_error == 156384763) {
+            // EOF
+            return -1;
+        } else {
+            printf("error %d\n", msg_error);
+            return -1;
+        }
     }
 
     // start the index

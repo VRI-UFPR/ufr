@@ -33,7 +33,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include "ufr_gtw_ros_noetic.hpp"
+#include "ufr_gtw_ros1.hpp"
 
 
 #define MAX 8
@@ -80,7 +80,7 @@ struct DecoderImage {
 // ============================================================================
 
 static
-int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_ros1_boot(link_t* link, const ufr_args_t* args) {
     char buffer[UFR_ARGS_TOKEN];
     const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topic");
 
@@ -91,12 +91,12 @@ int ufr_dcr_ros_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_dcr_ros_close(link_t* link) {
+void ufr_dcr_ros1_close(link_t* link) {
 }
 
 
 static 
-int ufr_dcr_ros_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
+int ufr_dcr_ros1_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     Gateway* gtw = (Gateway*) link->gtw_obj;
     while ( dcr->m_size == 0 ) {
@@ -114,7 +114,7 @@ int ufr_dcr_ros_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
 }
 
 static 
-int ufr_dcr_ros_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
+int ufr_dcr_ros1_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     Gateway* gtw = (Gateway*) link->gtw_obj;
 
@@ -131,14 +131,14 @@ int ufr_dcr_ros_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
 }
 
 static 
-int ufr_dcr_ros_next(link_t* link) {
+int ufr_dcr_ros1_next(link_t* link) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     dcr->index += 1;
     return UFR_OK;
 }
 
 static
-char ufr_dcr_ros_get_type(link_t* link) {
+char ufr_dcr_ros1_get_type(link_t* link) {
     static const char* format = "uuu";
     const DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr && dcr->index < 5 ) {
@@ -148,7 +148,7 @@ char ufr_dcr_ros_get_type(link_t* link) {
 }
 
 static
-size_t ufr_dcr_ros_get_nitems(link_t* link) {
+size_t ufr_dcr_ros1_get_nitems(link_t* link) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
         switch (dcr->index) {
@@ -162,7 +162,7 @@ size_t ufr_dcr_ros_get_nitems(link_t* link) {
 }
 
 static
-uint8_t* ufr_dcr_ros_get_rawptr(link_t* link) {
+uint8_t* ufr_dcr_ros1_get_rawptr(link_t* link) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
         return &dcr->m_message->data[0];
@@ -171,7 +171,7 @@ uint8_t* ufr_dcr_ros_get_rawptr(link_t* link) {
 }
 
 static
-int ufr_dcr_ros_get_u32(link_t* link, uint32_t* val, int nitems) {
+int ufr_dcr_ros1_get_u32(link_t* link, uint32_t* val, int nitems) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
         switch (dcr->index) {
@@ -186,7 +186,7 @@ int ufr_dcr_ros_get_u32(link_t* link, uint32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int nitems) {
+int ufr_dcr_ros1_get_i32(link_t* link, int32_t* val, int nitems) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
         
@@ -203,7 +203,7 @@ int ufr_dcr_ros_get_i32(link_t* link, int32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_get_f32(link_t* link, float* val, int nitems) {
+int ufr_dcr_ros1_get_f32(link_t* link, float* val, int nitems) {
     *val = 0.0;
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
@@ -219,7 +219,7 @@ int ufr_dcr_ros_get_f32(link_t* link, float* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_get_str(link_t* link, char* val, int maxbytes) {
+int ufr_dcr_ros1_get_str(link_t* link, char* val, int maxbytes) {
     DecoderImage* dcr = (DecoderImage*) link->dcr_obj;
     if ( dcr ) {
 
@@ -228,42 +228,42 @@ int ufr_dcr_ros_get_str(link_t* link, char* val, int maxbytes) {
 }
 
 static 
-int ufr_dcr_ros_enter(link_t* link) {
+int ufr_dcr_ros1_enter(link_t* link) {
     return -1;
 }
 
 static 
-int ufr_dcr_ros_leave(link_t* link) {
+int ufr_dcr_ros1_leave(link_t* link) {
     return -1;
 }
 
 static
-ufr_dcr_api_t ufr_dcr_ros_driver = {
-    .boot = ufr_dcr_ros_boot,
+ufr_dcr_api_t ufr_dcr_ros1_driver = {
+    .boot = ufr_dcr_ros1_boot,
     .close = NULL,
-    .recv_cb = ufr_dcr_ros_recv_cb,
-    .recv_async_cb = ufr_dcr_ros_recv_async_cb,
-    .next = ufr_dcr_ros_next,
+    .recv_cb = ufr_dcr_ros1_recv_cb,
+    .recv_async_cb = ufr_dcr_ros1_recv_async_cb,
+    .next = ufr_dcr_ros1_next,
 
     .get_type = NULL,
     .get_nbytes = NULL,
     .get_nitems = NULL,
-    .get_rawptr = ufr_dcr_ros_get_rawptr,
+    .get_rawptr = ufr_dcr_ros1_get_rawptr,
 
     .get_raw = NULL,
-    .get_str = ufr_dcr_ros_get_str,
+    .get_str = ufr_dcr_ros1_get_str,
 
-    .get_u32 = ufr_dcr_ros_get_u32,
-    .get_i32 = ufr_dcr_ros_get_i32,
-    .get_f32 = ufr_dcr_ros_get_f32,
+    .get_u32 = ufr_dcr_ros1_get_u32,
+    .get_i32 = ufr_dcr_ros1_get_i32,
+    .get_f32 = ufr_dcr_ros1_get_f32,
 
     .get_u64 = NULL,
     .get_i64 = NULL,
     .get_f64 = NULL,
 
-    // .get_str = ufr_dcr_ros_get_str
-    .enter = ufr_dcr_ros_enter,
-    .leave = ufr_dcr_ros_leave,
+    // .get_str = ufr_dcr_ros1_get_str
+    .enter = ufr_dcr_ros1_enter,
+    .leave = ufr_dcr_ros1_leave,
 };
 
 // ============================================================================
@@ -271,8 +271,8 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_noetic_new_image(link_t* link, int type) {
-    link->dcr_api = &ufr_dcr_ros_driver;
+int ufr_dcr_ros1_new_image(link_t* link, int type) {
+    link->dcr_api = &ufr_dcr_ros1_driver;
     return UFR_OK;
 }
 

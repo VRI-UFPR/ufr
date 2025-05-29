@@ -109,6 +109,59 @@ int ufr_dcr_opencv_leave(link_t* link) {
 }
 
 static
+int ufr_dcr_opencv_get_hash(link_t* link, const char* hash, int* out_index) {
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+
+    // 
+    if ( strcmp(hash, "type") == 0 ) {
+        *out_index = 0;
+        return UFR_OK;
+    }
+
+    //
+    if ( strcmp(hash, "cols") == 0 ) {
+        *out_index = 1;
+        return UFR_OK;
+    }
+
+    //
+    if ( strcmp(hash, "rows") == 0 ) {
+        *out_index = 2;
+        return UFR_OK;
+    }
+
+    // error
+    return -1;
+}
+
+static
+int ufr_dcr_opencv_get_meta(link_t* link, int index, char type, item_t* out) {
+    Gateway* gtw = (Gateway*) link->gtw_obj;
+
+    // 
+    if ( index == 10 ) {
+        const int type = gtw->frame.type();
+        out->i32 = type;
+        return UFR_OK;
+    }
+
+    //
+    if ( index == 11 ) {
+        out->u64 = gtw->frame.cols;
+        return UFR_OK;
+    }
+
+    //
+    if ( index == 12 ) {
+        out->u64 = gtw->frame.rows;
+        return UFR_OK;
+    }
+
+    // error
+    return -1;
+}
+
+static
 ufr_dcr_api_t ufr_dcr_opencv_api = {
     .boot = ufr_dcr_opencv_boot,
     .close = ufr_dcr_opencv_close,
@@ -133,7 +186,8 @@ ufr_dcr_api_t ufr_dcr_opencv_api = {
     .get_f64 = NULL,
 
     .enter = ufr_dcr_opencv_enter,
-    .leave = ufr_dcr_opencv_leave
+    .leave = ufr_dcr_opencv_leave,
+    .get_meta = ufr_dcr_opencv_get_meta
 };
 
 // ============================================================================
@@ -274,3 +328,10 @@ ufr_gtw_api_t ufr_gtw_opencv_api = {
 
 }
 
+/*
+
+int index = ufr_hash()
+ufr_seek(index);
+ufr_get('f')
+
+*/

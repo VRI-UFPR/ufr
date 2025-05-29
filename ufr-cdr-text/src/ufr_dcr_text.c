@@ -49,6 +49,7 @@ typedef struct {
 //  Private Functions
 // ============================================================================
 
+/*
 int lex_next_token(ll_decoder_t* decoder, char* out_token) {
     const char sep = decoder->sep;
     const char* msg = decoder->msg_ptr;
@@ -74,6 +75,36 @@ int lex_next_token(ll_decoder_t* decoder, char* out_token) {
     decoder->msg_index = cursor;
     return ( i_token > 0 ) ? UFR_OK : -1;
 }
+*/
+
+int lex_next_token(ll_decoder_t* decoder, char* out_token, const int max_out_token) {
+    const char* msg_ptr = decoder->msg_ptr;
+    const uint32_t msg_size = decoder->msg_size;
+    int copied = 0;
+
+    // Check if max_out_token is positive
+    if ( max_out_token <= 0 ) {
+        return -1;
+    }
+ 
+    // Has message to copy ?
+    if ( msg_size > decoder->msg_index ) {
+        const int rest = msg_size - decoder->msg_index;
+        if ( rest+1 < max_out_token ) {
+            copied = rest;
+            strncpy(out_token, msg_ptr, rest);
+        } else {
+            copied = max_out_token-1;
+            strncpy(out_token, msg_ptr, copied);
+        }
+        out_token[copied] = '\0';
+    }
+
+    // success
+    decoder->msg_index += copied;
+    return ( copied > 0 ) ? UFR_OK : -1;
+}
+
 
 // ============================================================================
 //  CSV Decoder
@@ -107,19 +138,34 @@ static
 int ufr_dcr_text_next(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     char token[TOKEN_SIZE];
-    return lex_next_token(decoder, token);
+    return lex_next_token(decoder, token, TOKEN_SIZE);
 }
 
 static
 char ufr_dcr_text_get_type(link_t* link) {
-    // ll_decoder_t* decoder = link->dcr_obj;
-    return 's';
+    const ll_decoder_t* decoder = link->dcr_obj;
+    if ( decoder->msg_size > decoder->msg_index ) {
+        return 's';
+    }
+    return 0;
 }
 
 static
 int ufr_dcr_text_get_nbytes(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;
-    return decoder->msg_size;
+    const ll_decoder_t* decoder = link->dcr_obj;
+    if ( decoder->msg_size > decoder->msg_index ) {
+        return decoder->msg_size - decoder->msg_index;
+    }
+    return 0;
+}
+
+static
+int ufr_dcr_text_get_nitems(link_t* link) {
+    const ll_decoder_t* decoder = link->dcr_obj;
+    if ( decoder->msg_size > decoder->msg_index ) {
+        return 1;
+    }
+    return 0;
 }
 
 static
@@ -131,7 +177,7 @@ int ufr_dcr_text_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     decoder->msg_size = msg_size;
     decoder->msg_index = 0;
 
-    // ufr_dbg("%s", msg_data);
+    // success
     return UFR_OK;
 }
 
@@ -141,7 +187,7 @@ int ufr_dcr_text_get_u32(link_t* link, uint32_t* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = (uint32_t) atoi(token);
@@ -155,7 +201,7 @@ int ufr_dcr_text_get_i32(link_t* link, int32_t* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = (int32_t) atoi(token);
@@ -169,7 +215,7 @@ int ufr_dcr_text_get_f32(link_t* link, float* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = (float) atof(token);
@@ -183,7 +229,7 @@ int ufr_dcr_text_get_u64(link_t* link, uint64_t* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = (uint64_t) atoi(token);
@@ -197,7 +243,7 @@ int ufr_dcr_text_get_i64(link_t* link, int64_t* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = atoi(token);
@@ -211,7 +257,7 @@ int ufr_dcr_text_get_f64(link_t* link, double* val, int max_nitems) {
     ll_decoder_t* decoder = link->dcr_obj;
     int copied = 0;
     for (; copied<max_nitems; copied++) {
-        if ( lex_next_token(decoder, token) != UFR_OK ) {
+        if ( lex_next_token(decoder, token, TOKEN_SIZE) != UFR_OK ) {
             break;
         }
         val[copied] = atof(token);
@@ -229,7 +275,7 @@ int ufr_dcr_text_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
 static
 int ufr_dcr_text_get_str(link_t* link, char* out_val, int maxlen) {
 	ll_decoder_t* decoder = link->dcr_obj;
-    return lex_next_token(decoder, out_val);
+    return lex_next_token(decoder, out_val, maxlen);
 }
 
 static
@@ -245,9 +291,9 @@ ufr_dcr_api_t ufr_dcr_std_text_api = {
     .next = ufr_dcr_text_next,
 
     // metadata
-    .get_type = NULL,
+    .get_type = ufr_dcr_text_get_type,
     .get_nbytes = ufr_dcr_text_get_nbytes,
-    .get_nitems = NULL,
+    .get_nitems = ufr_dcr_text_get_nitems,
     .get_rawptr = NULL,
 
     // 32 bits

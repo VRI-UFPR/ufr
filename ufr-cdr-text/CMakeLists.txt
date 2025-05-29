@@ -14,7 +14,7 @@ target_link_libraries(ufr_dcr_text ufr)
 install(TARGETS ufr_dcr_text DESTINATION lib)
 
 # test
-# if(BUILD_TESTS)
-#    enable_testing()
-#    add_subdirectory(./tests)
-# endif(BUILD_TESTS)
+if(BUILD_TESTS)
+   enable_testing()
+   add_subdirectory(./tests)
+endif(BUILD_TESTS)

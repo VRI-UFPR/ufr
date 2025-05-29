@@ -5,7 +5,6 @@
 import os
 import ctypes
 from pathlib import Path
-import numpy as np
 
 # _base_path = str( Path(__file__).parent.resolve() )
 
@@ -68,6 +67,15 @@ class Link(ctypes.Structure):
     dll.ufr_put_f32.argtypes = [ ctypes.c_void_p, ctypes.c_float ]
     dll.ufr_put_f32.restype =  ctypes.c_int32
 
+    dll.ufr_put_raw.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
+    dll.ufr_put_raw.restype =  ctypes.c_int32
+
+    dll.ufr_put_raw.argtypes = [ ctypes.c_void_p ]
+    dll.ufr_put_raw.restype =  ctypes.c_int32
+
+    # loop
+    dll.ufr_loop_ok.argtypes = [ ]
+    dll.ufr_loop_ok.restype =  ctypes.c_int32
 
 
 
@@ -121,22 +129,6 @@ class Link(ctypes.Structure):
         res = Link.dll.ufr_recv_async( ctypes.pointer(self) )
         return res == UFR_OK
 
-    def read(self):
-        size = Link.dll.ufr_size_bytes( ctypes.pointer(self) )
-        buffer = ( ctypes.c_ubyte * size )()
-        total = Link.dll.ufr_read( ctypes.pointer(self), ctypes.pointer(buffer), size )
-        # return bytes(buffer)
-        # print(total)
-
-        res = np.zeros(total, dtype=np.ubyte)
-        for i in range(total):
-            res[i] = buffer[i]
-        #     print( hex(res[i]), end=' ')
-        # print()
-        # print(res.shape)
-        # np.resize( res, (total,) )
-        return res
-
     def is_error(self):
         return Link.dll.ufr_link_is_error( ctypes.pointer(self) )
         
@@ -147,6 +139,11 @@ class Link(ctypes.Structure):
     def put(self, format, *args):
         index = 0
         for c in format:
+            # send message
+            if c == '#':
+                Link.dll.ufr_put_eof( ctypes.pointer(self) )
+                continue
+
             # send message
             if c == '\n':
                 Link.dll.ufr_send( ctypes.pointer(self) )
@@ -166,6 +163,11 @@ class Link(ctypes.Structure):
             elif c == 's':
                 value = args[index]
                 Link.dll.ufr_put_str (ctypes.pointer(self), bytes(value, 'utf-8'))
+
+            # put raw
+            elif c == 'r':
+                value = args[index]
+                Link.dll.ufr_put_raw (ctypes.pointer(self), value, len(value))
 
             # error
             else:
@@ -192,6 +194,11 @@ class Link(ctypes.Structure):
             elif c == 'p':
                 ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
                 resp.append(ptr)
+            elif c == 'r':
+                size = Link.dll.ufr_get_nbytes(ctypes.pointer(self))
+                buffer = (ctypes.c_ubyte * size)()
+                Link.dll.ufr_get_raw( ctypes.pointer(self), ctypes.pointer(buffer), size)
+                resp.append(buffer)
             elif c == '^':
                 Link.dll.ufr_recv(ctypes.pointer(self))
             elif c == '\n':
@@ -205,6 +212,7 @@ class Link(ctypes.Structure):
             return resp
 
     def get_cv_image(self):
+        import numpy as np
         msg = self.get("iiip")
 
         im_type = msg[0]
@@ -249,6 +257,25 @@ def Client(text: str):
     return Link(text, UFR_START_CLIENT)
 
 
+def subscriber(text: str):
+    return Link(text, UFR_START_SUBSCRIBER)
+
+def publisher(text: str):
+    return Link(text, UFR_START_PUBLISHER)
+
+def server(text: str):
+    return Link(text, UFR_START_SERVER)
+
+def client(text: str):
+    return Link(text, UFR_START_CLIENT)
+
+
+def loop_ok():
+    return Link.dll.ufr_loop_ok()
+
+def loop():
+    return Link.dll.ufr_loop_ok()
+
 def urf_input(format: str):
     resp = []
     for c in format:
@@ -283,3 +310,17 @@ def urf_output(format: str, *args):
         elif c == 's':
             c_args.append( bytes(args[i], 'utf-8') )
     Link.dll.urf_output( bytes(format, 'utf-8'), *c_args)
+
+
+"""
+import sys
+import signal
+
+print("OPA")
+
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+"""

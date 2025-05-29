@@ -55,17 +55,17 @@ size_t ufr_zmq_socket_write(link_t* link, const char* buffer, size_t size) {
 
     // send the data to buffer
     size_t sent;
-    if ( size > 0 ) {
-        sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        sent = zmq_send (gtw_obj->socket, buffer, size, 0); 
     } else {
-        sent = zmq_send (gtw_obj->socket, NULL, 0, 0); 
+        sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
     }
 
     // const size_t sent = zmq_send (gtw_obj->socket, buffer, size, 0);
     if ( sent != size ) {
         return ufr_error(link, 0, "%s", zmq_strerror(errno));
     }
-    ufr_info(link, "sent %ld bytes", sent);
+    // ufr_info(link, "sent %ld bytes", sent);
     return sent;
 }
 
@@ -80,6 +80,7 @@ int ufr_zmq_socket_type(const link_t* link) {
 
 static
 int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
+
     if ( type == UFR_START_CLIENT ) {
         ufr_log_ini(link, "creating a socket");
         const ll_shr_t* shr = link->gtw_shr;
@@ -105,10 +106,11 @@ int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
         ufr_log_end(link, "gateway object updated");
 
         // set timeout
-        int time = 2000;
+        int time = ufr_args_geti(args, "@timeout", 30000);
         zmq_setsockopt(socket, ZMQ_RCVTIMEO, &time, sizeof(time));
 
     } else if ( type == UFR_START_SERVER_ST || type == UFR_START_SERVER_MT ) {
+
         // create the socket
         ufr_log_ini(link, "creating the socket");
         const ll_shr_t* shr_data = link->gtw_shr;

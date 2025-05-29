@@ -63,15 +63,24 @@
 #define UFR_STATUS_STARTED  2
 
 
-#define UFR_STATE_READY     0
-#define UFR_STATE_RECV      1
-#define UFR_STATE_SEND      2
+#define UFR_STATE_RESET      0
+#define UFR_STATE_BOOT       1
+#define UFR_STATE_START      2
+#define UFR_STATE_READY      3
+#define UFR_STATE_PUT        4
+#define UFR_STATE_SEND       5
+#define UFR_STATE_SEND_LAST  6
+#define UFR_STATE_RECV       7
+#define UFR_STATE_GET        8
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct _link;
+
+typedef int (*loop_callback)(void);
 
 // ============================================================================
 //  UFR ARGS
@@ -116,7 +125,7 @@ typedef struct {
 
     // certo
     size_t (*read)(struct _link* link, char* buffer, size_t length);
-    size_t (*write)(struct _link* link, const char* buffer, size_t length);
+    size_t (*write)(struct _link* link, const char* buffer, size_t length);  // , bool is_last
 
     // receive functions
     int (*recv)(struct _link* link);
@@ -128,6 +137,7 @@ typedef struct {
 
     // tests
     const char* (*test_args)(const struct _link* link);
+    int (*ready)(struct _link* link);
 } ufr_gtw_api_t;
 
 typedef struct {
@@ -150,6 +160,7 @@ typedef struct {
 
     int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
     int (*get_str)(struct _link* link, char* out, int max_nbytes);
+    // int (*get_cmd)(struct _link* link, char cmd);
 
     int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
     int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
@@ -161,6 +172,8 @@ typedef struct {
 
     int (*enter)(struct _link* link);
     int (*leave)(struct _link* link);
+
+    int (*get_meta)(struct _link* link, int index, char type, item_t* out_val);
 } ufr_dcr_api_t;
 
 typedef struct {
@@ -222,7 +235,7 @@ typedef struct _link {
         struct{
             uint8_t is_booted  :1;
             uint8_t is_started :1;
-            uint8_t state      :2;
+            uint8_t state      :6;
         };
     };
 
@@ -239,8 +252,16 @@ typedef struct {
 //  Sem bloco ainda
 // ============================================================================
 
+/**
+ * @brief retorna o nome do Gateway
+ * 
+ * @param[in] link ponteiro do link
+ * @return const char* 
+ */
 const char* ufr_api_name(const link_t* link);
-link_t ufr_accept(link_t* link);
+
+
+// link_t ufr_accept(link_t* link);
 
 size_t ufr_write(link_t* link, const char* buffer, size_t size);
 size_t ufr_read(link_t* link, char* buffer, size_t maxsize);
@@ -266,7 +287,7 @@ bool ufr_link_is_error(const link_t* link);
 void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
 
 // ============================================================================
-//  UFR
+//  UFR - Open a Link
 // ============================================================================
 
 int ufr_new(link_t* link, int type, const char* format, ...);
@@ -290,7 +311,7 @@ link_t ufr_subscriber(const char* text, ...);
 int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
 
 /**
- * @brief Create a link as client
+ * @brief Create a link as client with variable parameters
  *
  * This function put formatted data to the message and it will be send
  * to the link related. 
@@ -301,6 +322,15 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
  * @version 1.0
  */
 link_t ufr_client(const char* text, ...);
+
+/**
+ * @brief Create a link as client with ufr_args parameter
+ * 
+ * @param link pointer of link to be created
+ * @param args arguments for the link
+ * @return int = 0: Success, != 0: Error
+ */
+int ufr_client_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new single thread server
@@ -317,6 +347,7 @@ link_t ufr_server(const char* text, ...);
  * @return link_t 
  */
 link_t ufr_server_st(const char* text, ...);
+int ufr_server_st_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new single thread server
@@ -331,7 +362,7 @@ link_t ufr_server_mt(const char* text, ...);
 // ============================================================================
 
 /**
- * @brief 
+ * @brief close a link
  * 
  * @param link 
  */
@@ -341,8 +372,34 @@ void ufr_close(link_t* link);
 //  UFR LOOP
 // ============================================================================
 
+/**
+ * @brief Function for main loop
+ * 
+ * @return true Ok, continue the loop
+ * @return false Error, exit of the loop
+ */
+bool ufr_loop();
+
+/**
+ * @brief Function for main loop
+ * 
+ * @return true Ok, continue the loop
+ * @return false Error, exit of the loop
+ */
 bool ufr_loop_ok();
+
+/**
+ * @brief Set for exit the main loop
+ * 
+ */
 void ufr_loop_set_end();
+
+/**
+ * @brief Put a new callback function for the main loop condition
+ * 
+ * @param loop_callback pointer for the function
+ * @return int = 0: Success, != 0 : Error
+ */
 int  ufr_loop_put_callback( int (*loop_callback)(void)  );
 
 // ============================================================================
@@ -550,6 +607,9 @@ void ufr_inoutput_init(const char* text);
 
 void ufr_exit_if_error(link_t* link);
 
+int ufr_set_state_ready(link_t* link);
+
+
 // ============================================================================
 //  UFR LOG
 // ============================================================================
@@ -593,6 +653,14 @@ void ufr_buffer_put_i32_as_str(ufr_buffer_t* buffer, int32_t val);
 void ufr_buffer_put_f32_as_str(ufr_buffer_t* buffer, float val);
 void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text);
 void ufr_buffer_check_size(ufr_buffer_t* buffer, size_t size);
+
+// ============================================================================
+//  UFR META
+// ============================================================================
+
+const char* ufr_meta_str(link_t* link, int index);
+int ufr_meta_i32(link_t* link, int index);
+
 
 // ============================================================================
 //  UFR TEST

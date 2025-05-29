@@ -40,7 +40,10 @@
 // ============================================================================
 
 int main() {
-    link_t server = ufr_server_st("@new zmq:socket @coder msgpack @debug 4");
-
+    link_t server = ufr_server_st("@new mqtt @coder msgpack @host bombardelli.dedyn.io");
+    char buffer[1024];
+    ufr_get(&server,"^s\n", buffer);
+    ufr_put(&server,"s\n\n", "OK");
+    ufr_close(&server);
     return 0;
 }
