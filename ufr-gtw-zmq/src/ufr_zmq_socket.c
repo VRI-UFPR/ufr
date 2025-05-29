@@ -56,7 +56,8 @@ size_t ufr_zmq_socket_write(link_t* link, const char* buffer, size_t size) {
     // send the data to buffer
     size_t sent;
     if ( size > 0 ) {
-        sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
+        // sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
+        sent = zmq_send (gtw_obj->socket, buffer, size, 0);
     } else {
         sent = zmq_send (gtw_obj->socket, NULL, 0, 0); 
     }
@@ -80,6 +81,7 @@ int ufr_zmq_socket_type(const link_t* link) {
 
 static
 int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
+
     if ( type == UFR_START_CLIENT ) {
         ufr_log_ini(link, "creating a socket");
         const ll_shr_t* shr = link->gtw_shr;
@@ -109,6 +111,7 @@ int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
         zmq_setsockopt(socket, ZMQ_RCVTIMEO, &time, sizeof(time));
 
     } else if ( type == UFR_START_SERVER_ST || type == UFR_START_SERVER_MT ) {
+
         // create the socket
         ufr_log_ini(link, "creating the socket");
         const ll_shr_t* shr_data = link->gtw_shr;

@@ -52,23 +52,7 @@ erros:
 #include <mosquitto.h>
 #include <ufr.h>
 
-#define MQTT_QOS_0 0
-
-typedef struct {
-    char broker_hostname[128];
-    char topic_name[128];
-    uint16_t broker_port;
-} ll_shr_t;
-
-typedef struct {
-    uint8_t start_type;
-    volatile bool is_received;
-    struct mosquitto* mosq;
-    size_t msg_size;
-    size_t msg_size_max;
-    size_t msg_read_idx;
-    char* msg_data;
-} ll_obj_t;
+#include "ufr_gtw_mqtt.h"
 
 size_t g_mosq_count = 0;
 
@@ -355,6 +339,15 @@ int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
 }
 
 int ufr_gtw_mqtt_new(link_t* link, int type) {
-    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    if ( type == UFR_START_PUBLISHER ) {
+        ufr_gtw_mqtt_new_topic(link, type);
+    } else if ( type == UFR_START_SUBSCRIBER ) {
+        ufr_gtw_mqtt_new_topic(link, type);
+    } else if ( type == UFR_START_CLIENT ) {
+        ufr_gtw_mqtt_new_client(link, type);
+    } else if ( type == UFR_START_SERVER ) {
+        ufr_gtw_mqtt_new_server(link, type);
+    }
+
     return UFR_OK;
 }

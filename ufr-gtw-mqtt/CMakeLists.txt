@@ -6,6 +6,7 @@ project(urf-gtw-mqtt)
 
 add_library(ufr_gtw_mqtt SHARED
     ./src/urf_gtw_mqtt.c
+    ./src/ufr_gtw_mqtt_socket.c
     )
 
 target_compile_options(ufr_gtw_mqtt PUBLIC -O1)

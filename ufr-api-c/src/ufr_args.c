@@ -261,6 +261,7 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
                     }
                     return args->arg[count_arg].str;
                 } else {
+                    strcpy(buffer, default_value);
                     return default_value;
                 }
             } else {
@@ -271,6 +272,7 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
     }
 
     // not found, return default value
+    strcpy(buffer, default_value);
     return default_value;
 }
 

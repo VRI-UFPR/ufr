@@ -265,11 +265,15 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
 
 
 int ufr_put_eof(link_t* link) {
+    if ( link->type_started == UFR_START_SUBSCRIBER ) {
+        return ufr_error(link, -1, "Link is a subscriber");
+    }
+
     const int retval = link->enc_api->put_cmd(link, EOF);
     link->put_count = 0;
     if ( link->type_started == UFR_START_CLIENT ) {
         link->state = UFR_STATE_RECV;
-    } else if ( link->type_started == UFR_START_SERVER ) { 
+    } else if ( link->type_started == UFR_START_SERVER || link->type_started == UFR_START_PUBLISHER ) { 
         link->state = UFR_STATE_READY;
     }
     return retval;

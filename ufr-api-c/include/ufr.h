@@ -63,9 +63,15 @@
 #define UFR_STATUS_STARTED  2
 
 
-#define UFR_STATE_READY     0
-#define UFR_STATE_RECV      1
-#define UFR_STATE_SEND      2
+#define UFR_STATE_RESET      0
+#define UFR_STATE_BOOT       1
+#define UFR_STATE_START      2
+#define UFR_STATE_READY      3
+#define UFR_STATE_PUT        4
+#define UFR_STATE_SEND       5
+#define UFR_STATE_RECV       6
+#define UFR_STATE_GET        7
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,7 +122,7 @@ typedef struct {
 
     // certo
     size_t (*read)(struct _link* link, char* buffer, size_t length);
-    size_t (*write)(struct _link* link, const char* buffer, size_t length);
+    size_t (*write)(struct _link* link, const char* buffer, size_t length);  // , bool is_last
 
     // receive functions
     int (*recv)(struct _link* link);
@@ -128,6 +134,7 @@ typedef struct {
 
     // tests
     const char* (*test_args)(const struct _link* link);
+    int (*ready)(struct _link* link);
 } ufr_gtw_api_t;
 
 typedef struct {
@@ -222,7 +229,7 @@ typedef struct _link {
         struct{
             uint8_t is_booted  :1;
             uint8_t is_started :1;
-            uint8_t state      :2;
+            uint8_t state      :6;
         };
     };
 
