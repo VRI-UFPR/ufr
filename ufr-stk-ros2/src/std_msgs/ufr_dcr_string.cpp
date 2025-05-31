@@ -33,7 +33,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 typedef ufr_ros_decoder_t<std_msgs::msg::String> ll_decoder_t;
 
@@ -121,7 +121,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_humble_new_string(link_t* link, int type) {
+int ufr_dcr_ros2_new_string(link_t* link, int type) {
     link->dcr_api = &ufr_dcr_ros_driver;
     return UFR_OK;
 }

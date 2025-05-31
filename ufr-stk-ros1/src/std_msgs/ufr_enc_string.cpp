@@ -36,7 +36,7 @@
 #include <string.h>
 #include <ufr.h>
 
-#include "ufr_gtw_ros_noetic.hpp"
+#include "ufr_gtw_ros1.hpp"
 #include "std_msgs/String.h"
 
 struct Encoder {

@@ -43,15 +43,15 @@ struct Gateway {
 // Public Functions
 extern "C" {
     // gateway
-    int ufr_gtw_ros_noetic_new_topic(link_t* out, int type);
+    int ufr_gtw_ros1_new_topic(link_t* out, int type);
 
     // encoders
-    int ufr_enc_ros_noetic_new_twist(link_t* link, int type);
-    int ufr_enc_ros_noetic_new_string(link_t* link, int type);
-    int ufr_enc_ros_noetic_new_laserscan(link_t* link, int type);
+    int ufr_enc_ros1_new_twist(link_t* link, int type);
+    int ufr_enc_ros1_new_string(link_t* link, int type);
+    int ufr_enc_ros1_new_laserscan(link_t* link, int type);
 
     // decoders
-    int ufr_dcr_ros_noetic_new_pose(link_t* link, int type);
-    int ufr_dcr_ros_noetic_new_twist(link_t* link, int type);
-    int ufr_dcr_ros_noetic_new_string(link_t* link, int type);
+    int ufr_dcr_ros1_new_pose(link_t* link, int type);
+    int ufr_dcr_ros1_new_twist(link_t* link, int type);
+    int ufr_dcr_ros1_new_string(link_t* link, int type);
 }

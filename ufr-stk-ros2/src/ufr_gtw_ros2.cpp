@@ -32,7 +32,7 @@
 #include <memory>
 #include <ufr.h>
 
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 size_t g_ros_count = 0;
 ll_gateway_t* g_gateway = NULL;
@@ -174,17 +174,17 @@ ufr_gtw_api_t ufr_ros_humble_topic_drv = {
 // ======================================================================================
 
 extern "C"
-int ufr_gtw_ros_humble_new_topic(link_t* out, int type) {
+int ufr_gtw_ros2_new_topic(link_t* out, int type) {
     ufr_link_init(out, &ufr_ros_humble_topic_drv);
     return UFR_OK;
 }
 
 extern "C"
-int ufr_gtw_ros_humble_new(link_t* out, int type) {
+int ufr_gtw_ros2_new(link_t* out, int type) {
     if ( type == UFR_START_PUBLISHER) {
-        ufr_gtw_ros_humble_new_topic(out, type);
+        ufr_gtw_ros2_new_topic(out, type);
     } else if ( type == UFR_START_SUBSCRIBER) {
-        ufr_gtw_ros_humble_new_topic(out, type);
+        ufr_gtw_ros2_new_topic(out, type);
     } else {
         return ufr_error(out, 1, "Start type is invalid");
     }

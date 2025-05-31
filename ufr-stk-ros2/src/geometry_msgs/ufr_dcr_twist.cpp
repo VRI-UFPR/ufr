@@ -33,7 +33,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros2.hpp"
 
 typedef ufr_ros_decoder_t<geometry_msgs::msg::Twist> ll_decoder_t;
 
@@ -164,7 +164,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_humble_new_twist(link_t* link, int type) {
+int ufr_dcr_ros2_new_twist(link_t* link, int type) {
     link->dcr_api = &ufr_dcr_ros_driver;
     return UFR_OK;
 }

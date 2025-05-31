@@ -33,7 +33,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "ufr_gtw_ros_humble.hpp"
+#include "ufr_gtw_ros1.hpp"
 
 typedef ufr_ros_decoder_t<std_msgs::msg::String> ll_decoder_t;
 

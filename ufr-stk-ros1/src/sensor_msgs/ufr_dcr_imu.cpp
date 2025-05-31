@@ -33,7 +33,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
-#include "ufr_gtw_ros_noetic.hpp"
+#include "ufr_gtw_ros1.hpp"
 
 
 #define MAX 8
@@ -232,7 +232,7 @@ int ufr_dcr_ros_leave(link_t* link) {
 }
 
 static
-ufr_dcr_api_t ufr_dcr_ros_driver = {
+ufr_dcr_api_t ufr_dcr_ros1_driver = {
     .boot = ufr_dcr_ros_boot,
     .close = NULL,
     .recv_cb = ufr_dcr_ros_recv_cb,
@@ -265,8 +265,8 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 // ============================================================================
 
 extern "C"
-int ufr_dcr_ros_noetic_new_imu(link_t* link, int type) {
-    link->dcr_api = &ufr_dcr_ros_driver;
+int ufr_dcr_ros1_new_imu(link_t* link, int type) {
+    link->dcr_api = &ufr_dcr_ros1_driver;
     return UFR_OK;
 }
 
