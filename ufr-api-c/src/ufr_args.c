@@ -257,11 +257,14 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
                 if ( token[1] == 's' ) {
                     if ( args->arg[count_arg].str == NULL ) {
                         // ufr_warn(args, "Expected string pointer but received a NULL pointer");
-                        return default_value;
+                        buffer[0] = '\0';
+                        return NULL;
                     }
                     return args->arg[count_arg].str;
                 } else {
-                    strcpy(buffer, default_value);
+                    if ( default_value != NULL ) {
+                        strcpy(buffer, default_value);
+                    }
                     return default_value;
                 }
             } else {

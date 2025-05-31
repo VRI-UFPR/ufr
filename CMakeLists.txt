@@ -68,6 +68,8 @@ add_subdirectory(./ufr-gtw-posix)
 add_subdirectory(./ufr-cdr-csv)
 add_subdirectory(./ufr-cdr-text)
 
+add_subdirectory(./ufr-gtw-file)
+
 # Build libraries with dependencies
 if(BUILD_UFR_GTW_ZMQ)
     # debian/ubuntu: sudo apt install libzmq3-dev
