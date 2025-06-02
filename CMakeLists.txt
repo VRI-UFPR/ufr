@@ -41,16 +41,17 @@ if (OPENCV_FOUND)
 endif()
 
 # Configure compilation
-option(BUILD_UFR_GTW_ZMQ     "build the gateway for ZMQ"    ${HAVE_ZMQ})
-option(BUILD_UFR_GTW_MQTT    "build the gateway for MQTT"   ${HAVE_MOSQUITTO})
-option(BUILD_UFR_CDR_MSGPACK "build the coder for MsgPack"  ${HAVE_MSGPACK})
-option(BUILD_UFR_STK_SQLITE  "build the stack for Sqlite3"  OFF )
-option(BUILD_UFR_STK_ROS1    "build the stack for ROS1"     OFF )
-option(BUILD_UFR_STK_ROS2    "build the stack for ROS2"     OFF )
-option(BUILD_UFR_DEV_VIDEO   "build the stack for Video"    ${HAVE_OPENCV} )
-option(BUILD_EXAMPLES        "build the examples"           OFF )
-option(BUILD_TESTS           "build the tests"              ON )
-option(COVERAGE_TEST         "coverage test"                OFF)
+option(BUILD_UFR_GTW_ZMQ      "build the gateway for ZMQ"      ${HAVE_ZMQ})
+option(BUILD_UFR_GTW_MQTT     "build the gateway for MQTT"     ${HAVE_MOSQUITTO})
+option(BUILD_UFR_CDR_MSGPACK  "build the coder for MsgPack"    ${HAVE_MSGPACK})
+option(BUILD_UFR_STK_SQLITE   "build the stack for Sqlite3"    OFF )
+option(BUILD_UFR_STK_ROS1     "build the stack for ROS1"       OFF )
+option(BUILD_UFR_STK_ROS2     "build the stack for ROS2"       OFF )
+option(BUILD_UFR_DEV_VIDEO    "build the stack for Video"      ${HAVE_OPENCV} )
+option(BUILD_UFR_STK_TELEGRAM "build the server for Telegram"  OFF )
+option(BUILD_EXAMPLES         "build the examples"             OFF )
+option(BUILD_TESTS            "build the tests"                ON )
+option(COVERAGE_TEST          "coverage test"                  OFF)
 # option(BUILD_APPLICATION        "build the applications"       ON )
 
 if(COVERAGE_TEST)
@@ -94,6 +95,7 @@ endif(BUILD_UFR_STK_SQLITE)
 # Build examples
 if(BUILD_EXAMPLES)
     add_subdirectory(./examples/)
+    install(FILES ./etc/init.bash DESTINATION .)
 endif(BUILD_EXAMPLES)
 
 # Build tests
@@ -133,6 +135,5 @@ endif(BUILD_UFR_STK_ROS2)
 # add_subdirectory(./ufr-stk-webots)
 # add_subdirectory(./cv_mat)
 
-# install(FILES ./etc/init.bash DESTINATION .)
 # install(FILES ./etc/Makefile DESTINATION .)
 

@@ -158,6 +158,7 @@ void ufr_buffer_put(ufr_buffer_t* buffer, const char* text, size_t size) {
     // Copia os dados para o buffer
     char* base = &buffer->ptr[buffer->size];
     strncpy(base, text, size);
+    base[size] = '\0';
     buffer->size += size; //atualiza o tamanho atual do buffer
 }
 
@@ -323,12 +324,12 @@ void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text) {
         printf("\n");
         return;
     }
+
     const size_t size = strlen(text); // Calcula o tamanho da string 
-    ufr_buffer_check_size(buffer, size); // Verifica se há espaço suficiente no buffer
     if ( buffer->size == 0 ) {
-        ufr_buffer_put(buffer, text, size); // Adiciona a string 
+        ufr_buffer_put(buffer, text, size); // Se eh a primeira string, Adiciona a string sem divisor
     } else {
         ufr_buffer_put(buffer, " ", 1);
-        ufr_buffer_put(buffer, text, size); // Adiciona a string 
+        ufr_buffer_put(buffer, text, size); // Adiciona a string com espaco antes da frase
     }
 }
