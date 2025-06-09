@@ -55,11 +55,10 @@ size_t ufr_zmq_socket_write(link_t* link, const char* buffer, size_t size) {
 
     // send the data to buffer
     size_t sent;
-    if ( size > 0 ) {
-        // sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
-        sent = zmq_send (gtw_obj->socket, buffer, size, 0);
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        sent = zmq_send (gtw_obj->socket, buffer, size, 0); 
     } else {
-        sent = zmq_send (gtw_obj->socket, NULL, 0, 0); 
+        sent = zmq_send (gtw_obj->socket, buffer, size, ZMQ_SNDMORE);
     }
 
     // const size_t sent = zmq_send (gtw_obj->socket, buffer, size, 0);

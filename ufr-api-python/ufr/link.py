@@ -146,14 +146,22 @@ class Link(ctypes.Structure):
 
     def put(self, format, *args):
         index = 0
-        for c in format:
+        next_char = 0
+        iter_format = iter(format)
+        for c in iter_format:
+            next_char += 1
+
             # send message
             if c == '\n':
-                Link.dll.ufr_send( ctypes.pointer(self) )
-                continue
+                if next_char < len(format) and format[next_char] == '\n':
+                    Link.dll.ufr_put_eof( ctypes.pointer(self) )
+                    next(iter_format)
+                else:
+                    Link.dll.ufr_send( ctypes.pointer(self) )
+                continue   # avoid increment index
 
             # put integer
-            elif c == 'i':
+            if c == 'i':
                 value = ctypes.c_int32( args[index] )
                 Link.dll.ufr_put_i32(ctypes.pointer(self), value, 1)
 

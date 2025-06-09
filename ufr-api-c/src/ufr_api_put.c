@@ -71,8 +71,17 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
 
 		// new line
 		} else if ( type == '\n' ) {
-            if ( link->put_count == 0 ) {
+
+            // case \n\n together
+            if ( *format == '\n' ) {
                 ufr_put_eof(link);
+                format += 1;
+
+            // case one \n and no data in the link
+            } else if ( link->put_count == 0 ) {
+                ufr_put_eof(link);
+
+            // case one \n and data in the link to send
             } else {
 			    link->enc_api->put_cmd(link, '\n');
                 link->put_count = 0;
@@ -269,12 +278,18 @@ int ufr_put_eof(link_t* link) {
         return ufr_error(link, -1, "Link is a subscriber");
     }
 
+    // send the last message
+    link->state = UFR_STATE_SEND_LAST;
     const int retval = link->enc_api->put_cmd(link, EOF);
-    link->put_count = 0;
-    if ( link->type_started == UFR_START_CLIENT ) {
-        link->state = UFR_STATE_RECV;
-    } else if ( link->type_started == UFR_START_SERVER || link->type_started == UFR_START_PUBLISHER ) { 
-        link->state = UFR_STATE_READY;
+
+    // update the state of the link
+    if ( retval == UFR_OK ) {
+        link->put_count = 0;
+        if ( link->type_started == UFR_START_CLIENT ) {
+            link->state = UFR_STATE_RECV;
+        } else if ( link->type_started == UFR_START_SERVER || link->type_started == UFR_START_PUBLISHER ) { 
+            link->state = UFR_STATE_READY;
+        }
     }
     return retval;
 }

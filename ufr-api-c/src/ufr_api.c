@@ -449,9 +449,9 @@ int ufr_new(link_t* link, int type, const char* format, ...) {
     } else if ( type == UFR_START_PUBLISHER ) {
         res = ufr_publisher_args(link, &args);
     } else if ( type == UFR_START_CLIENT ) {
-
+        res = ufr_client_args(link, &args);
     } else if ( type == UFR_START_SERVER ) {
-
+        res = ufr_server_st_args(link, &args);
     }
     return res;
 }
@@ -481,6 +481,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     if ( func_gtw_new == NULL ) {
         ufr_fatal(link, 1, "erro1");
     }
+
     if ( func_gtw_new(link, UFR_START_SUBSCRIBER) != UFR_OK ) {
         ufr_fatal(link, 1, "erro2");
     }
@@ -501,6 +502,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro4");
     }
+
 
     // Prepare Decoder
     if ( link->dcr_api == NULL ) {
@@ -593,6 +595,62 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
 }
 
 
+int ufr_client_args(link_t* link, const ufr_args_t* args) {
+    // Prepare Gateway
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(args, "gtw", "@new", NULL);
+    if ( func_gtw_new == NULL ) {
+        ufr_fatal(link, 1, "erro1");
+    }
+    if ( func_gtw_new(link, UFR_START_CLIENT) != UFR_OK ) {
+        ufr_fatal(link, 1, "erro2");
+    }
+
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
+    link->type_started = UFR_START_CLIENT;
+    if ( link->gtw_api->boot(link, args) != UFR_OK ) {
+        ufr_fatal(link, 1, "erro3");
+    }
+
+    // Prepare Decoder
+    if ( link->dcr_api == NULL ) {
+        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(args, "dcr", "@coder", NULL);
+        if ( func_dcr_new == NULL ) {
+            ufr_dcr_sys_new_std(link, UFR_START_CLIENT);
+        } else {
+            if ( func_dcr_new(link, UFR_START_CLIENT) != UFR_OK ) {
+                ufr_fatal(link, 1, "erro4");
+            }
+        }
+
+        if ( link->dcr_api->boot(link, args) != UFR_OK ) {
+            ufr_fatal(link, 1, "erro5");
+        }
+    }
+
+    // Prepare Encoder
+    if ( link->enc_api == NULL ) {
+        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(args, "enc", "@coder", NULL);
+        if ( func_enc_new == NULL ) {
+            ufr_enc_sys_new_std(link, UFR_START_CLIENT);
+        } else {
+            if ( func_enc_new(link, UFR_START_CLIENT) != UFR_OK ) {
+                ufr_fatal(link, 1, "erro4");
+            }
+        }
+
+        if ( link->enc_api->boot(link, args) != UFR_OK ) {
+            ufr_fatal(link, 1, "erro5");
+        }
+    }
+
+    // start
+    if ( link->gtw_api->start(link, UFR_START_CLIENT, args) != UFR_OK ) {
+        ufr_fatal(&link, 1, "erro6");
+    }
+
+    return UFR_OK;
+}
+
 link_t ufr_client(const char* format, ...) {
     link_t link;
 
@@ -603,60 +661,67 @@ link_t ufr_client(const char* format, ...) {
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
 
+    ufr_client_args(&link, &args);
+
+    // success
+    return link;
+}
+
+int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
     // Prepare Gateway
-    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "gtw", "@new", NULL);
+    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(args, "gtw", "@new", NULL);
     if ( func_gtw_new == NULL ) {
-        ufr_fatal(&link, 1, "erro1");
+        ufr_fatal(link, 1, "erro1");
     }
-    if ( func_gtw_new(&link, UFR_START_CLIENT) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro2");
+    if ( func_gtw_new(link, UFR_START_SERVER) != UFR_OK ) {
+        ufr_fatal(link, 1, "erro2");
     }
 
-    link.log_level = ufr_args_geti(&args, "@log", g_default_log_level);
-    link.type_started = UFR_START_CLIENT;
-    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro3");
+    link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
+    link->type_started = UFR_START_SERVER;
+    if ( link->gtw_api->boot(link, args) != UFR_OK ) {
+        ufr_fatal(link, 1, "erro3");
     }
 
     // Prepare Decoder
-    if ( link.dcr_api == NULL ) {
-        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
+    if ( link->dcr_api == NULL ) {
+        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(args, "dcr", "@coder", NULL);
         if ( func_dcr_new == NULL ) {
-            ufr_dcr_sys_new_std(&link, UFR_START_CLIENT);
+            ufr_dcr_sys_new_std(link, UFR_START_SERVER);
         } else {
-            if ( func_dcr_new(&link, UFR_START_CLIENT) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro4");
+            if ( func_dcr_new(link, UFR_START_SERVER) != UFR_OK ) {
+                ufr_fatal(link, 1, "erro4");
             }
         }
 
-        if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
+        if ( link->dcr_api->boot(link, args) != UFR_OK ) {
             ufr_fatal(&link, 1, "erro5");
         }
     }
 
     // Prepare Encoder
-    if ( link.enc_api == NULL ) {
-        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(&args, "enc", "@coder", NULL);
+    if ( link->enc_api == NULL ) {
+        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(args, "enc", "@coder", NULL);
         if ( func_enc_new == NULL ) {
-            ufr_enc_sys_new_std(&link, UFR_START_CLIENT);
+            ufr_enc_sys_new_std(link, UFR_START_SERVER);
         } else {
-            if ( func_enc_new(&link, UFR_START_CLIENT) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro4");
+            if ( func_enc_new(link, UFR_START_SERVER) != UFR_OK ) {
+                ufr_fatal(link, 1, "erro4");
             }
         }
 
-        if ( link.enc_api->boot(&link, &args) != UFR_OK ) {
-            ufr_fatal(&link, 1, "erro5");
+        if ( link->enc_api->boot(link, args) != UFR_OK ) {
+            ufr_fatal(link, 1, "erro5");
         }
     }
 
     // start
-    if ( link.gtw_api->start(&link, UFR_START_CLIENT, &args) != UFR_OK ) {
+    if ( link->gtw_api->start(link, UFR_START_SERVER, args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro6");
     }
 
     // success
-    return link;
+    return UFR_OK;
 }
 
 link_t ufr_server_st(const char* format, ...) {
@@ -669,57 +734,7 @@ link_t ufr_server_st(const char* format, ...) {
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
 
-    // Prepare Gateway
-    int(*func_gtw_new)(link_t*,int) = ufr_args_getfunc(&args, "gtw", "@new", NULL);
-    if ( func_gtw_new == NULL ) {
-        ufr_fatal(&link, 1, "erro1");
-    }
-    if ( func_gtw_new(&link, UFR_START_SERVER) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro2");
-    }
-
-    link.log_level = ufr_args_geti(&args, "@log", g_default_log_level);
-    link.type_started = UFR_START_SERVER;
-    if ( link.gtw_api->boot(&link, &args) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro3");
-    }
-
-    // Prepare Decoder
-    if ( link.dcr_api == NULL ) {
-        int(*func_dcr_new)(link_t*,int) = ufr_args_getfunc(&args, "dcr", "@coder", NULL);
-        if ( func_dcr_new == NULL ) {
-            ufr_dcr_sys_new_std(&link, UFR_START_SERVER);
-        } else {
-            if ( func_dcr_new(&link, UFR_START_SERVER) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro4");
-            }
-        }
-
-        if ( link.dcr_api->boot(&link, &args) != UFR_OK ) {
-            ufr_fatal(&link, 1, "erro5");
-        }
-    }
-
-    // Prepare Encoder
-    if ( link.enc_api == NULL ) {
-        int(*func_enc_new)(link_t*,int) = ufr_args_getfunc(&args, "enc", "@coder", NULL);
-        if ( func_enc_new == NULL ) {
-            ufr_enc_sys_new_std(&link, UFR_START_SERVER);
-        } else {
-            if ( func_enc_new(&link, UFR_START_SERVER) != UFR_OK ) {
-                ufr_fatal(&link, 1, "erro4");
-            }
-        }
-
-        if ( link.enc_api->boot(&link, &args) != UFR_OK ) {
-            ufr_fatal(&link, 1, "erro5");
-        }
-    }
-
-    // start
-    if ( link.gtw_api->start(&link, UFR_START_SERVER, &args) != UFR_OK ) {
-        ufr_fatal(&link, 1, "erro6");
-    }
+    ufr_server_st_args(&link, &args);
 
     // success
     return link;

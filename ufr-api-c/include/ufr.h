@@ -69,8 +69,9 @@
 #define UFR_STATE_READY      3
 #define UFR_STATE_PUT        4
 #define UFR_STATE_SEND       5
-#define UFR_STATE_RECV       6
-#define UFR_STATE_GET        7
+#define UFR_STATE_SEND_LAST  6
+#define UFR_STATE_RECV       7
+#define UFR_STATE_GET        8
 
 
 #ifdef __cplusplus
@@ -134,7 +135,7 @@ typedef struct {
 
     // tests
     const char* (*test_args)(const struct _link* link);
-    int (*ready)(struct _link* link);
+    // int (*ready)(struct _link* link);
 } ufr_gtw_api_t;
 
 typedef struct {
@@ -308,6 +309,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
  * @version 1.0
  */
 link_t ufr_client(const char* text, ...);
+int ufr_client_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new single thread server
@@ -324,6 +326,7 @@ link_t ufr_server(const char* text, ...);
  * @return link_t 
  */
 link_t ufr_server_st(const char* text, ...);
+int ufr_server_st_args(link_t* link, const ufr_args_t* args);
 
 /**
  * @brief Create a new single thread server

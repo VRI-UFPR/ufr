@@ -171,6 +171,11 @@ int ufr_enc_sys_put_cmd(link_t* link, char cmd) {
         ufr_buffer_put_chr(buffer, '\n');
         ufr_write(link, buffer->ptr, buffer->size);
         ufr_buffer_clear(buffer);
+    } else if ( cmd == (char) EOF ) {
+        ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
+        ufr_buffer_put_chr(buffer, '\n');
+        ufr_write(link, buffer->ptr, buffer->size);
+        ufr_buffer_clear(buffer);
     }
     return UFR_OK;
 }

@@ -338,7 +338,7 @@ ufr_gtw_api_t ufr_gtw_mqtt_client_api = {
     .recv_async = ufr_gtw_mqtt_socket_recv_async,
     .read = ufr_gtw_mqtt_socket_read,
     .write = ufr_gtw_mqtt_client_write,
-    .ready = ufr_gtw_mqtt_client_ready,
+    // .ready = ufr_gtw_mqtt_client_ready,
 };
 
 static
@@ -355,7 +355,7 @@ ufr_gtw_api_t ufr_gtw_mqtt_server_api = {
     .recv_async = ufr_gtw_mqtt_socket_recv_async,
     .read = ufr_gtw_mqtt_socket_read,
     .write = ufr_gtw_mqtt_server_write,
-    .ready = NULL
+    // .ready = NULL
 };
 
 // ============================================================================

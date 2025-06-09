@@ -275,7 +275,9 @@ const char* ufr_args_gets(const ufr_args_t* args, char* buffer, const char* noun
     }
 
     // not found, return default value
-    strcpy(buffer, default_value);
+    if ( default_value != NULL ) {
+        strcpy(buffer, default_value);
+    }
     return default_value;
 }
 

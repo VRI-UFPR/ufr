@@ -85,6 +85,7 @@ size_t ufr_gtw_posix_file_size(const link_t* link, int type){
 
 static
 int ufr_gtw_posix_file_boot(link_t* link, const ufr_args_t* args) {
+
     char buffer[UFR_ARGS_TOKEN];
     const char* path = ufr_args_gets(args, buffer, "@path", NULL);
     if ( path == NULL ) {
@@ -314,7 +315,7 @@ ufr_gtw_api_t ufr_gtw_posix_stdin_api = {
 // ============================================================================
 
 int ufr_gtw_posix_new_file(link_t* link, int type) {
-    ufr_link_init(link, &ufr_gtw_posix_file_api);
+    link->gtw_api = &ufr_gtw_posix_file_api;
     return UFR_OK;
 }
 
