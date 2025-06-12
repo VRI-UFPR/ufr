@@ -32,6 +32,7 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(turtlesim REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 # Gateway
 add_library(ufr_gtw_ros2 SHARED src/ufr_gtw_ros2.cpp)
@@ -42,12 +43,13 @@ install(TARGETS ufr_gtw_ros2 DESTINATION lib)
 # Encoder
 add_library(ufr_enc_ros2 SHARED 
     src/std_msgs/ufr_enc_string.cpp
+    src/std_msgs/ufr_enc_tf.cpp
     src/geometry_msgs/ufr_enc_pose.cpp
     src/geometry_msgs/ufr_enc_twist.cpp
     src/sensor_msgs/ufr_enc_image.cpp
     src/sensor_msgs/ufr_enc_laserscan.cpp
     )
-ament_target_dependencies(ufr_enc_ros2 rclcpp std_msgs geometry_msgs sensor_msgs turtlesim)
+ament_target_dependencies(ufr_enc_ros2 rclcpp std_msgs geometry_msgs sensor_msgs turtlesim tf2_ros)
 target_link_libraries(ufr_enc_ros2 ufr)
 install(TARGETS ufr_enc_ros2 DESTINATION lib)
 

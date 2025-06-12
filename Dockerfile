@@ -1,5 +1,10 @@
 # Usa a imagem base do Ubuntu 24.10
-FROM ubuntu:24.10
+# FROM ubuntu:24.10
+
+# Debian
+FROM debian:bookworm
+ENV DEBIAN_UPDATE_ALWAYS 1
+ENV DEBIAN_FRONTEND noninteractive
 
 # Atualiza os pacotes para compilacao
 RUN apt-get update && apt-get install -y \
@@ -13,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     libzmq3-dev \
     libmosquitto-dev \
     libopencv-dev \
+    libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Define o diretório de trabalho
@@ -21,11 +27,14 @@ WORKDIR /app
 # Copia o código-fonte para o container (substitua pelo seu método preferido)
 COPY . .
 
+VOLUME ["/usr/local/lib"]
+
 # Cria um diretório de build e compila o projeto
-RUN mkdir build && \
-    cd build && \
+RUN mkdir build_docker && \
+    cd build_docker && \
     cmake .. -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build . -- -j$(nproc)
+    cmake --build . -- -j$(nproc) && \
+    make install
 
 # Define o comando padrão para executar o programa (ajuste conforme necessário)
 # CMD ["./build/nome_do_seu_executavel"]

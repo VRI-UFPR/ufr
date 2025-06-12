@@ -41,16 +41,23 @@
 int main() {
     // abre um publicador
     // link_t pub = ufr_publisher("@new zmq @coder msgpack @log 5 @port 5000");
-    link_t pub = ufr_publisher("@new mqtt @coder text @log 5 @host 185.159.82.136 @topic intercampi");
+    // link_t pub = ufr_publisher("@new mqtt @coder text @log 5 @host 185.159.82.136 @topic intercampi");
     // link_t pub = ufr_publisher("@new posix:file @coder csv @log 5 @path saida.txt");
+    link_t pub = ufr_publisher("@new ros2 @coder ros2:tf @frame teste1 @child aaa");
 
     // loop principal
-    for(int i=0; i<10; i++) {
-        ufr_put(&pub, "s\n", "{\"rota\": \"intercampi\"}");
-        sleep(1);
+    int i=0;
+    while( ufr_loop_ok() ) {
+        float x = 0.5+0.25*(float)i;
+        ufr_put(&pub, "fff\n", x, 0.1, 1.80);
+        usleep(100000);
+        i += 1;
     }
 
     // fim
-    // ufr_close(&pub);
+    printf("fim\n");
+    ufr_close(&pub);
+
+    printf("fim2\n");
     return 0;
 }
