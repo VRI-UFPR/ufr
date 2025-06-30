@@ -135,7 +135,7 @@ typedef struct {
 
     // tests
     const char* (*test_args)(const struct _link* link);
-    // int (*ready)(struct _link* link);
+    int (*ready)(struct _link* link);
 } ufr_gtw_api_t;
 
 typedef struct {
@@ -559,6 +559,9 @@ void ufr_inoutput_init(const char* text);
 
 
 void ufr_exit_if_error(link_t* link);
+
+int ufr_set_state_ready(link_t* link);
+
 
 // ============================================================================
 //  UFR LOG

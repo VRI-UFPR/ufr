@@ -146,8 +146,10 @@ int ufr_recv(link_t* link) {
         }
     }
     
-    link->state = 1;
     const int retval = link->gtw_api->recv(link);
+    if ( retval == UFR_OK ) {
+        link->state = UFR_STATE_GET;
+    }
     ufr_log_end(link, "received data from link %d", retval);
     return retval;
 }
@@ -434,6 +436,25 @@ void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...
 //  UFR
 // ============================================================================
 
+int ufr_pack_begin(link_t* link) {
+    // call the ready state
+    // link->state = UFR_STATE_READY;
+    link->put_count = 0;
+    if ( link->gtw_api->ready != NULL ) {
+        link->gtw_api->ready(link);
+    }
+
+    // set next state
+    /*if ( link->type_started == UFR_START_PUBLISHER || link->type_started == UFR_START_CLIENT ) {
+        link->state = UFR_STATE_PUT;
+    } else if ( link->type_started == UFR_START_SUBSCRIBER || link->type_started == UFR_START_SERVER ) {
+        link->state = UFR_STATE_RECV;
+    }*/
+
+    // sucess
+    return UFR_OK;
+}
+
 int ufr_new(link_t* link, int type, const char* format, ...) {
     // load variable arguments to args
     ufr_args_t args;
@@ -532,7 +553,7 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     }
 
     // success
-    link->state = UFR_STATE_READY;
+    ufr_set_state_ready(link);
     return UFR_OK;
 }
 
@@ -591,6 +612,7 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
     }
 
     // success
+    ufr_set_state_ready(link);
     return UFR_OK;
 }
 
@@ -607,6 +629,7 @@ int ufr_client_args(link_t* link, const ufr_args_t* args) {
 
     link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_CLIENT;
+    link->state = UFR_STATE_BOOT;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro3");
     }
@@ -644,10 +667,12 @@ int ufr_client_args(link_t* link, const ufr_args_t* args) {
     }
 
     // start
+    link->state = UFR_STATE_START;
     if ( link->gtw_api->start(link, UFR_START_CLIENT, args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro6");
     }
 
+    ufr_set_state_ready(link);
     return UFR_OK;
 }
 
@@ -679,6 +704,7 @@ int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
 
     link->log_level = ufr_args_geti(args, "@log", g_default_log_level);
     link->type_started = UFR_START_SERVER;
+    link->state = UFR_STATE_BOOT;
     if ( link->gtw_api->boot(link, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro3");
     }
@@ -716,11 +742,13 @@ int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
     }
 
     // start
+    link->state = UFR_STATE_START;
     if ( link->gtw_api->start(link, UFR_START_SERVER, args) != UFR_OK ) {
         ufr_fatal(&link, 1, "erro6");
     }
 
     // success
+    ufr_set_state_ready(link);
     return UFR_OK;
 }
 

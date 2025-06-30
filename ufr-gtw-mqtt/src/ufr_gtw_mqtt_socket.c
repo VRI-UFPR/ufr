@@ -54,13 +54,15 @@ erros:
 
 #include "ufr_gtw_mqtt.h"
 
+#define MQTT_MESSAGE_STATE_OK   1
+#define MQTT_MESSAGE_STATE_END  0
+
 // ============================================================================
 //  Subscriber Receive Callback
 // ============================================================================
 
 static
 void ufr_gtw_mqtt_socket_recv_cb(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message) {
-printf("aqui\n");
     ll_obj_t* obj = (ll_obj_t*) userdata;
 
     // expand the buffer case payload is bigger
@@ -189,6 +191,7 @@ int ufr_gtw_mqtt_socket_start (link_t* link, int type, const ufr_args_t* args) {
         mosquitto_message_callback_set(obj->mosq, ufr_gtw_mqtt_socket_recv_cb);
         ufr_info(link, "connected");
         obj->start_type = UFR_START_CLIENT;
+        obj->socket_msg_id = rand();
     }
 
     // success
@@ -217,23 +220,50 @@ void ufr_gtw_mqtt_socket_stop(link_t* link, int type) {
 }
 
 static
-int ufr_gtw_mqtt_socket_recv(link_t* link) {
+int ufr_gtw_mqtt_server_recv(link_t* link) {
     ll_obj_t* obj = link->gtw_obj;
 
     // wait for the message
-printf("recv1\n");
+    const int timeout_ms = 50;
     while( obj->is_received == false ) {
-        mosquitto_loop(obj->mosq, 1, 1);
+        mosquitto_loop(obj->mosq, timeout_ms, 1);
     }
     obj->is_received = false;
-printf("recv2\n");
 
     // decoder the message
     if ( link->dcr_api != NULL ) {
         link->dcr_api->recv_cb(link, obj->msg_data, obj->msg_size);
     }
 
-    return UFR_OK;
+    int msg_id, msg_state;
+    ufr_get(link, "dd", &msg_id, &msg_state);
+printf("recv %d %d\n", msg_id, msg_state);
+    obj->socket_msg_id = msg_id;
+
+    return (msg_state == MQTT_MESSAGE_STATE_OK) ? UFR_OK : -1;
+}
+
+static
+int ufr_gtw_mqtt_client_recv(link_t* link) {
+    ll_obj_t* obj = link->gtw_obj;
+
+    // wait for the message
+    const int timeout_ms = 50;
+    while( obj->is_received == false ) {
+        mosquitto_loop(obj->mosq, timeout_ms, 1);
+    }
+    obj->is_received = false;
+
+    // decoder the message
+    if ( link->dcr_api != NULL ) {
+        link->dcr_api->recv_cb(link, obj->msg_data, obj->msg_size);
+    }
+
+    int msg_id, msg_state;
+    ufr_get(link, "dd", &msg_id, &msg_state);
+printf("cli recv %d %d\n", msg_id, msg_state);
+
+    return (msg_state == MQTT_MESSAGE_STATE_OK) ? UFR_OK : -1;
 }
 
 static
@@ -241,7 +271,8 @@ int ufr_gtw_mqtt_socket_recv_async(link_t* link) {
     ll_obj_t* obj = link->gtw_obj;
 
     // wait for the message
-    mosquitto_loop(obj->mosq, 1, 1);
+    const int timeout_ms = 50;
+    mosquitto_loop(obj->mosq, timeout_ms, 1);
 
     // Case received a message
     if ( obj->is_received == true ) {
@@ -291,11 +322,27 @@ size_t ufr_gtw_mqtt_server_write(link_t* link, const char* buffer, size_t size) 
     if ( obj->mosq == NULL ) {
         return ufr_error(link, 1, "Mosquisto pointer is null");
     }
+printf("server_mqtt %d\n", link->state);
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        ufr_info(link, "last writing %ld bytes on %s", size, shr->topic2_name);
+        const int error = mosquitto_publish(obj->mosq, NULL, shr->topic2_name, size, buffer, MQTT_QOS_0, false);
+        if ( error != MOSQ_ERR_SUCCESS ) {
+            return ufr_error(link, 0, "error");
+        }
 
-    ufr_info(link, "writing %ld bytes on %s", size, shr->topic2_name);
-    const int error = mosquitto_publish(obj->mosq, NULL, shr->topic2_name, size, buffer, MQTT_QOS_0, false);
-    if ( error != MOSQ_ERR_SUCCESS ) {
-        return ufr_error(link, 0, "error");
+        link->state = UFR_STATE_SEND;
+        const int val[2] = {obj->socket_msg_id, MQTT_MESSAGE_STATE_END};
+        link->enc_api->clear(link);
+        link->enc_api->put_i32(link, val, 2);
+        link->enc_api->put_cmd(link, '\n');
+        link->state = UFR_STATE_SEND_LAST;
+        
+    } else {
+        ufr_info(link, "writing %ld bytes on %s", size, shr->topic2_name);
+        const int error = mosquitto_publish(obj->mosq, NULL, shr->topic2_name, size, buffer, MQTT_QOS_0, false);
+        if ( error != MOSQ_ERR_SUCCESS ) {
+            return ufr_error(link, 0, "error");
+        }
     }
     return size;
 }
@@ -309,17 +356,49 @@ size_t ufr_gtw_mqtt_client_write(link_t* link, const char* buffer, size_t size) 
         return ufr_error(link, 1, "aaa");
     }
 
-    ufr_info(link, "writing %ld bytes on %s", size, shr->topic1_name);
-    const int error = mosquitto_publish(obj->mosq, NULL, shr->topic1_name, size, buffer, MQTT_QOS_0, false);
-    if ( error != MOSQ_ERR_SUCCESS ) {
-        return ufr_error(link, 0, "error");
+    if ( link->state == UFR_STATE_SEND_LAST ) {
+        ufr_info(link, "last writing %ld bytes on %s", size, shr->topic1_name);
+        const int error = mosquitto_publish(obj->mosq, NULL, shr->topic1_name, size, buffer, MQTT_QOS_0, false);
+        if ( error != MOSQ_ERR_SUCCESS ) {
+            return ufr_error(link, 0, "error");
+        }
+
+        link->state = UFR_STATE_SEND;
+        const int val[2] = {obj->socket_msg_id, MQTT_MESSAGE_STATE_END};
+        link->enc_api->clear(link);
+        link->enc_api->put_i32(link, val, 2);
+        link->enc_api->put_cmd(link, '\n');
+        link->state = UFR_STATE_SEND_LAST;
+
+    } else {
+        ufr_info(link, "writing %ld bytes on %s", size, shr->topic1_name);
+        const int error = mosquitto_publish(obj->mosq, NULL, shr->topic1_name, size, buffer, MQTT_QOS_0, false);
+        if ( error != MOSQ_ERR_SUCCESS ) {
+            return ufr_error(link, 0, "error");
+        }
     }
     return size;
 }
 
 static
-int ufr_gtw_mqtt_client_ready(link_t* link) {
+int ufr_gtw_mqtt_server_ready(link_t* link) {
     ll_shr_socket_t* shr = link->gtw_shr;
+    printf("opa\n");
+
+    ll_obj_t* obj = link->gtw_obj;
+    ufr_put(link, "dd", obj->socket_msg_id, 1);
+
+    return UFR_OK;
+}
+
+static
+int ufr_gtw_mqtt_client_ready(link_t* link) {
+    // ll_shr_socket_t* shr = link->gtw_shr;
+    printf("opa\n");
+
+    // put in the message the field id and state OK
+    ll_obj_t* obj = link->gtw_obj;
+    ufr_put(link, "dd", obj->socket_msg_id, 1);
 
     return UFR_OK;
 }
@@ -334,11 +413,11 @@ ufr_gtw_api_t ufr_gtw_mqtt_client_api = {
     .start = ufr_gtw_mqtt_socket_start,
     .stop = ufr_gtw_mqtt_socket_stop,
     .copy = NULL,
-    .recv = ufr_gtw_mqtt_socket_recv,
+    .recv = ufr_gtw_mqtt_client_recv,
     .recv_async = ufr_gtw_mqtt_socket_recv_async,
     .read = ufr_gtw_mqtt_socket_read,
     .write = ufr_gtw_mqtt_client_write,
-    // .ready = ufr_gtw_mqtt_client_ready,
+    .ready = ufr_gtw_mqtt_client_ready,
 };
 
 static
@@ -351,11 +430,11 @@ ufr_gtw_api_t ufr_gtw_mqtt_server_api = {
     .start = ufr_gtw_mqtt_socket_start,
     .stop = ufr_gtw_mqtt_socket_stop,
     .copy = NULL,
-    .recv = ufr_gtw_mqtt_socket_recv,
+    .recv = ufr_gtw_mqtt_server_recv,
     .recv_async = ufr_gtw_mqtt_socket_recv_async,
     .read = ufr_gtw_mqtt_socket_read,
     .write = ufr_gtw_mqtt_server_write,
-    // .ready = NULL
+    .ready = ufr_gtw_mqtt_server_ready
 };
 
 // ============================================================================

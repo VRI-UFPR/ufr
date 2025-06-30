@@ -55,6 +55,9 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             if ( link->enc_api->put_f32 == NULL ) {
                 ufr_fatal(link, -1, "Function put_f32 is NULL");
             }
+            if ( link->state != UFR_STATE_PUT ) {
+                ufr_log_error(link, -1, "Link is not in PUT state");
+            }
         }
     } else {
         ufr_fatal(link, -1, "Link is NULL");
@@ -83,8 +86,10 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
 
             // case one \n and data in the link to send
             } else {
+                link->state = UFR_STATE_SEND;
 			    link->enc_api->put_cmd(link, '\n');
                 link->put_count = 0;
+                ufr_pack_begin(link);
             }
 
 		} else if ( type == 'a' ) {
@@ -284,12 +289,7 @@ int ufr_put_eof(link_t* link) {
 
     // update the state of the link
     if ( retval == UFR_OK ) {
-        link->put_count = 0;
-        if ( link->type_started == UFR_START_CLIENT ) {
-            link->state = UFR_STATE_RECV;
-        } else if ( link->type_started == UFR_START_SERVER || link->type_started == UFR_START_PUBLISHER ) { 
-            link->state = UFR_STATE_READY;
-        }
+        ufr_set_state_ready(link);
     }
     return retval;
 }

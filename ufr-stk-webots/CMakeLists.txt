@@ -20,3 +20,7 @@ install(TARGETS ufr_gtw_webots DESTINATION lib)
 # test
 enable_testing()
 add_subdirectory(./tests)
+
+
+add_executable(e01_lidar ./examples/e01_lidar.c)
+target_link_libraries(e01_lidar ufr )
