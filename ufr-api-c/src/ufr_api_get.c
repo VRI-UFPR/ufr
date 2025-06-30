@@ -54,10 +54,15 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
             if ( link->dcr_api->get_str == NULL ) {
                 ufr_fatal(link, -1, "Function get_str is NULL");
             }
+            if ( link->state != UFR_STATE_GET ) {
+                ufr_log_error(link, -1, "Link is not in GET state");
+            }
         }
     } else {
         ufr_fatal(link, -1, "Link is NULL");
     }
+
+printf("state %d\n", link->state);
 
     int retval = 0;
 	while( format != NULL ) {	
@@ -160,6 +165,7 @@ void ufr_get_eof(link_t* link) {
             break;
         }
     }
+    ufr_set_state_ready(link);
 }
 
 char ufr_get_type(link_t* link) {

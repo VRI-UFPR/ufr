@@ -54,6 +54,7 @@ typedef struct {
     size_t msg_size_max;
     size_t msg_read_idx;
     char* msg_data;
+    int32_t socket_msg_id;
 } ll_obj_t;
 
 extern size_t g_mosq_count;

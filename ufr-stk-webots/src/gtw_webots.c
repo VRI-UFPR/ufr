@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <webots/robot.h>
+#include <signal.h>
 
 #include "ufr_webots.h"
 
@@ -47,6 +48,10 @@ static
 int webots_loop_cb(void) {
     wb_robot_step(g_time_step);
     return UFR_OK;
+}
+
+void webots_interrupt_handler(int dummy) {
+    ufr_loop_set_end();
 }
 
 // ============================================================================
@@ -73,27 +78,31 @@ int  ufr_gtw_webots_boot(link_t* link, const ufr_args_t* args) {
     // Library initialization
     static uint8_t is_initialized = 0;
     if ( is_initialized == 0 ) {
+        ufr_log(link, "inicializado WeBots");
         wb_robot_init();
         ufr_loop_put_callback( webots_loop_cb );
+        signal(SIGINT, webots_interrupt_handler);
     }
     is_initialized = 1;
 
     // Select the encoder ou decoder
-    const char* dev_type = ufr_args_gets(args, "@type", "");
-    if ( strcmp(dev_type, "motors") == 0 ) {
+    char buffer[UFR_ARGS_TOKEN];
+    const char* dev_type = ufr_args_gets(args, buffer, "@topic", "");
+    if ( strcmp(dev_type, "cmd_vel") == 0 || strcmp(dev_type, "/cmd_vel") == 0 ) {
+        ufr_log(link, "Carregado encoder para cmd_vel");
         ufr_enc_webots_new_motors(link, UFR_START_PUBLISHER);
         ufr_boot_enc(link, args);
     } else if ( strcmp(dev_type, "encoders") == 0 ) {
         ufr_dcr_webots_new_encoders(link, UFR_START_SUBSCRIBER);
         ufr_boot_dcr(link, args);
-    } else if ( strcmp(dev_type, "lidar") == 0 ) {
+    } else if ( strcmp(dev_type, "scan") == 0 || strcmp(dev_type, "/scan") == 0 ) {
         ufr_dcr_webots_new_lidar(link, UFR_START_SUBSCRIBER);
         ufr_boot_dcr(link, args);
-    } else if ( strcmp(dev_type, "pose") == 0 ) {
+    } else if ( strcmp(dev_type, "pose") == 0 || strcmp(dev_type, "/pose") == 0 ) {
         ufr_dcr_webots_new_pose(link, UFR_START_SUBSCRIBER);
         ufr_boot_dcr(link, args);
     } else {
-        ufr_log(link, "error");
+        return ufr_error(link, -1, "Device not avaliable");
     }
 
     return UFR_OK;

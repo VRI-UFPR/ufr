@@ -67,6 +67,12 @@ void ufr_enc_msgpack_close(link_t* link) {
 }
 
 static
+void ufr_enc_msgpack_clear(link_t* link) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    msgpack_sbuffer_clear(&enc_obj->sbuf);
+}
+
+static
 int ufr_enc_msgpack_put_u32(link_t* link, const uint32_t* val, int nitems) {
     int wrote = 0;
     ll_encoder_t* enc_obj = link->enc_obj;
@@ -192,6 +198,7 @@ static
 ufr_enc_api_t ufr_enc_msgpack_api = {
     .boot = ufr_enc_msgpack_boot,
     .close = ufr_enc_msgpack_close,
+    .clear = ufr_enc_msgpack_clear,
 
     .put_u32 = ufr_enc_msgpack_put_u32,
     .put_i32 = ufr_enc_msgpack_put_i32,

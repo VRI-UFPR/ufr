@@ -38,7 +38,7 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @topic intercampi @host 185.159.82.136");
+    link_t sub = ufr_subscriber("@new mqtt @topic intercampi @host 127.0.0.1");
 
     // aaa
     char buffer[512];
