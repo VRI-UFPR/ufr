@@ -129,6 +129,11 @@ void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api) {
     link->log_level = g_default_log_level;
 }
 
+int ufr_set_state_ready(link_t* link) {
+    link->state = UFR_STATE_READY;
+    return UFR_OK;
+}
+
 // ============================================================================
 //  UFR RECV
 // ============================================================================

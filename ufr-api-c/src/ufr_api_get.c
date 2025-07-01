@@ -62,18 +62,16 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
         ufr_fatal(link, -1, "Link is NULL");
     }
 
-printf("state %d\n", link->state);
-
     int retval = 0;
-	while( format != NULL ) {	
-		const char type = *format;
+    while( format != NULL ) {	
+        const char type = *format;
         format += 1;
 
-		if ( type == '\0' ) {
-			break;
+        if ( type == '\0' ) {
+            break;
 
-		} else if ( type == '^' ) {
-			if ( ufr_recv(link) != UFR_OK ) {
+        } else if ( type == '^' ) {
+            if ( ufr_recv(link) != UFR_OK ) {
                 retval = -1;
                 ufr_log(link, "Error to receive data");
             }
