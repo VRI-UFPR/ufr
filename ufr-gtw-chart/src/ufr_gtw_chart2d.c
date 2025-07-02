@@ -49,9 +49,10 @@ typedef struct {
     GtkWidget *drawing_area;
     double max_x, max_y;
     double x[MAX_POINTS];
-    double y[8][MAX_POINTS];
-    uint16_t count[8];             // contador de cada linha
-    uint8_t line;                  // indice de qual linha escrever
+    double y[MAX_POINTS];
+    uint16_t count;             // contador de cada linha
+    uint8_t index;               // indice de qual linha escrever
+    double val[8];
 } chart_t;
 
 // ============================================================================
@@ -60,35 +61,33 @@ typedef struct {
 
 static
 void chart_clean(chart_t* chart) {
-    chart->line = 0;
+    chart->index = 0;
 }
 
 static
-void chart_put(chart_t* chart, double val_y) {
-    const uint8_t line = chart->line;
+void chart_put(chart_t* chart, double val_x, double val_y) {
     // printf("line %d %f\n", line, val_y);
 
-    if (chart->count[line] >= MAX_POINTS) {
-        double* chart_y = &chart->y[line][0];
+    if (chart->count >= MAX_POINTS) {
         for (int j = 0; j < MAX_POINTS - 1; ++j) {
-            // chart->x[j] = chart->x[j + 1];
-            chart_y[j] = chart_y[j + 1];
+            chart->x[j] = chart->x[j + 1];
+            chart->y[j] = chart->y[j + 1];
         }
-        // chart->x[MAX_POINTS - 1] = val_x;
-        chart_y[MAX_POINTS - 1] = val_y;
+        chart->x[MAX_POINTS - 1] = val_x;
+        chart->y[MAX_POINTS - 1] = val_y;
     } else {
-        const int idx = chart->count[line];
-        // chart->x[idx] = val_x;
-        chart->y[line][idx] = val_y;
-        chart->count[line] += 1;
+        const int idx = chart->count;
+        chart->x[idx] = val_x;
+        chart->y[idx] = val_y;
+        chart->count += 1;
     }
 
-    const double abs_val_y = fabs(val_y);
+    /*const double abs_val_y = fabs(val_y);
     if ( abs_val_y > chart->max_y ) {
         chart->max_y = abs_val_y;
-    }
+    }*/
 
-    chart->line += 1;
+    // chart->line += 1;
 }
 
 
@@ -135,15 +134,14 @@ static void drawing_area_draw_func(GtkDrawingArea *area, cairo_t *cr, int width,
     };
 
     // 
-    for (uint8_t line=0; line<8; line++) {
-        const uint16_t chart_count = chart->count[line];
+    // for (uint8_t line=0; line<8; line++) {
+        const uint16_t chart_count = chart->count;
         if (chart_count == 0) {
-            break;
+            // break;
         }
 
         // otimiza o acesso das variaveis
-        const double* chart_y = &chart->y[line][0];
-        const float* color = &colors[line][0];
+        const float* color = &colors[0];
 
         // Desenha a linha
         {
@@ -156,23 +154,24 @@ static void drawing_area_draw_func(GtkDrawingArea *area, cairo_t *cr, int width,
             double x_scale = (double)width / (MAX_POINTS - 1);
             double y_scale = (double)height / 2.0;
             double y_offset = height / 2.0;
+            double x_offset = width / 2.0;
 
             // Set o cursor no primeiro ponto
-            const double val_x0 = 0; // chart->x[0] * x_scale;
-            const double val_y0 = y_offset - (chart_y[0]/chart->max_y) * y_scale;
+            const double val_x0 = x_offset + chart->x[0] * x_scale;
+            const double val_y0 = y_offset - (chart->y[0]/chart->max_y) * y_scale;
             cairo_move_to(cr, val_x0, val_y0);
 
             // Desenha os pontos
             for (uint16_t i = 1; i < chart_count; i++) {
-                const double val_x = i * x_scale; // chart->x[i] * x_scale;
-                const double val_y = y_offset - (chart_y[i]/chart->max_y) * y_scale;
+                const double val_x = x_offset + chart->x[i] * x_scale;
+                const double val_y = y_offset - (chart->y[i]/chart->max_y) * y_scale;
                 cairo_line_to(cr, val_x, val_y);
             }
 
             //
             cairo_stroke(cr);
         }
-    }
+    // }
 
     
 }
@@ -254,9 +253,8 @@ int gtw_gtk_boot(link_t* link, const ufr_args_t* args) {
     if ( chart == NULL ) {
         return ufr_error(link, -1, "sem memoria");
     }
-    for (uint8_t i=0;i<8; i++) {
-        chart->count[i] = 0;
-    }
+
+    chart->count = 0;
     chart_clean(chart);
     chart->max_x = ufr_args_getf(args, "@max_x", 100.0);
     chart->max_y = ufr_args_getf(args, "@max", 1.0);
@@ -350,7 +348,8 @@ int ufr_enc_chart_put_i32(link_t* link, const int32_t* val, int nitems) {
     chart_t* chart = (chart_t*) link->gtw_obj;
     int wrote = 0;
     for (; wrote<nitems; wrote++) {
-        chart_put(chart, (double) val[wrote]);
+        chart->val[ chart->index ] = (double) val[wrote];
+        chart->index += 1;
     }
     return wrote;
 }
@@ -360,7 +359,8 @@ int ufr_enc_chart_put_f32(link_t* link, const float* val, int nitems) {
     chart_t* chart = (chart_t*) link->gtw_obj;
     int wrote = 0;
     for (; wrote<nitems; wrote++) {
-        chart_put(chart, (double) val[wrote]);
+        chart->val[ chart->index ] = (double) val[wrote];
+        chart->index += 1;
     }
     return wrote;
 }
@@ -397,6 +397,7 @@ static
 int ufr_enc_chart_put_cmd(link_t* link, char cmd) {
     chart_t* chart = (chart_t*) link->gtw_obj;
     if ( cmd == '\n' || cmd == (char) EOF ) {
+        chart_put(chart, chart->val[0], chart->val[1]);
         gtk_widget_queue_draw(chart->drawing_area);
         chart_clean(chart);
     } else {
@@ -421,7 +422,7 @@ int ufr_enc_chart_leave(link_t* link) {
 }
 
 static
-ufr_enc_api_t ufr_enc_chart_api = {
+ufr_enc_api_t ufr_enc_chart2d_api = {
     .boot = ufr_enc_chart_boot,
     .close = ufr_enc_chart_close,
     .clear = ufr_enc_chart_clear,
@@ -446,9 +447,9 @@ ufr_enc_api_t ufr_enc_chart_api = {
 //  Public Functions
 // ============================================================================
 
-int ufr_gtw_chart_new(link_t* link, int type) {
+int ufr_gtw_chart2d_new(link_t* link, int type) {
     link->gtw_api = &gtw_gtk;
-    link->enc_api = &ufr_enc_chart_api;
+    link->enc_api = &ufr_enc_chart2d_api;
 	return UFR_OK;
 }
 

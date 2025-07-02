@@ -32,7 +32,7 @@ int ufr_dcr_lidar_boot(link_t* link, const ufr_args_t* args) {
 
     // get sensor for both wheel
     char buffer[UFR_ARGS_TOKEN];
-    const char* dev_tag_name = ufr_args_gets(args, buffer, "@tag", "RPlidar A2");
+    const char* dev_tag_name = ufr_args_gets(args, buffer, "@tag", "scan");
     const int time_step = ufr_gtw_webots_get_time_step();
     dcr->lidar = wb_robot_get_device(dev_tag_name);
     dcr->values_size = 0;

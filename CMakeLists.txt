@@ -122,7 +122,9 @@ endif(BUILD_UFR_DEV_VIDEO)
 # debian/ubuntu: sudo apt install libssh-dev
 # add_subdirectory(./ufr-stk-ssh)
 # add_subdirectory(ufr-stk-irrlicht)
-
+add_subdirectory(./ufr-stk-webots)
+add_subdirectory(./ufr-gtw-chart)
+# add_subdirectory(./cv_mat)
 
 if(BUILD_UFR_STK_ROS1)
     add_subdirectory(./ufr-stk-ros1)
@@ -132,8 +134,7 @@ if(BUILD_UFR_STK_ROS2)
     add_subdirectory(./ufr-stk-ros2)
 endif(BUILD_UFR_STK_ROS2)
 
-# add_subdirectory(./ufr-stk-webots)
-# add_subdirectory(./cv_mat)
+
 
 # install(FILES ./etc/Makefile DESTINATION .)
 

@@ -209,18 +209,18 @@ static
 ufr_dcr_api_t dcr_pose_api = {
     .boot = ufr_dcr_pose_boot,
     .close = ufr_dcr_pose_close,
-	.recv_cb = ufr_dcr_pose_recv_cb,
+    .recv_cb = ufr_dcr_pose_recv_cb,
     .recv_async_cb = ufr_dcr_pose_recv_cb,
 
-	.get_u32 = ufr_dcr_pose_get_u32,
-	.get_i32 = ufr_dcr_pose_get_i32,
-	.get_f32 = ufr_dcr_pose_get_f32,
+    .get_u32 = ufr_dcr_pose_get_u32,
+    .get_i32 = ufr_dcr_pose_get_i32,
+    .get_f32 = ufr_dcr_pose_get_f32,
 
-	.get_u64 = ufr_dcr_pose_get_u64,
-	.get_i64 = ufr_dcr_pose_get_i64,
-	.get_f64 = ufr_dcr_pose_get_f64,
+    .get_u64 = ufr_dcr_pose_get_u64,
+    .get_i64 = ufr_dcr_pose_get_i64,
+    .get_f64 = ufr_dcr_pose_get_f64,
 
-	.get_str = ufr_dcr_pose_get_str,
+    .get_str = ufr_dcr_pose_get_str,
 
     .enter = ufr_dcr_pose_enter,
     .leave = ufr_dcr_pose_leave

@@ -84,11 +84,6 @@ void ufr_loop_set_end() {
     g_is_ok = false;
 }
 
-
-int ufr_set_state_ready(link_t* link) {
-    return UFR_OK;
-}
-
 uint64_t ufr_timestamp_ms() {
     struct timespec now;
     timespec_get(&now, TIME_UTC);
@@ -837,3 +832,72 @@ void ufr_exit_if_error(link_t* link) {
         exit(1);
     }
 }
+
+
+
+
+/*
+int ufr_fprintf(link_t* stream, const char* format, ...) {
+    va_list args;
+    va_start(args, format); // Inicializa a lista de argumentos variádicos
+
+    const char *p = format;
+    int chars_written = 0;
+
+    while (*p != '\0') {
+        if (*p == '%') {
+            p++; // Avança para o caractere após o '%'
+            switch (*p) {
+                case 'd': { // Inteiro
+                    const int value = va_arg(args, int);
+                    
+                    break;
+                }
+                case 'f': { // Double
+                    const double value = va_arg(args, double);
+                    
+                    break;
+                }
+                case 's': { // String
+                    char* value = va_arg(args, char *);
+                    if (value == NULL) { // Trata caso de string nula
+                        fputs("(null)", stream);
+                        chars_written += strlen("(null)");
+                    } else {
+                        fputs(value, stream);
+                        chars_written += strlen(value);
+                    }
+                    break;
+                }
+                case '%': { // Literal '%'
+                    fputc('%', stream); // Escreve um '%' literal
+                    chars_written++;
+                    break;
+                }
+                default: { // Caractere de formato não reconhecido
+                    // Poderíamos imprimir o '%' e o caractere para depuração
+                    fputc('%', stream);
+                    fputc(*p, stream);
+                    chars_written += 2;
+                    break;
+                }
+            }
+        } else {
+            fputc(*p, stream); // Escreve o caractere literal
+            chars_written++;
+        }
+        p++; // Avança para o próximo caractere na string de formato
+    }
+
+    va_end(args); // Finaliza a lista de argumentos variádicos
+    return chars_written; // Retorna o número de caracteres escritos
+}
+*/
+
+
+
+/**
+ fazer funcoes ufr_print, ufr_fprintf
+
+
+ */
