@@ -78,15 +78,17 @@ static
 int  ufr_gtw_webots_boot(link_t* link, const ufr_args_t* args) {
     // Library initialization
     static uint8_t is_initialized = 0;
+
     if ( is_initialized == 0 ) {
+        // Start the WeBots Robot
         ufr_log(link, "inicializado WeBots");
         wb_robot_init();
         ufr_loop_put_callback( webots_loop_cb );
         signal(SIGINT, webots_interrupt_handler);
 
+        // Show Information
         const char* model = wb_robot_get_model();
         ufr_log(link, "Robot model: %s", model);
-
         const int n_devices = wb_robot_get_number_of_devices();
         for(int i=0; i<n_devices; i++) {
             WbDeviceTag tag = wb_robot_get_device_by_index(i);
@@ -108,27 +110,32 @@ int  ufr_gtw_webots_boot(link_t* link, const ufr_args_t* args) {
     if ( strcmp(dev_type, "cmd_vel") == 0 || strcmp(dev_type, "/cmd_vel") == 0 ) {
         ufr_log(link, "Carregado encoder para cmd_vel");
         ufr_enc_webots_new_motors(link, UFR_START_PUBLISHER);
-        ufr_boot_enc(link, args);
+        link->enc_api->init(link, args);
+        // ufr_boot_enc(link, args);
 
     } else if ( strcmp(dev_type, "cmd_vel_3d") == 0 || strcmp(dev_type, "/cmd_vel_3d") == 0 ) {
         ufr_log(link, "Carregado encoder para cmd_vel");
         ufr_enc_webots_new_motors_drone(link, UFR_START_PUBLISHER);
-        ufr_boot_enc(link, args);
+        link->enc_api->init(link, args);
+        // ufr_boot_enc(link, args);
 
     // Encoders da roda
-    } else if ( strcmp(dev_type, "encoders") == 0 ) {
+    } else if ( strcmp(dev_type, "odom") == 0 || strcmp(dev_type, "/odom") == 0 ) {
         ufr_dcr_webots_new_encoders(link, UFR_START_SUBSCRIBER);
-        ufr_boot_dcr(link, args);
+        link->dcr_api->init(link, args);
+        // ufr_boot_dcr(link, args);
 
     // Lidar
     } else if ( strcmp(dev_type, "scan") == 0 || strcmp(dev_type, "/scan") == 0 ) {
         ufr_dcr_webots_new_lidar(link, UFR_START_SUBSCRIBER);
-        ufr_boot_dcr(link, args);
+        link->dcr_api->init(link, args);
+        // ufr_boot_dcr(link, args);
 
     // Posicao
     } else if ( strcmp(dev_type, "pose") == 0 || strcmp(dev_type, "/pose") == 0 ) {
         ufr_dcr_webots_new_pose(link, UFR_START_SUBSCRIBER);
-        ufr_boot_dcr(link, args);
+        link->dcr_api->init(link, args);
+        // ufr_boot_dcr(link, args);
 
     // Error
     } else {

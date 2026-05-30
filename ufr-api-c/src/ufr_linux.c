@@ -87,7 +87,14 @@ void ufr_linux_free_libraries() {
 void* ufr_linux_load_library(const char* type, const char* name, const char* classname) {
     // dl_file: ufr_[gtw,enc,dcr]_name.so
     char dl_file[512];
-    snprintf(dl_file, sizeof(dl_file), "libufr_%s_%s.so", type, name);
+    if ( strcmp(type, "gtw") == 0 ) {
+        snprintf(dl_file, sizeof(dl_file), "libufr_gtw_%s.so", name);
+    } else if ( strcmp(type, "enc") == 0 || strcmp(type, "dcr") == 0 ) {
+        snprintf(dl_file, sizeof(dl_file), "libufr_cdr_%s.so", name);
+    } else {
+        fprintf(stderr, "Error: type (%s) is not valid", type);
+        exit(1);
+    }
 
     // dl_funcname: ufr_gtw_mqtt_new, ufr_gtw_mqtt_new_topic
     char dl_funcname[1024];

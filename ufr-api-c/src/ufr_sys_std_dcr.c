@@ -46,14 +46,14 @@ typedef struct {
 // ============================================================================
 
 static
-int ufr_dcr_sys_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_sys_init(link_t* link, const ufr_args_t* args) {
     decoder_t* dcr = malloc(sizeof(decoder_t));
     link->dcr_obj = dcr;
     return UFR_OK;
 }
 
 static
-void ufr_dcr_sys_close(link_t* link) {
+void ufr_dcr_sys_free(link_t* link) {
     if ( link->dcr_obj != NULL ) {
         free(link->dcr_obj);
         link->dcr_obj = NULL;
@@ -75,14 +75,14 @@ int ufr_dcr_sys_recv(link_t* link, char* msg_data, size_t msg_size) {
 }
 
 static
-char ufr_dcr_sys_get_type(link_t* link) {
+char ufr_dcr_sys_meta_item_type(link_t* link) {
     return 0;
 }
 
 static
-int ufr_dcr_sys_get_nbytes(link_t* link) {
+int ufr_dcr_sys_meta_item_nbytes(link_t* link) {
     decoder_t* dcr = link->dcr_obj;
-    return dcr->msg_size;
+    return (int) dcr->msg_size;
 }
 
 static
@@ -165,38 +165,55 @@ int ufr_dcr_sys_get_str(link_t* link, char* ret_val, int maxbytes) {
 }
 
 static
-int ufr_dcr_sys_enter(link_t* link) {
+int ufr_dcr_sys_cmd_enter(link_t* link) {
     return UFR_OK;
 }
 
 static
-int ufr_dcr_sys_leave(link_t* link) {
+int ufr_dcr_sys_cmd_leave(link_t* link) {
     return UFR_OK;
 }
 
 static
 ufr_dcr_api_t dcr_sys_api = {
-    .boot = ufr_dcr_sys_boot,
-    .close = ufr_dcr_sys_close,
-	.recv_cb = ufr_dcr_sys_recv,
-    .recv_async_cb = NULL,
+    // Open and close
+    .init = ufr_dcr_sys_init,
+    .free = ufr_dcr_sys_free,
 
-    .next = NULL,
+    // Receive callback
+    .recv_cb = ufr_dcr_sys_recv,
+    .recv_async_cb = ufr_dcr_sys_recv,
 
-    .get_type = ufr_dcr_sys_get_type,
-    .get_nbytes = ufr_dcr_sys_get_nbytes,
-    .get_nitems = NULL,
-    .get_rawptr = NULL,
+    // Get
+    .get_u32 = ufr_dcr_sys_get_u32,
+    .get_i32 = ufr_dcr_sys_get_i32,
+    .get_f32 = ufr_dcr_sys_get_f32,
 
-	.get_u32 = ufr_dcr_sys_get_u32,
-	.get_i32 = ufr_dcr_sys_get_i32,
-	.get_f32 = ufr_dcr_sys_get_f32,
+    .get_u64 = NULL,
+    .get_i64 = NULL,
+    .get_f64 = NULL,
 
     .get_raw = NULL,
     .get_str = ufr_dcr_sys_get_str,
+    .get_bin = NULL,
 
-    .enter = ufr_dcr_sys_enter,
-    .leave = ufr_dcr_sys_leave
+    // Meta
+    .meta_get = NULL,
+    .meta_set = NULL,
+
+    .meta_item_type = ufr_dcr_sys_meta_item_type,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = ufr_dcr_sys_meta_item_nbytes,
+    .meta_item_nitems = NULL,
+
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
+    // Commands
+    .cmd_enter = ufr_dcr_sys_cmd_enter,
+    .cmd_leave = ufr_dcr_sys_cmd_leave,
+    .cmd_next = NULL,
 };
 
 // ============================================================================

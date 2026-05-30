@@ -167,32 +167,24 @@ int ufr_dcr_telegram_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
 static
 int ufr_dcr_telegram_get_str(link_t* link, char* out_val, int maxlen) {
     out_val[0] = '\0';
-
+printf("aaa4\n");
     telegram_obj_t* obj = link->gtw_obj;
     if (obj->message.text) {
         strcpy(out_val, obj->message.text);
     }
+printf("aaa5\n");
 
     return 0;
 }
 
 static
 ufr_dcr_api_t ufr_dcr_telegram_api = {
-    .boot = ufr_dcr_telegram_boot,
-    .close = ufr_dcr_telegram_close,
+    .init = ufr_dcr_telegram_boot,
+    .free = ufr_dcr_telegram_close,
 
     // Receive
     .recv_cb = ufr_dcr_telegram_recv_cb,
     .recv_async_cb = ufr_dcr_telegram_recv_cb,
-
-    // ignore
-    .next = ufr_dcr_telegram_next,
-
-    // metadata
-    .get_type = ufr_dcr_telegram_get_type,
-    .get_nbytes = ufr_dcr_telegram_get_nbytes,
-    .get_nitems = ufr_dcr_telegram_get_nitems,
-    .get_rawptr = NULL,
 
     // 32 bits
     .get_u32 = ufr_dcr_telegram_get_u32,
@@ -208,9 +200,22 @@ ufr_dcr_api_t ufr_dcr_telegram_api = {
     .get_raw = ufr_dcr_telegram_get_raw,
     .get_str = ufr_dcr_telegram_get_str,
 
-    // Enter and Leave
-    .enter = NULL,
-    .leave = NULL,
+    // Meta Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Meta Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
+    // Commands
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = ufr_dcr_telegram_next
+
 };
 
 // ============================================================================
@@ -228,9 +233,10 @@ void ufr_enc_telegram_close(link_t* link) {
     }
 }
 
-void ufr_enc_telegram_clear(link_t* link) {
+int ufr_enc_telegram_clear(link_t* link) {
     ufr_buffer_t* buffer = link->enc_obj;
     ufr_buffer_clear(buffer);
+    return UFR_OK;
 }
 
 int ufr_enc_telegram_put_u32(link_t* link, const uint32_t* val, int nitems) {
@@ -289,8 +295,28 @@ int ufr_enc_telegram_put_f64(link_t* link, const double* val, int nitems) {
 
 int ufr_enc_telegram_put_str(link_t* link, const char* val) {
     ufr_buffer_t* buffer = link->enc_obj;
-    ufr_buffer_put_str(buffer, val);
+    // ufr_buffer_put_str(buffer, val);
     return UFR_OK;
+}
+
+int ufr_enc_telegram_cmd_send(link_t* link) {
+    telegram_obj_t* obj = link->gtw_obj;
+    ufr_buffer_t* buffer = link->enc_obj;
+    // const telebot_error_e ret = telebot_send_message(obj->handle, obj->message.chat->id, buffer->ptr, "HTML", false, false, 0, "");
+    ufr_buffer_clear(buffer);
+    ufr_info(link, "Sent message");
+    return 0;
+}
+
+int ufr_enc_telegram_cmd_eof(link_t* link) {
+printf("aab\n");
+return UFR_OK;
+    telegram_obj_t* obj = link->gtw_obj;
+    obj->req_offset = obj->updates[obj->req_index].update_id + 1;
+    obj->req_index += 1;
+    const telebot_error_e ret = telebot_put_updates(obj->updates, obj->req_index);
+    ufr_info(link, "End of answer");
+    return ret;
 }
 
 int ufr_enc_telegram_put_cmd(link_t* link, char cmd) {
@@ -298,10 +324,10 @@ int ufr_enc_telegram_put_cmd(link_t* link, char cmd) {
 
     if ( cmd == '\n' ) {
         ufr_buffer_t* buffer = link->enc_obj;
-        const telebot_error_e ret = telebot_send_message(obj->handle, obj->message.chat->id, buffer->ptr, "HTML", false, false, 0, "");
+        // const telebot_error_e ret = telebot_send_message(obj->handle, obj->message.chat->id, buffer->ptr, "HTML", false, false, 0, "");
         ufr_buffer_clear(buffer);
         ufr_info(link, "Sent message");
-        return ret;
+        return 0;
     }
     
     if ( cmd == EOF ) {
@@ -325,9 +351,8 @@ int ufr_enc_telegram_leave(link_t* link) {
 }
 
 ufr_enc_api_t ufr_enc_telegram_api = {
-    .boot = ufr_enc_telegram_boot,
-    .close = ufr_enc_telegram_close,
-    .clear = ufr_enc_telegram_clear,
+    .init = ufr_enc_telegram_boot,
+    .free = ufr_enc_telegram_close,
 
     .put_u32 = ufr_enc_telegram_put_u32,
     .put_i32 = ufr_enc_telegram_put_i32,
@@ -340,9 +365,15 @@ ufr_enc_api_t ufr_enc_telegram_api = {
     .put_cmd = ufr_enc_telegram_put_cmd,
     .put_str = ufr_enc_telegram_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_enc_telegram_enter,
-    .leave = ufr_enc_telegram_leave,
+    // Commands
+    .cmd_enter = ufr_enc_telegram_enter,
+    .cmd_leave = ufr_enc_telegram_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_telegram_clear,
+    .cmd_send = ufr_enc_telegram_cmd_send,
+    .cmd_eof = ufr_enc_telegram_cmd_eof
 };
 
 // ============================================================================
@@ -437,19 +468,22 @@ void ufr_gtw_telegram_stop(link_t* link, int type) {
 
 static
 int ufr_gtw_telegram_recv(link_t* link) {
+printf("aaa1\n");
     telegram_obj_t* obj = link->gtw_obj;
-
     if ( obj == NULL ) {
         return ufr_error(link, -1, "Object pointer is null");
     }
 
     // Still there are messages in the buffer
     if ( obj->req_index < obj->req_count ) {
+printf("aaa2\n");
         ufr_info(link, "Number of updates: %d/%d", obj->req_index, obj->req_count);
         obj->message = obj->updates[obj->req_index].message;
         return UFR_OK;
     }
 
+
+printf("aaa3\n");
     // Update the telebot with new req_count
     // if ( obj->req_count > 0 ) {
     // }
@@ -467,7 +501,7 @@ int ufr_gtw_telegram_recv(link_t* link) {
 
     // Success
     obj->message = obj->updates[0].message;
-    obj->req_index = 0;
+    obj->req_index = 1;
     ufr_info(link, "Number of updates: %d", obj->req_count);
 
     return UFR_OK;

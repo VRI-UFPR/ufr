@@ -32,6 +32,8 @@
 
 typedef struct {
     int server_sockfd;
+    ufr_args_t args;
+    char args_text[256];
 } ll_shr_t;
 
 // ============================================================================

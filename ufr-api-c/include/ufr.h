@@ -41,9 +41,6 @@
 
 #define LINK_TO_ERROR  0x00
 
-#define UFR_SIZE_STD        0
-#define UFR_SIZE_MAX        1
-
 #define UFR_START_BLANK      0
 #define UFR_START_SERVER     1
 #define UFR_START_SERVER_ST  1
@@ -91,7 +88,7 @@ typedef union {
     uint32_t    u32;
     uint64_t    u64;
     int32_t     i32;
-    int32_t     i64;
+    int64_t     i64;
     float       f32;
     double      f64;
     void*       ptr;
@@ -106,7 +103,7 @@ typedef struct {
 } ufr_args_t;
 
 // ============================================================================
-//  API
+//  API - Gateway
 // ============================================================================
 
 typedef struct {
@@ -125,43 +122,38 @@ typedef struct {
 
     // certo
     size_t (*read)(struct _link* link, char* buffer, size_t length);
-    size_t (*write)(struct _link* link, const char* buffer, size_t length);  // , bool is_last
+    size_t (*write)(struct _link* link, const char* buffer, size_t length);  //
 
     // receive functions
     int (*recv)(struct _link* link);
     int (*recv_async)(struct _link* link);
+
     int (*recv_peer_name)(struct _link* link, char* buffer, size_t maxbuffer);
 
     // server multi-thread
     int (*accept)(struct _link* link, struct _link* out_client);
 
     // tests
-    const char* (*test_args)(const struct _link* link);
+    const char* (*test_args)(const struct _link* link);  // remover
     int (*ready)(struct _link* link);
+
+    int (*cmd_connect)(struct _link* link);
 } ufr_gtw_api_t;
+
+// ============================================================================
+//  API - Decoder
+// ============================================================================
 
 typedef struct {
     // Open and close
-    int  (*boot)(struct _link* link, const ufr_args_t* args);
-    void (*close)(struct _link* link);
+    int  (*init)(struct _link* link, const ufr_args_t* args);
+    void (*free)(struct _link* link);
 
-    // receive callback
+    // Receive callback
     int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
     int (*recv_async_cb)(struct _link* link, char* msg_data, size_t msg_size);
 
-    // Next item
-    int (*next)(struct _link* link);
-
-    // Function on current Item
-    char     (*get_type)(struct _link* link);
-    int      (*get_nbytes)(struct _link* link);
-    int      (*get_nitems)(struct _link* link);
-    uint8_t* (*get_rawptr)(struct _link* link);
-
-    int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
-    int (*get_str)(struct _link* link, char* out, int max_nbytes);
-    // int (*get_cmd)(struct _link* link, char cmd);
-
+    // Get
     int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
     int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
     int (*get_f32)(struct _link* link, float* out, int max_nitems);
@@ -170,16 +162,37 @@ typedef struct {
     int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
     int (*get_f64)(struct _link* link, double* out, int max_nitems);
 
-    int (*enter)(struct _link* link);
-    int (*leave)(struct _link* link);
+    int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
+    int (*get_str)(struct _link* link, char* out, int max_nbytes);
+    int (*get_bin)(struct _link* link, char** out_mime, char** out_data, int* out_nbytes);
+    void* (*get_ptr)(struct _link* link);
 
-    int (*get_meta)(struct _link* link, int index, char type, item_t* out_val);
+    // Meta
+    int (*meta_get)(struct _link* link, int index, char type, item_t* out_val);
+    int (*meta_set)(struct _link* link, int index, char type, item_t* out_val);
+
+    char (*meta_item_type)(struct _link* link);
+    const char* (*meta_item_mime)(struct _link* link);
+    int (*meta_item_nbytes)(struct _link* link);
+    int (*meta_item_nitems)(struct _link* link);
+
+    const char* (*meta_pack_mime)(struct _link* link);
+    int (*meta_pack_nbytes)(struct _link* link);
+    int (*meta_pack_nitems)(struct _link* link);
+
+    // Commands
+    int (*cmd_enter)(struct _link* link);
+    int (*cmd_leave)(struct _link* link);
+    int (*cmd_next)(struct _link* link);
 } ufr_dcr_api_t;
 
+// ============================================================================
+//  API - Encoder
+// ============================================================================
+
 typedef struct {
-    int  (*boot)(struct _link* link, const ufr_args_t* args);
-    void (*close)(struct _link* link);
-    void (*clear)(struct _link* link);
+    int  (*init)(struct _link* link, const ufr_args_t* args);
+    void (*free)(struct _link* link);
 
     // 32 bits
     int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
@@ -195,10 +208,15 @@ typedef struct {
     int (*put_cmd)(struct _link* link, char cmd);
     int (*put_str)(struct _link* link, const char* val);
     int (*put_raw)(struct _link* link, const uint8_t* val, int nbytes);
+    int (*put_bin)(struct _link* link, const char* mime, const char* data, int nbytes);
 
-    // acho que tah bom, talvez retirar o leave e deixar no next
-    int (*enter)(struct _link* link, size_t max_nitems);
-    int (*leave)(struct _link* link);
+    // Commands
+    int (*cmd_enter)(struct _link* link, size_t max_nitems);
+    int (*cmd_leave)(struct _link* link);
+    int (*cmd_next)(struct _link* link);
+    int (*cmd_clear)(struct _link* link);
+    int (*cmd_send)(struct _link* link);
+    int (*cmd_eof)(struct _link* link);
 } ufr_enc_api_t;
 
 // ============================================================================
@@ -268,8 +286,8 @@ size_t ufr_read(link_t* link, char* buffer, size_t maxsize);
 
 bool ufr_send(link_t* link);
 
-int ufr_boot_enc(link_t* link, const ufr_args_t* args);
-int ufr_boot_dcr(link_t* link, const ufr_args_t* args);
+int ufr_init_enc(link_t* link, const ufr_args_t* args);
+int ufr_init_dcr(link_t* link, const ufr_args_t* args);
 
 // ============================================================================
 //  UFR LINK
@@ -375,8 +393,8 @@ void ufr_close(link_t* link);
 /**
  * @brief Function for main loop
  * 
- * @return true Ok, continue the loop
- * @return false Error, exit of the loop
+ * @return true for OK -> so continue the loop;
+ * @return false for ERROR -> so exit of the loop;
  */
 bool ufr_loop();
 
@@ -412,7 +430,7 @@ int  ufr_loop_put_callback( int (*loop_callback)(void)  );
  * @param link 
  * @return int 
  */
-int ufr_recv(link_t* link);
+bool ufr_recv(link_t* link);
 int ufr_recv_sy(link_t* link0, link_t* link1, int time_ms);
 int ufr_recv_sy1(link_t* link0, link_t* link1, int time_ms);
 int ufr_recv_2s(link_t* link0, link_t* link1, int time_ms);
@@ -425,21 +443,20 @@ int ufr_recv_sy3(link_t* link0, link_t* link1, link_t link2, int time_ms);
  * @return int 
  */
 
-int ufr_recv_async(link_t* link);
+bool ufr_recv_async(link_t* link);
 int ufr_recv_as(link_t* link);
 int ufr_recv_as1(link_t* link);
 int ufr_recv_as2(link_t* link0, link_t* link1, int time_ms);
 int ufr_recv_as3(link_t* link0, link_t* link1, link_t* link2, int time_ms);
 
-int ufr_recv_peername(link_t* link, char* buffer, size_t maxbuffer);
+
+bool ufr_accept(link_t* link);
+
+bool ufr_connect(link_t* link);
 
 // ============================================================================
 //  UFR GET
 // ============================================================================
-
-int ufr_get_nbytes(link_t* link);
-int ufr_get_nitems(link_t* link);
-const uint8_t* ufr_get_rawptr(link_t* link);
 
 /**
  * @brief 
@@ -494,6 +511,8 @@ int ufr_get_str(link_t* link, char* buffer, int maxlen);
  */
 int ufr_get_raw(link_t* link, uint8_t buffer[], int max_nitems);
 
+int ufr_get_bin(link_t* link, char** out_mime, char** out_data, int* out_nbytes);
+
 // GET Scalar - 32 bites 
 uint32_t ufr_get_u32(link_t* link, uint32_t defval);
 int32_t  ufr_get_i32(link_t* link, int32_t defval);
@@ -537,6 +556,8 @@ int ufr_put_va(link_t* link, const char* format, va_list list);
  */
 int ufr_put(link_t* link, const char* format, ...);
 
+int ufr_putln(link_t* link, const char* format, ...);
+
 // PUT
 int ufr_put_pu32(link_t* link, const uint32_t* array, int nitems);
 int ufr_put_pi32(link_t* link, const int32_t* array, int nitems);
@@ -547,6 +568,9 @@ int ufr_put_pi64(link_t* link, const int64_t* array, int nitems);
 int ufr_put_pf64(link_t* link, const double* array, int nitems);
 
 int ufr_put_raw(link_t* link, const uint8_t* array, int nbytes);
+int ufr_put_bin(link_t* link, const char* mime, const char* buffer, int nbytes);
+int ufr_put_file(link_t* link, const char* mime, const char* buffer, int nbytes);
+
 int ufr_put_u8(link_t* link, const uint8_t* array, int nbytes);
 int ufr_put_i8(link_t* link, const int8_t* array, int nbytes);
 
@@ -581,6 +605,7 @@ bool ufr_args_flex(const char* text, uint16_t* cursor_ini, char* token, const ui
 int ufr_args_decrease_level(const char* src, char* dst);
 
 void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list);
+void ufr_args_load_from(ufr_args_t* args, const char* format, ...);
 
 // ============================================================================
 //  UFR DUMMY (remover)
@@ -658,9 +683,17 @@ void ufr_buffer_check_size(ufr_buffer_t* buffer, size_t size);
 //  UFR META
 // ============================================================================
 
-const char* ufr_meta_str(link_t* link, int index);
-int ufr_meta_i32(link_t* link, int index);
+// Meta on Item of Package
+const char* ufr_meta_item_mime(const link_t* link);
+int ufr_meta_item_nbytes(const link_t* link);
+int ufr_meta_item_nitems(const link_t* link);
 
+// Meta on Package
+const char* ufr_meta_pack_mime(const link_t* link);
+int ufr_meta_pack_nbytes(const link_t* link);
+int ufr_meta_pack_nitems(const link_t* link);
+
+// const char* ufr_meta_pack_peername(const link_t* link);*
 
 // ============================================================================
 //  UFR TEST
@@ -684,6 +717,14 @@ link_t ufr_app_publisher(const char* name);
 link_t ufr_app_subscriber(const char* name);
 link_t ufr_app_client(const char* name);
 link_t ufr_app_server(const char* name);
+
+
+// ============================================================================
+//  UFR OTHER
+// ============================================================================
+
+// int ufr_register(const char* nome, void (*funcao)());
+
 
 // ============================================================================
 //  Footer

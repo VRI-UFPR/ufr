@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <ufr.h>
 #include <unistd.h>
+#include <pthread.h>
 
 // ============================================================================
 //  Main
@@ -44,15 +45,23 @@ int main() {
     // link_t pub = ufr_publisher("@new mqtt @coder text @log 5 @host 185.159.82.136 @topic intercampi");
     // link_t pub = ufr_publisher("@new posix:file @coder csv @log 5 @path saida.txt");
     // link_t pub = ufr_publisher("@new ros2 @coder ros2:tf @frame teste1 @child aaa");
+    // link_t pub = ufr_publisher("@new webots @topic cmd_vel");
 
+    link_t pub = ufr_publisher("@new mqtt @coder msgpack @topic teste");
 
-
-    link_t pub = ufr_publisher("@new webots @topic cmd_vel");
+    static char buffer[1024*100];
+    FILE* fd = fopen("sala76.jpg", "r");
+    const size_t nbytes = fread(buffer, 1, 1024*100, fd);
+    fclose(fd);
 
     // loop principal
-    while( ufr_loop_ok() ) {
-        ufr_put(&pub, "ff\n", 0.1, 0.0);
-    }
+    // while( ufr_loop_ok() ) {
+        // ufr_put(&pub, "%d %d\n", 10, 2);
+        ufr_put_bin(&pub, "image/jpeg", buffer, nbytes);
+        // ufr_put(&pub, "%d\n", 1,2);
+        ufr_send(&pub);
+        // sleep(1);
+    // }
 
     return 0;
 }

@@ -68,21 +68,23 @@ size_t ufr_zmq_size(const link_t* link, int type) {
 
 int ufr_zmq_boot (link_t* link, const ufr_args_t* args) {
     // get optional parameter context
-    char buffer[UFR_ARGS_TOKEN];
-    const char* host = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
-
-    // get optional parameter context
     void* context = (void*) ufr_args_getp(args, "@context", NULL);
     if ( context == NULL ) {
         if ( g_context == NULL ) {
-            ufr_info(link, "creating zmq context");
+            ufr_info(link, "creating zmq context aaa");
             g_context = zmq_ctx_new();
         }
         context = g_context;
     }
 
+    // get optional parameter context
+    char buffer[UFR_ARGS_TOKEN];
+    const char* host = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
+    ufr_info(link, "@host %s", host);
+
     // get optional parameter port
     const uint32_t port = ufr_args_geti(args, "@port", 5000);
+    ufr_info(link, "@port %d", port);
 
     // prepare shared data with the socket parameters
     const size_t host_str_len = strlen(host);
@@ -159,14 +161,14 @@ int ufr_zmq_recv(link_t* link) {
     local->idx = 0;
 
     // link has decoder, call the dcr_api->recv()
+    const size_t recv_msg_size = zmq_msg_size(&local->recv_msg);
     if ( link->dcr_api != NULL ) {
         uint8_t* recv_msg_data = zmq_msg_data(&local->recv_msg);
-        const size_t recv_msg_size = zmq_msg_size(&local->recv_msg);
         link->dcr_api->recv_cb(link, (char*) recv_msg_data, recv_msg_size);
     }
 
     // success
-    return UFR_OK;
+    return (int32_t) recv_msg_size;
 }
 
 int ufr_zmq_recv_async(link_t* link) {

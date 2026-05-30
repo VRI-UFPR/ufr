@@ -48,7 +48,7 @@ struct encoder_obj_t {
 // ============================================================================
 
 static
-int ufr_enc_csv_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_csv_init(link_t* link, const ufr_args_t* args) {
     // allocate the encoder
     encoder_obj_t* enc_obj = new encoder_obj_t();
     if ( enc_obj == NULL ) {
@@ -64,7 +64,7 @@ int ufr_enc_csv_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_enc_csv_close(link_t* link) {
+void ufr_enc_csv_free(link_t* link) {
     if ( link->enc_obj != NULL ) {
         free(link->enc_obj);
         link->enc_obj = NULL;
@@ -178,7 +178,7 @@ int ufr_enc_csv_put_str(link_t* link, const char* val) {
     return 0;
 }
 
-int ufr_enc_enter(link_t* link, size_t maxsize) {
+int ufr_enc_csv_cmd_enter(link_t* link, size_t maxsize) {
     encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
     if ( enc_obj->line.size() > 0 ) {
         enc_obj->line += enc_obj->sep;
@@ -188,7 +188,7 @@ int ufr_enc_enter(link_t* link, size_t maxsize) {
 }
 
 
-int ufr_enc_leave(link_t* link) {
+int ufr_enc_csv_cmd_leave(link_t* link) {
     encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
     if ( enc_obj->line.size() > 0 ) {
         enc_obj->line += enc_obj->sep;
@@ -198,24 +198,32 @@ int ufr_enc_leave(link_t* link) {
 }
 
 ufr_enc_api_t ufr_enc_std_csv_api = {
-    .boot = ufr_enc_csv_boot,
-    .close = ufr_enc_csv_close,
-    .clear = NULL,
+    .init = ufr_enc_csv_init,
+    .free = ufr_enc_csv_free,
 
+    // 32 bits
     .put_u32 = ufr_enc_csv_put_u32,
     .put_i32 = ufr_enc_csv_put_i32,
     .put_f32 = ufr_enc_csv_put_f32,
 
+    // 64 bits
     .put_u64 = NULL,
     .put_i64 = NULL,
     .put_f64 = NULL,
 
+    // Single - 8 bits
     .put_cmd = ufr_enc_csv_put_cmd,
     .put_str = ufr_enc_csv_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_enc_enter,
-    .leave = ufr_enc_leave
+    // Commands
+    .cmd_enter = ufr_enc_csv_cmd_enter,
+    .cmd_leave = ufr_enc_csv_cmd_leave,
+    .cmd_next = NULL,
+    .cmd_clear = NULL,
+    .cmd_send = NULL,
+    .cmd_eof = NULL
 };
 
 // ============================================================================

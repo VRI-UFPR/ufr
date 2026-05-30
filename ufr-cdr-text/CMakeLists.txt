@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(ufr-cdr-text)
 
-# libenc_csv.so
-add_library(ufr_enc_text SHARED ./src/ufr_enc_text.c)
-target_compile_options(ufr_enc_text PUBLIC -O1)
-target_link_libraries(ufr_enc_text ufr)
-install(TARGETS ufr_enc_text DESTINATION lib)
-
-# libdcr_csv.so
-add_library(ufr_dcr_text SHARED ./src/ufr_dcr_text.c)
-target_compile_options(ufr_dcr_text PUBLIC -O1)
-target_link_libraries(ufr_dcr_text ufr)
-install(TARGETS ufr_dcr_text DESTINATION lib)
+# libcdr_csv.so
+add_library(ufr_cdr_text SHARED ./src/ufr_enc_text.c ./src/ufr_dcr_text.c)
+target_compile_options(ufr_cdr_text PUBLIC -O1)
+target_link_libraries(ufr_cdr_text ufr)
+install(TARGETS ufr_cdr_text DESTINATION lib)
 
 # test
 if(BUILD_TESTS)

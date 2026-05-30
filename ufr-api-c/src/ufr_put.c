@@ -59,7 +59,7 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
                 ufr_fatal(link, -1, "Function put_f32 is NULL");
             }
             if ( link->state != UFR_STATE_PUT ) {
-                ufr_log_error(link, -1, "Link is not in PUT state");
+                // ufr_log_error(link, -1, "Link is not in PUT state");
             }
         }
     } else {
@@ -67,20 +67,21 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
     }
 
     int count = 0;
-	while( format != NULL ) {
-		const char type = *format;
+	while( true ) {
+        const char type = *format;
         format += 1;
 
         // end of string
-		if ( type == '\0' ) {
-			break;
+        if ( type == '\0' ) {
+            break;
+        }
 
-		// EOF
-        } else if ( type == '#' ) {
+        //
+        if ( type == '#' ) {
             ufr_put_eof(link);
 
-		// new line
-		} else if ( type == '\n' ) {
+        //
+        } else if ( type == '\n' ) {
 
             // case \n\n together
             if ( *format == '\n' ) {
@@ -99,60 +100,70 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
                 ufr_put_begin_package(link);
             }
 
-		} else if ( type == 'a' ) {
-            const char arr_type = *format;
+        //
+        } else if ( type == '%' ) {
+            const char type = *format;
             format += 1;
-            if ( arr_type == '\0' ) {
+
+            // end of string
+            if ( type == '\0' ) {
                 break;
             }
-            const int32_t arr_size = va_arg(list, int32_t);
-            if ( arr_type == 'i' ) {
-                const int32_t* arr_ptr = va_arg(list, int32_t*);
-                ufr_put_pi32(link, arr_ptr, arr_size);
-            } else if ( arr_type == 'f' ) {
-                const float* arr_ptr = va_arg(list, float*);
-                ufr_put_pf32(link, arr_ptr, arr_size);
-            } else if ( arr_type == 'b' ) {
-                const int8_t* arr_ptr = va_arg(list, int8_t*);
-                ufr_put_raw(link, (uint8_t*) arr_ptr, arr_size);
-            } 
+       
+		    if ( type == 'a' ) {
+                const char arr_type = *format;
+                format += 1;
+                if ( arr_type == '\0' ) {
+                    break;
+                }
+                const int32_t arr_size = va_arg(list, int32_t);
+                if ( arr_type == 'i' ) {
+                    const int32_t* arr_ptr = va_arg(list, int32_t*);
+                    ufr_put_pi32(link, arr_ptr, arr_size);
+                } else if ( arr_type == 'f' ) {
+                    const float* arr_ptr = va_arg(list, float*);
+                    ufr_put_pf32(link, arr_ptr, arr_size);
+                } else if ( arr_type == 'b' ) {
+                    const int8_t* arr_ptr = va_arg(list, int8_t*);
+                    ufr_put_raw(link, (uint8_t*) arr_ptr, arr_size);
+                } 
 
-		// s, i or f
-		} else {
-			switch (type) {
-				case 's': {
-					const char* str = va_arg(list, const char*);
-					link->enc_api->put_str(link, str);
-				} break;
-			
-				case 'i':
-                case 'd': {
-					const int32_t val = va_arg(list, int32_t);
-					link->enc_api->put_i32(link, &val, 1);
-				} break;
+            // s, i or f
+            } else {
+                switch (type) {
+                    case 's': {
+                        const char* str = va_arg(list, const char*);
+                        link->enc_api->put_str(link, str);
+                    } break;
+                
+                    case 'i':
+                    case 'd': {
+                        const int32_t val = va_arg(list, int32_t);
+                        link->enc_api->put_i32(link, &val, 1);
+                    } break;
 
-				case 'f': {
-					const float val = (float) va_arg(list, double);
-					link->enc_api->put_f32(link, &val, 1);
-				} break;
+                    case 'f': {
+                        const float val = (float) va_arg(list, double);
+                        link->enc_api->put_f32(link, &val, 1);
+                    } break;
 
-                // pensar se adotar essa notacao
-                case '[': {
-                    link->enc_api->enter(link, 100);
-                } break;
+                    // pensar se adotar essa notacao
+                    case '[': {
+                        link->enc_api->cmd_enter(link, 100);
+                    } break;
 
-                case ']': {
-                    link->enc_api->leave(link);
-                } break;
+                    case ']': {
+                        link->enc_api->cmd_leave(link);
+                    } break;
 
-				default:
-                    ufr_warn(link, "Operador '%c' nao definido", type);
-					break;
-			}
-            link->put_count += 1;
-            count += 1;
-		}
-
+                    default:
+                        ufr_warn(link, "Operador '%c' nao definido", type);
+                        break;
+                }
+                link->put_count += 1;
+                count += 1;
+            }
+        }
 	}
     return count;
 }
@@ -165,6 +176,14 @@ int ufr_put(link_t* link, const char* format, ...) {
     return nitems;
 }
 
+int ufr_putln(link_t* link, const char* format, ...) {
+    va_list list;
+    va_start(list, format);
+    const int nitems = ufr_put_va(link, format, list);
+    va_end(list);
+    ufr_send(link);
+    return nitems;
+}
 
 int ufr_put_u32(link_t* link, const uint32_t val) {
     return link->enc_api->put_u32(link, &val, 1);
@@ -258,10 +277,10 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
         if ( link->enc_api == NULL ) {
             return ufr_error(link, 0, "Encoder is null");
         }
-        if ( link->enc_api->enter == NULL ) {
+        if ( link->enc_api->cmd_enter == NULL ) {
             return ufr_error(link, 0, "Function enter of encoder is null");
         }
-        if ( link->enc_api->leave == NULL ) {
+        if ( link->enc_api->cmd_leave == NULL ) {
             return ufr_error(link, 0, "Function leave of encoder is null");
         }
         if ( link->enc_api->put_f32 == NULL ) {
@@ -269,7 +288,7 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
         }
     }
 
-    if ( link->enc_api->enter(link, nitems) != UFR_OK ) {
+    if ( link->enc_api->cmd_enter(link, nitems) != UFR_OK ) {
         return -1;
     }
 
@@ -277,7 +296,7 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
     if ( wrote_nitems > 0 ) {
         link->put_count += wrote_nitems;
     }
-    if ( link->enc_api->leave(link) != UFR_OK ) {
+    if ( link->enc_api->cmd_leave(link) != UFR_OK ) {
         ufr_warn(link, "Function leave returned with error");
     }
     return wrote_nitems;
@@ -290,9 +309,18 @@ int ufr_put_eof(link_t* link) {
         return ufr_error(link, -1, "Link is a subscriber");
     }
 
+    if ( link->enc_api == NULL ) {
+        return ufr_error(link, 1, "link->enc_api == NULL");
+    }
+
+    if ( link->enc_api->cmd_eof == NULL ) {
+        //ufr_fatal(link, "link->enc_api->cmd_eof == NULL");
+        return ufr_error(link, 1, "link->enc_api->cmd_eof == NULL");
+    }
+
     // send the last message
     link->state = UFR_STATE_SEND_LAST;
-    const int retval = link->enc_api->put_cmd(link, EOF);
+    const int retval = link->enc_api->cmd_eof(link);
 
     // update the state of the link
     if ( retval == UFR_OK ) {
@@ -321,21 +349,39 @@ int ufr_put_raw(link_t* link, const uint8_t* buffer, int nitems) {
 }
 
 
+int ufr_put_bin(link_t* link, const char* mime, const char* buffer, int nbytes) {
+    // check inputs
+    if ( link != NULL && link->enc_api->put_bin == NULL ) {
+        ufr_fatal(link, 1, "enc_api->put_bin is NULL");
+    }
+    // send data
+    const int wrote_nbytes = link->enc_api->put_bin(link, mime, buffer, nbytes);
+    if ( wrote_nbytes > 0 ) {
+        link->put_count += wrote_nbytes;
+    }
+    return wrote_nbytes;
+}
+
+int ufr_put_file(link_t* link, const char* mime, const char* buffer, int nbytes) {
+    return ufr_put_bin(link, mime, buffer, nbytes);
+}
+
+
 
 int ufr_put_enter(link_t* link, int max_nitems) {
-    if (link->enc_api->enter == NULL ) {
+    if (link->enc_api->cmd_enter == NULL ) {
         return ufr_error(link, 1, "enter array pointer is NULL");
     }
 
-    return link->enc_api->enter(link, max_nitems);
+    return link->enc_api->cmd_enter(link, max_nitems);
 }
 
 int ufr_put_leave(link_t* link) {
-    if (link->enc_api->leave == NULL ) {
+    if (link->enc_api->cmd_leave == NULL ) {
         return ufr_error(link, 1, "leave array pointer is NULL");
     }
 
-    return link->enc_api->leave(link);
+    return link->enc_api->cmd_leave(link);
 }
 
 

@@ -35,15 +35,37 @@
 //  Meta
 // ============================================================================
 
-const char* ufr_meta_str(link_t* link, int index) {
-    item_t item;
-    const int code = link->dcr_api->get_meta(link, index, 's', &item);
-    return (code == UFR_OK) ? item.str : "";
+const char* ufr_meta_item_mime(const link_t* link) {
+    return link->dcr_api->meta_item_mime(link);
 }
 
-int ufr_meta_i32(link_t* link, int index) {
-    item_t item;
-    const int code = link->dcr_api->get_meta(link, index, 'd', &item);
-    return (code == UFR_OK) ? item.i32 : 0;
+char ufr_meta_item_type(const link_t* link) {
+    return link->dcr_api->meta_item_type(link);
+}
+
+int ufr_meta_item_nbytes(const link_t* link) {
+    return link->dcr_api->meta_item_nbytes(link);
+}
+
+int ufr_meta_item_nitems(const link_t* link) {
+    return link->dcr_api->meta_item_nitems(link);
+}
+
+
+
+const char* ufr_meta_pack_mime(const link_t* link) {
+    if ( link->dcr_api->meta_pack_mime == NULL ) {
+        ufr_error(link, -1, "Function meta_pack_mime from decoder is NULL");
+        return "";
+    }
+    return link->dcr_api->meta_pack_mime(link);
+}
+
+int ufr_meta_pack_nbytes(const link_t* link) {
+    return link->dcr_api->meta_pack_nbytes(link);
+}
+
+int ufr_meta_pack_nitems(const link_t* link) {
+    return link->dcr_api->meta_pack_nitems(link);
 }
 

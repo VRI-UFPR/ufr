@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.5)
 project(urf-gtw-mqtt)
 
 # find_package(PkgConfig REQUIRED)
-# pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
 
 add_library(ufr_gtw_mqtt SHARED
-    ./src/urf_gtw_mqtt.c
+    ./src/ufr_gtw_mqtt_topic.c
     ./src/ufr_gtw_mqtt_socket.c
     )
 

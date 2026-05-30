@@ -3,17 +3,16 @@
 # =======================================================================================
 
 import ufr
-import time
-import numpy as np
-import ctypes
 import cv2
+
 
 # =======================================================================================
 #  Main
 # =======================================================================================
 
-link = ufr.Subscriber("@new mqtt @coder msgpack")
-for i in range(5):
-    res = link.get("> %d %f %s")
-    print(res)
+link = ufr.Subscriber("@new video @@new mqtt @@coder msgpack @@topic camera @@host 177.153.62.174")
+for i in range(10):
+    imagem = link.recv_cv_image()
+    cv2.imshow("aaa", imagem)
+    cv2.waitKey(1)
 link.close()

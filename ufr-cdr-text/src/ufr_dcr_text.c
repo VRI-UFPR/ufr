@@ -111,7 +111,7 @@ int lex_next_token(ll_decoder_t* decoder, char* out_token, const int max_out_tok
 // ============================================================================
 
 static
-int ufr_dcr_text_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_text_init(link_t* link, const ufr_args_t* args) {
     // allocate the decoder object
     ll_decoder_t* decoder = malloc(sizeof(ll_decoder_t));
     if ( decoder == NULL ) {
@@ -127,7 +127,7 @@ int ufr_dcr_text_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_dcr_text_close(link_t* link) {
+void ufr_dcr_text_free(link_t* link) {
     if ( link->dcr_obj != NULL ) {
         free(link->dcr_obj);
         link->dcr_obj = NULL;
@@ -135,7 +135,7 @@ void ufr_dcr_text_close(link_t* link) {
 }
 
 static
-int ufr_dcr_text_next(link_t* link) {
+int ufr_dcr_text_cmd_next(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
     char token[TOKEN_SIZE];
     return lex_next_token(decoder, token, TOKEN_SIZE);
@@ -280,39 +280,47 @@ int ufr_dcr_text_get_str(link_t* link, char* out_val, int maxlen) {
 
 static
 ufr_dcr_api_t ufr_dcr_std_text_api = {
-    .boot = ufr_dcr_text_boot,
-    .close = ufr_dcr_text_close,
+    // Init and Free
+    .init = ufr_dcr_text_init,
+    .free = ufr_dcr_text_free,
 
-    // Receive
+    // Receive callback
     .recv_cb = ufr_dcr_text_recv_cb,
     .recv_async_cb = ufr_dcr_text_recv_cb,
 
-    // ignore
-    .next = ufr_dcr_text_next,
-
-    // metadata
-    .get_type = ufr_dcr_text_get_type,
-    .get_nbytes = ufr_dcr_text_get_nbytes,
-    .get_nitems = ufr_dcr_text_get_nitems,
-    .get_rawptr = NULL,
-
-    // 32 bits
+    // Get 32#
     .get_u32 = ufr_dcr_text_get_u32,
     .get_i32 = ufr_dcr_text_get_i32,
     .get_f32 = ufr_dcr_text_get_f32,
 
-    // 64 bits
+    // Get 64#
     .get_u64 = ufr_dcr_text_get_u64,
     .get_i64 = ufr_dcr_text_get_i64,
     .get_f64 = ufr_dcr_text_get_f64,
 
-    // Binary and String
     .get_raw = ufr_dcr_text_get_raw,
     .get_str = ufr_dcr_text_get_str,
+    .get_bin = NULL,
 
-    // Enter and Leave
-    .enter = NULL,
-    .leave = NULL,
+    // Meta
+    .meta_get = NULL,
+    .meta_set = NULL,
+
+    // Meta Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Meta Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
+    // Commands
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = ufr_dcr_text_cmd_next
 };
 
 // ============================================================================

@@ -50,7 +50,7 @@ void test_simple() {
         char recv[512];
         const char* send = "10 20 30";
         ufr_write(&link, send, strlen(send));
-        ufr_get(&link, "^s", &recv);
+        ufr_get(&link, "> %s", &recv);
         UFR_TEST_EQUAL_STR(recv, send);
     }
 
@@ -59,7 +59,7 @@ void test_simple() {
         char recv[512];
         const char* send = "10 20 30\n20 30 50 60\n40 50 70\nççç&5%";
         ufr_write(&link, send, strlen(send));
-        ufr_get(&link, "^s", &recv);
+        ufr_get(&link, "> %s", &recv);
         UFR_TEST_EQUAL_STR(recv, send);
     }
 

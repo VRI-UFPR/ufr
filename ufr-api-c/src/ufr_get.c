@@ -30,6 +30,8 @@
 // ============================================================================
 
 #include <stdlib.h>
+#include <string.h>
+
 #include "ufr.h"
 
 // ============================================================================
@@ -70,80 +72,110 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
         if ( type == '\0' ) {
             break;
 
-        } else if ( type == '^' ) {
-            if ( ufr_recv(link) != UFR_OK ) {
-                retval = -1;
-                ufr_log(link, "Error to receive data");
+        } else if ( type == '#' ) {
+            if ( ufr_accept(link) == false ) {
+                return ufr_error(link, -1, "Error to accept the connection");
+            }
+
+        } else if ( type == '^' || type == '\r' || type == '>' ) {
+            if ( ufr_recv(link) == false ) {
+                return ufr_error(link, -1, "Error to receive data");
             }
 
         } else if ( type == '\n' ) {
             ufr_get_eof(link);
 
-        } else if ( type == '-' ) {
-            link->dcr_api->next(link);
-
-        } else if ( type == 'a' ) {
-            const char arr_type = *format;
+        } else if ( type == '%' ) {
+            const char type = *format;
             format += 1;
-            if ( arr_type == '\0' ) {
+
+            if ( type == '\0' ) {
                 break;
-            }
-            
-            /*void* arr_ptr = va_arg(list, void*);
-            const size_t arr_maxlen = va_arg(list, size_t);
-            if ( arr_type == 'f' ) {
-                ufr_get_af32(link, arr_ptr, arr_maxlen);
-            }*/
 
-        } else {
-            switch (type) {
-                case 's': {
-                    char* buffer = va_arg(list, char*);
-                    buffer[0] = '\0';
-                    if ( link->dcr_api->get_str(link, buffer, 1024) >= 0 ) {
-                        retval += 1;
-                    }
-                } break;
+            } else if ( type == '-' ) {
+                link->dcr_api->cmd_next(link);
 
-                case 'u': {
-                    uint32_t *val = va_arg(list, uint32_t*);
-                    if ( link->dcr_api->get_u32(link, val, 1) == 1 ) {
-                        retval += 1;
-                    }
-                } break;
+            } else if ( type == 'a' ) {
+                const char arr_type = *format;
+                format += 1;
+                if ( arr_type == '\0' ) {
+                    break;
+                }
+                
+                /*void* arr_ptr = va_arg(list, void*);
+                const size_t arr_maxlen = va_arg(list, size_t);
+                if ( arr_type == 'f' ) {
+                    ufr_get_af32(link, arr_ptr, arr_maxlen);
+                }*/
 
-                case 'i':
-                case 'd': {
-                    int32_t *val = va_arg(list, int32_t*);
-                    if ( link->dcr_api->get_i32(link, val, 1) == 1 ) {
-                        retval += 1;
-                    }
-                } break;
+            } else {
+                switch (type) {
+                    case 's': {
+                        char* buffer = va_arg(list, char*);
+                        buffer[0] = '\0';
+                        if ( link->dcr_api->get_str(link, buffer, 1024) >= 0 ) {
+                            retval += 1;
+                        }
+                    } break;
 
-                case 'l': {
-                    int64_t *val = va_arg(list, int64_t*);
-                    if ( link->dcr_api->get_i64(link, val, 1) == 1 ) {
-                        retval += 1;
-                    }
-                } break;
+                    case 'u': {
+                        uint32_t *val = va_arg(list, uint32_t*);
+                        if ( link->dcr_api->get_u32(link, val, 1) == 1 ) {
+                            retval += 1;
+                        }
+                    } break;
 
-                case 'f': {
-                    float* val = va_arg(list, float*);
-                    if ( link->dcr_api->get_f32(link, val, 1) == 1 ) {
-                        retval += 1;
-                    }
-                } break;
+                    case 'i':
+                    case 'd': {
+                        int32_t *val = va_arg(list, int32_t*);
+                        if ( link->dcr_api->get_i32(link, val, 1) == 1 ) {
+                            retval += 1;
+                        }
+                    } break;
 
-                case 'g': {
-                    double* val = va_arg(list, double*);
-                    if ( link->dcr_api->get_f64(link, val, 1) == 1 ) {
-                        retval += 1;
-                    }
-                } break;
+                    case 'l': {
+                        int64_t *val = va_arg(list, int64_t*);
+                        if ( link->dcr_api->get_i64(link, val, 1) == 1 ) {
+                            retval += 1;
+                        }
+                    } break;
 
-                case '-': {
-                    link->dcr_api->next(link);
-                } break;
+                    case 'f': {
+                        float* val = va_arg(list, float*);
+                        if ( link->dcr_api->get_f32(link, val, 1) == 1 ) {
+                            retval += 1;
+                        }
+                    } break;
+
+                    case 'g': {
+                        double* val = va_arg(list, double*);
+                        if ( link->dcr_api->get_f64(link, val, 1) == 1 ) {
+                            retval += 1;
+                        }
+                    } break;
+
+                    case 'p': {
+                        void** val = va_arg(list, void**);
+                        *val = link->dcr_api->get_ptr(link);
+                        if ( *val != NULL ) {
+                            retval += 1;
+                        }
+                    } break;
+
+                    case 'z': {
+                        char* buffer = va_arg(list, char*);
+                        buffer[0] = '\0';
+                        buffer[1] = '\0';
+                        if ( link->dcr_api->get_str(link, &buffer[1], 255) >= 0 ) {
+                            retval += 1;
+                            buffer[0] = (uint8_t) strlen(&buffer[1]);
+                        }
+                    } break;
+
+                    case '-': {
+                        link->dcr_api->cmd_next(link);
+                    } break;
+                }
             }
         }
 	}
@@ -163,7 +195,7 @@ int ufr_get(link_t* link, const char* format, ...) {
 void ufr_get_eof(link_t* link) {
     uint8_t count;
     for (count=0; count<32; count++) {
-        if ( ufr_recv(link) != UFR_OK ) {
+        if ( ufr_recv(link) == false ) {
             break;
         }
     }
@@ -173,38 +205,11 @@ void ufr_get_eof(link_t* link) {
     ufr_set_state_ready(link);
 }
 
-char ufr_get_type(link_t* link) {
-    return link->dcr_api->get_type(link);
-}
-
-int ufr_get_nbytes(link_t* link) {
-    if ( link == NULL ) {
-        ufr_error(link, 0, "Link is null");
-    }
-    if ( link->dcr_api == NULL ) {
-        ufr_error(link, 0, "Decoder of link is null");
-    }
-    if ( link->dcr_api->get_nbytes == NULL ) {
-        ufr_error(link, 0, "Function get_size of the decoder is null");
-    }
-    return link->dcr_api->get_nbytes(link);
-}
-
-int ufr_get_nitems(link_t* link) {
-    if ( link == NULL ) {
-        ufr_error(link, 0, "Link is null");
-    }
-    if ( link->dcr_api == NULL ) {
-        ufr_error(link, 0, "Decoder of link is null");
-    }
-    if ( link->dcr_api->get_nitems == NULL ) {
-        ufr_error(link, 0, "Function get_nitems of the decoder is null");
-    }
-    return link->dcr_api->get_nitems(link);
-}
 
 const uint8_t* ufr_get_rawptr(link_t* link) {
-    return link->dcr_api->get_rawptr(link);
+    return link->dcr_api->get_ptr(link);
+    // return NULL;
+    // return link->dcr_api->get_rawptr(link);
 }
 
 
@@ -279,28 +284,55 @@ int ufr_get_raw(link_t* link, uint8_t* buffer, int max_nitems) {
     return arr_size;
 }
 
+int ufr_get_bin(link_t* link, char** out_mime, char** out_data, int* out_nbytes) {
+
+    if (link->log_level > 0 ) {
+        if ( link != NULL && link->dcr_api->get_bin == NULL ) {
+            ufr_fatal(link, 1, "dcr_api->get_bin is NULL");
+        }
+        if ( out_mime == NULL ) {
+            ufr_fatal(link, 1, "out_mime is NULL");
+        }
+        if ( out_data == NULL ) {
+            ufr_fatal(link, 1, "out_data is NULL");
+        }
+        if ( out_nbytes == NULL ) {
+            ufr_fatal(link, 1, "out_nbytes is NULL");
+        }
+    }
+
+    // Set zero to output
+    *out_mime = NULL;
+    *out_data = NULL;
+    *out_nbytes = 0;
+
+    // execute decoder get_bin
+    return link->dcr_api->get_bin(link, out_mime, out_data, out_nbytes);
+}
+
+
 // Enter and Leave
 
 int ufr_get_enter(link_t* link) {
-    if (link->dcr_api->enter == NULL ) {
+    if (link->dcr_api->cmd_enter == NULL ) {
         return ufr_error(link, 1, "Function enter in Decoder is NULL");
     }
-    return link->dcr_api->enter(link);
+    return link->dcr_api->cmd_enter(link);
 }
 
 int ufr_get_leave(link_t* link) {
-    if (link->dcr_api->leave == NULL ) {
+    if (link->dcr_api->cmd_leave == NULL ) {
         return ufr_error(link, 1, "Function leave in Decoder is NULL");
     }
-    return link->dcr_api->leave(link);
+    return link->dcr_api->cmd_leave(link);
 }
 
 int ufr_get_af32(link_t* link, float buffer[], int max_items) {
-    if (link->dcr_api->leave == NULL ) {
+    if (link->dcr_api->cmd_leave == NULL ) {
         return ufr_error(link, 1, "Function leave in Decoder is NULL");
     }
 
-    const int res1 = link->dcr_api->enter(link);
+    const int res1 = link->dcr_api->cmd_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -308,7 +340,7 @@ int ufr_get_af32(link_t* link, float buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_f32 function");
     }
-    link->dcr_api->leave(link);
+    link->dcr_api->cmd_leave(link);
 
 
     return items_read;

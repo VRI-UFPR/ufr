@@ -47,23 +47,27 @@
 
 typedef struct {
     int sockfd;
-    message_t message;
+    ufr_buffer_t message;
 } ll_conn_t;
 
 // ============================================================================
 //  Client Driver
 // ============================================================================
 
-static
-int ufr_posix_socket_start_client(link_t* link, int type, const ufr_args_t* args) {
-link->log_level = 10;
-    ufr_log_ini(link, "recvaa");
-    struct sockaddr_in serverAddr;
+static int ufr_posix_socket_cli_cmd_connect(link_t* link) {
+    ll_shr_t* shr = (ll_shr_t*) link->gtw_shr;
+    if ( shr == NULL ) {
+        return -1;
+    }
 
     // get the parameters
     char buffer[UFR_ARGS_TOKEN];
-    const char* address = ufr_args_gets(args, buffer, "@host", "127.0.0.1");
-    const uint16_t port = ufr_args_geti(args, "@port", 2000);
+    const char* address = ufr_args_gets(&shr->args, buffer, "@host", "127.0.0.1");
+    // const char* address = "127.0.0.1";
+    ufr_log(link, "@host %s", address);
+
+    const uint16_t port = ufr_args_geti(&shr->args, "@port", 2000);
+    ufr_log(link, "@port %d", port);
 
     /*---- Create the socket. The three arguments are: ----*/
     /* 1) Internet domain 2) Stream socket 3) Default protocol (TCP in this case) */
@@ -71,6 +75,7 @@ link->log_level = 10;
 
     /*---- Configure settings of the server address struct ----*/
     /* Address family = Internet */
+    struct sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(address);
@@ -80,20 +85,32 @@ link->log_level = 10;
         return ufr_error(link, 1, "Nao foi possivel conectar %s:%d", address, port);
     }
 
-    // update the link
-    ll_conn_t* conn = malloc( sizeof(ll_conn_t) );
+    // update the connection
+    ll_conn_t* conn = link->gtw_obj;
     conn->sockfd = sockfd;
-    message_init( &conn->message );
+    ufr_buffer_clear(&conn->message);
 
     // change the API function to client
     ufr_log_end(link, "created socket %s on port %d", address, port);
+    return UFR_OK;
+}
+
+static
+int ufr_posix_socket_start_client(link_t* link, int type, const ufr_args_t* args) {
+    ll_conn_t* conn = malloc( sizeof(ll_conn_t) );
+    conn->sockfd = -1;
+    ufr_buffer_init(&conn->message);
     link->gtw_obj = conn;
     return UFR_OK;
 }
 
 static
 void ufr_posix_socket_cli_stop(link_t* link, int type) {
-    
+    ll_conn_t* conn = link->gtw_obj;
+    if ( conn->sockfd > 0 ) {
+        close(conn->sockfd);
+        conn->sockfd = -1;
+    }
 }
 
 static
@@ -109,15 +126,15 @@ size_t ufr_posix_socket_cli_write(link_t* link, const char* buffer, size_t lengt
 
     // Send the last Message
     if ( link->state == UFR_STATE_SEND_LAST ) {
+        // Send the last message
         ufr_log(link, "sending last message");
         if ( length > 0 ) {
             wrote = send(conn->sockfd, buffer, length, 0);
         }
 
-
+        // Close write pipe
         ufr_log(link, "closing the socket for writing");
         shutdown(conn->sockfd, SHUT_WR);
-        // close(conn->sockfd);
 
     // Send a Message
     } else {
@@ -133,13 +150,16 @@ static
 int ufr_posix_socket_cli_recv(link_t* link) {
     ll_conn_t* conn = link->gtw_obj;
 
-    // message_write_from_fd(&conn->message, conn->sockfd);
-    // conn->message.size = recv(conn->sockfd, conn->message.ptr, conn->message.max, 0);
+    message_write_from_fd(&conn->message, conn->sockfd);
+    if ( conn->message.size <= 0 ) {
+        return -1;
+    } 
+
     if ( link->dcr_api != NULL ) {
-        // link->dcr_api->recv_cb(link, conn->message.ptr, conn->message.size);
+        link->dcr_api->recv_cb(link, conn->message.ptr, conn->message.size);
     }
 
-    return UFR_OK;
+    return conn->message.size;
 }
 
 ufr_gtw_api_t ufr_posix_socket_cli = {
@@ -154,4 +174,7 @@ ufr_gtw_api_t ufr_posix_socket_cli = {
 	.read = ufr_posix_socket_cli_read,
 	.write = ufr_posix_socket_cli_write,
     .recv = ufr_posix_socket_cli_recv,
+
+    .cmd_connect = ufr_posix_socket_cli_cmd_connect,
+    .ready = NULL
 };

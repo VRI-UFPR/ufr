@@ -1,7 +1,6 @@
 /* BSD 2-Clause License
  * 
- * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
- *  - Felipe Bombardelli <felipebombardelli@gmail.com>
+ * Copyright (c) 2023, Felipe Bombardelli
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,9 +28,24 @@
 //  Header
 // ============================================================================
 
-#include <ufr.h>
+#pragma once
 
-// ============================================================================
-//  Public Functions
-// ============================================================================
+typedef struct {
+    msgpack_unpacked result;
+    uint8_t* pack_data;
+    uint32_t pack_nbytes;
+    int  pack_nitems;
 
+    // Current cursor and item
+    size_t cursor;
+    msgpack_object object;
+
+    // enter
+    msgpack_object_array l0_array;
+    size_t l0_idx;
+
+    // meta
+    bool is_pack_scalar;
+} ll_decoder_t;
+
+extern ufr_dcr_api_t ufr_dcr_msgpack_array_api;

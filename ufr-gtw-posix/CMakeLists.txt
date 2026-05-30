@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(ufr-gtw-posix)
 
 
+# Posix
 add_library(ufr_gtw_posix SHARED
     ./src/ufr_gtw_posix.c
     # ./src/ufr_posix_dir.c 
@@ -18,6 +19,14 @@ target_link_libraries(ufr_gtw_posix ufr)
 install(TARGETS ufr_gtw_posix DESTINATION lib)
 
 
+# Timer
+add_library(ufr_gtw_timer SHARED ./src/ufr_gtw_timer.c)
+target_compile_options(ufr_gtw_timer PUBLIC -O1)
+target_link_libraries(ufr_gtw_timer ufr)
+install(TARGETS ufr_gtw_timer DESTINATION lib)
+
+
+# Socket
 add_library(ufr_gtw_socket SHARED
     ./src/ufr_posix_socket.c
     ./src/ufr_posix_socket_srv_st.c
@@ -29,7 +38,7 @@ target_link_libraries(ufr_gtw_socket ufr)
 install(TARGETS ufr_gtw_socket DESTINATION lib)
 
 
-# test
+# Tests
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(./tests)

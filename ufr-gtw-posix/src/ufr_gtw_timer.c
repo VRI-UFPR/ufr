@@ -117,7 +117,7 @@ int ufr_gtw_posix_timer_start(link_t* link, int type, const ufr_args_t* args) {
         gtw->count_ms = time_ms;
     // error
     } else {
-        return ufr_error(link, 1, "parameter type(%d) is invalid", type);
+        return ufr_error(link, 1, "Only subscriber is valid");
     }
 
     // success
@@ -198,7 +198,7 @@ ufr_gtw_api_t ufr_gtw_posix_timer_api = {
 //  Public Functions
 // ============================================================================
 
-int ufr_gtw_posix_new_timer(link_t* link, int type) {
+int ufr_gtw_timer_new(link_t* link, int type, const ufr_args_t* args) {
     ufr_link_init(link, &ufr_gtw_posix_timer_api);
     return UFR_OK;
 }

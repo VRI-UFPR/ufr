@@ -355,6 +355,13 @@ void ufr_args_load_from_va(ufr_args_t* args, const char* text, va_list list) {
     args->text = text;
 }
 
+void ufr_args_load_from(ufr_args_t* args, const char* format, ...) {
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(args, format, list);
+    va_end(list);
+}
+
 // Mover essa funcao para UFR
 // @new aaa @param1 bbb @@new ccc @@param1 ddd -> @new ccc @param1 ddd
 int ufr_args_decrease_level(const char* src, char* dst) {

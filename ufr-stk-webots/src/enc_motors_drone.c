@@ -119,13 +119,14 @@ void ufr_enc_motors_drone_close(link_t* link) {
 }
 
 static
-void ufr_enc_motors_drone_clear(link_t* link) {
+int ufr_enc_motors_drone_clear(link_t* link) {
     enc_motors_drone_t* enc = (enc_motors_drone_t*) link->enc_obj;
     enc->linear_x = 0.0;
     enc->linear_y = 0.0;
     enc->linear_z = 0.0;
     enc->angular_z = 0.0;
     enc->index = 0;
+    return UFR_OK;
 }
 
 static
@@ -298,9 +299,8 @@ int ufr_enc_motors_drone_leave(link_t* link) {
 
 static
 ufr_enc_api_t ufr_enc_motors_drone_api = {
-    .boot = ufr_enc_motors_drone_boot,
-    .close = ufr_enc_motors_drone_close,
-    .clear = ufr_enc_motors_drone_clear,
+    .init = ufr_enc_motors_drone_boot,
+    .free = ufr_enc_motors_drone_close,
 
     .put_u32 = ufr_enc_motors_drone_put_u32,
     .put_i32 = ufr_enc_motors_drone_put_i32,
@@ -310,11 +310,18 @@ ufr_enc_api_t ufr_enc_motors_drone_api = {
     .put_i64 = ufr_enc_motors_drone_put_i64,
     .put_f64 = ufr_enc_motors_drone_put_f64,
 
-    .put_str = ufr_enc_motors_drone_put_str,
     .put_cmd = ufr_enc_motors_drone_put_cmd,
+    .put_str = ufr_enc_motors_drone_put_str,
+    .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_enc_motors_drone_enter,
-    .leave = ufr_enc_motors_drone_leave,
+    // Commands
+    .cmd_enter = ufr_enc_motors_drone_enter,
+    .cmd_leave = ufr_enc_motors_drone_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_motors_drone_clear,
+    .cmd_send = NULL,
+    .cmd_eof = NULL
 };
 
 // ============================================================================

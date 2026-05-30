@@ -17,7 +17,7 @@ UFR_START_PUBLISHER=4
 UFR_START_SUBSCRIBER=5
 
 # =======================================================================================
-#  Link
+#  Class Link
 # =======================================================================================
 
 class Link(ctypes.Structure):
@@ -34,8 +34,8 @@ class Link(ctypes.Structure):
     dll.ufr_recv_async.restype = ctypes.c_int32
 
     # Meta
-    dll.ufr_get_nbytes.argtypes = [ ctypes.c_void_p ]
-    dll.ufr_get_nbytes.restype =  ctypes.c_uint32
+    dll.ufr_meta_item_nbytes.argtypes = [ ctypes.c_void_p ]
+    dll.ufr_meta_item_nbytes.restype =  ctypes.c_int32
 
     # Get Scalar - 32bits
     dll.ufr_get_u32.argtypes = [ ctypes.c_void_p, ctypes.c_uint32 ]
@@ -73,6 +73,11 @@ class Link(ctypes.Structure):
     dll.ufr_put_raw.argtypes = [ ctypes.c_void_p ]
     dll.ufr_put_raw.restype =  ctypes.c_int32
 
+    dll.ufr_put_file.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
+    dll.ufr_put_file.restype =  ctypes.c_int32
+
+    
+
     # loop
     dll.ufr_loop_ok.argtypes = [ ]
     dll.ufr_loop_ok.restype =  ctypes.c_int32
@@ -80,25 +85,7 @@ class Link(ctypes.Structure):
 
 
     _fields_ = [
-        ('gtw_api', ctypes.c_void_p),
-        ('gtw_shr', ctypes.c_void_p),
-        ('gtw_obj', ctypes.c_void_p),
-        ('enc_api', ctypes.c_void_p),
-        ('enc_obj', ctypes.c_void_p),
-        ('dcr_api', ctypes.c_void_p),
-        ('dcr_obj', ctypes.c_void_p),
-
-        ('dcr_api_s0', ctypes.c_void_p),
-        ('dcr1_obj_s0', ctypes.c_void_p),
-
-        ('type_started', ctypes.c_ubyte),
-        ('log_level', ctypes.c_ubyte),
-        ('status', ctypes.c_ubyte),
-        ('status2', ctypes.c_ubyte),
-
-        ('put_count', ctypes.c_ushort),
-
-        ('errstr', ctypes.c_ubyte * 172)
+        ('data', ctypes.c_ubyte * 256)
     ]
 
     def __init__(self, text: str, type: int):
@@ -138,73 +125,99 @@ class Link(ctypes.Structure):
 
     def put(self, format, *args):
         index = 0
+        state = 0
         for c in format:
-            # send message
-            if c == '#':
-                Link.dll.ufr_put_eof( ctypes.pointer(self) )
-                continue
+            # State 0 : default
+            if state == 0:
+                if c == '#':
+                    Link.dll.ufr_put_eof( ctypes.pointer(self) )
+                elif c == '%':
+                    state = 1
+                elif c == '\n':
+                    Link.dll.ufr_send( ctypes.pointer(self) )
 
-            # send message
-            if c == '\n':
-                Link.dll.ufr_send( ctypes.pointer(self) )
-                continue
+            # State 0 : Found the caracter '%'. Example %d
+            elif state == 1:
+                # put integer
+                if c == 'i' or c == 'd':
+                    value = ctypes.c_int32( args[index] )
+                    Link.dll.ufr_put_i32(ctypes.pointer(self), value, 1)
+                    state = 0
 
-            # put integer
-            elif c == 'i':
-                value = ctypes.c_int32( args[index] )
-                Link.dll.ufr_put_i32(ctypes.pointer(self), value, 1)
+                # put float
+                elif c == 'f':
+                    value = ctypes.c_float( args[index] )
+                    Link.dll.ufr_put_f32(ctypes.pointer(self), value)
+                    state = 0
 
-            # put float
-            elif c == 'f':
-                value = ctypes.c_float( args[index] )
-                Link.dll.ufr_put_f32(ctypes.pointer(self), value)
+                # put string
+                elif c == 's':
+                    value = args[index]
+                    Link.dll.ufr_put_str(ctypes.pointer(self), bytes(value, 'utf-8'))
+                    state = 0
 
-            # put string
-            elif c == 's':
-                value = args[index]
-                Link.dll.ufr_put_str (ctypes.pointer(self), bytes(value, 'utf-8'))
+                # put raw
+                elif c == 'r':
+                    value = args[index]
+                    Link.dll.ufr_put_raw(ctypes.pointer(self), value, len(value))
+                    state = 0
+                else:
+                    raise Exception(f"The variable %{c} is not allowed to serialize")
 
-            # put raw
-            elif c == 'r':
-                value = args[index]
-                Link.dll.ufr_put_raw (ctypes.pointer(self), value, len(value))
+                index += 1
 
-            # error
+            # Error: state invalid
             else:
-                Exception(f"The variable {c} is not allowed to serialize")
+                raise Exception(f"State invalid")
 
-            # loop step
-            index += 1
 
     def get(self, format: str):
         resp = []
+        state = 0
         for c in format:
-            if c == 'i':
-                var = Link.dll.ufr_get_i32(ctypes.pointer(self), ctypes.c_int32(0))
-                resp.append(var)
-            elif c == 'f':
-                var = Link.dll.ufr_get_f32(ctypes.pointer(self), ctypes.c_float(0))
-                resp.append(var)
-            elif c == 's':
-                size = Link.dll.ufr_get_nbytes(ctypes.pointer(self)) + 1
-                buffer = ctypes.create_string_buffer(b"", size)
-                Link.dll.ufr_get_str( ctypes.pointer(self), ctypes.pointer(buffer), size)
-                text = bytes(buffer).decode('utf-8').rstrip('\0')
-                resp.append(text)
-            elif c == 'p':
-                ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
-                resp.append(ptr)
-            elif c == 'r':
-                size = Link.dll.ufr_get_nbytes(ctypes.pointer(self))
-                buffer = (ctypes.c_ubyte * size)()
-                Link.dll.ufr_get_raw( ctypes.pointer(self), ctypes.pointer(buffer), size)
-                resp.append(buffer)
-            elif c == '^':
-                Link.dll.ufr_recv(ctypes.pointer(self))
-            elif c == '\n':
-                Link.dll.ufr_get_eof(ctypes.pointer(self))
+            # State 0 : default
+            if state == 0:
+                if c == '^' or c == '>':
+                    Link.dll.ufr_recv(ctypes.pointer(self))
+                elif c == '\n':
+                    Link.dll.ufr_get_eof(ctypes.pointer(self))
+                elif c == '%':
+                    state = 1
+               
+            # State 1 : Found the caracter '%'. Example %d
+            elif state == 1:
+                if c == 'i' or c == 'd':
+                    var = Link.dll.ufr_get_i32(ctypes.pointer(self), ctypes.c_int32(0))
+                    resp.append(var)
+                    state = 0
+                elif c == 'f':
+                    var = Link.dll.ufr_get_f32(ctypes.pointer(self), ctypes.c_float(0))
+                    resp.append(var)
+                    state = 0
+                elif c == 's':
+                    size = Link.dll.ufr_meta_item_nbytes(ctypes.pointer(self)) + 1   # +1 : para o \0
+                    buffer = ctypes.create_string_buffer(b"", size)
+                    Link.dll.ufr_get_str( ctypes.pointer(self), ctypes.pointer(buffer), size)
+                    text = bytes(buffer).decode('utf-8').rstrip('\0')
+                    resp.append(text)
+                    state = 0
+                elif c == 'p':
+                    ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
+                    resp.append(ptr)
+                    state = 0
+                elif c == 'r':
+                    size = Link.dll.ufr_meta_item_nbytes(ctypes.pointer(self))
+                    buffer = (ctypes.c_ubyte * size)()
+                    Link.dll.ufr_get_raw( ctypes.pointer(self), ctypes.pointer(buffer), size)
+                    resp.append(buffer)
+                    state = 0
+                else:
+                    raise Exception(f"The variable %{c} is not allowed to unpack")    
+            
+            # Error: state invalid
             else:
-                Exception(f"The variable {c} is not allowed to unpack")
+                raise Exception(f"Wrong state for get")
+
         # case just one, return scalar value
         if len(resp) == 1:
             return resp[0]
@@ -213,7 +226,8 @@ class Link(ctypes.Structure):
 
     def get_cv_image(self):
         import numpy as np
-        msg = self.get("iiip")
+        msg = self.get("%d %d %d %p")
+        # print(msg)
 
         im_type = msg[0]
         im_rows = msg[1]
@@ -240,9 +254,15 @@ class Link(ctypes.Structure):
         self.recv()
         return self.get_cv_image()
 
-    # @staticmethod
-    # def loop_ok():
-    #    return Link.dll.ufr_loop_ok()
+    def send_cv_image(self, image):
+        success, buffer = cv2.imencode('.jpg', image, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+        byte_data = buffer.tobytes()
+        # Link.dll.ufr_put_file(ctypes.pointer(self), 'image/jpeg', byte.)
+
+
+# =======================================================================================
+#  Public Functions
+# =======================================================================================
 
 def Subscriber(text: str):
     return Link(text, UFR_START_SUBSCRIBER)
@@ -276,41 +296,9 @@ def loop_ok():
 def loop():
     return Link.dll.ufr_loop_ok()
 
-def urf_input(format: str):
-    resp = []
-    for c in format:
-        if c == 'i':
-            var = ctypes.c_int32(0)
-            Link.dll.urf_input(bytes('i', 'utf-8'), ctypes.byref(var))
-            resp.append(var.value)
-        elif c == 'f':
-            var = ctypes.c_float(0)
-            Link.dll.urf_input(bytes('f', 'utf-8'), ctypes.byref(var))
-            resp.append(var.value)
-        elif c == 's':
-            buffer = (ctypes.c_ubyte * 1024)()
-            Link.dll.urf_input(bytes('s', 'utf-8'), ctypes.pointer(buffer))
-            text = bytes(buffer).decode('utf-8').rstrip('\0')
-            resp.append(text)
-            # raise Exception("error")
-        elif c == '^':
-            Link.dll.urf_input(bytes('^', 'utf-8'))
-    return resp
-
-def urf_output(format: str, *args):
-    c_args = []
-    for i in range( len(format) ):
-        c = format[i]
-        if c == '\n':
-            break
-        elif c == 'i':
-            c_args.append( ctypes.c_int32(args[i]) )
-        elif c == 'f':
-            c_args.append( ctypes.c_float(args[i]) )
-        elif c == 's':
-            c_args.append( bytes(args[i], 'utf-8') )
-    Link.dll.urf_output( bytes(format, 'utf-8'), *c_args)
-
+# =======================================================================================
+#  Tests
+# =======================================================================================
 
 """
 import sys

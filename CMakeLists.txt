@@ -47,8 +47,9 @@ option(BUILD_UFR_CDR_MSGPACK  "build the coder for MsgPack"    ${HAVE_MSGPACK})
 option(BUILD_UFR_STK_SQLITE   "build the stack for Sqlite3"    OFF )
 option(BUILD_UFR_STK_ROS1     "build the stack for ROS1"       OFF )
 option(BUILD_UFR_STK_ROS2     "build the stack for ROS2"       OFF )
-option(BUILD_UFR_DEV_VIDEO    "build the stack for Video"      ${HAVE_OPENCV} )
-option(BUILD_UFR_STK_TELEGRAM "build the server for Telegram"  OFF )
+option(BUILD_UFR_STK_WEBOTS   "build the stack for WeBots"     OFF )
+option(BUILD_UFR_STK_TELEGRAM "build the cliente for Telegram" OFF )
+option(BUILD_UFR_STK_VIDEO    "build the stack for Video"      ${HAVE_OPENCV} )
 option(BUILD_EXAMPLES         "build the examples"             OFF )
 option(BUILD_TESTS            "build the tests"                ON )
 option(COVERAGE_TEST          "coverage test"                  OFF)
@@ -93,6 +94,51 @@ if(BUILD_UFR_STK_SQLITE)
     add_subdirectory(./ufr-stk-sqlite)
 endif(BUILD_UFR_STK_SQLITE)
 
+if(BUILD_UFR_STK_ROS1)
+    add_subdirectory(./ufr-stk-ros1)
+endif(BUILD_UFR_STK_ROS1)
+
+if(BUILD_UFR_STK_ROS2)
+    add_subdirectory(./ufr-stk-ros2)
+endif(BUILD_UFR_STK_ROS2)
+
+if(BUILD_UFR_STK_WEBOTS)
+    add_subdirectory(./ufr-stk-webots)
+endif(BUILD_UFR_STK_WEBOTS)
+
+if(BUILD_UFR_STK_TELEGRAM)
+    # debian/ubuntu: sudo apt install libjson-c-dev libcurl4-gnutls-dev
+    add_subdirectory(./ufr-stk-telegram)
+endif(BUILD_UFR_STK_TELEGRAM)
+
+if(BUILD_UFR_STK_VIDEO)
+    # debian/ubuntu: sudo apt install libopencv-dev
+    add_subdirectory(./ufr-stk-video)
+    # include_directories(./cv_mat/include)
+    # add_subdirectory(./cv_mat)
+endif(BUILD_UFR_STK_VIDEO)
+
+
+
+
+# add_subdirectory(./ufr-app-filesystem)
+# add_subdirectory(./ufr-app-proxy)
+# add_subdirectory(./ufr-gtw-qt)
+# add_subdirectory(./ufr-gtw-gtk)
+# add_subdirectory(./ufr-cdr-http)
+# add_subdirectory(./ufr-gtw-http)
+
+# debian/ubuntu: sudo apt install libssh-dev
+# add_subdirectory(./ufr-stk-ssh)
+# add_subdirectory(ufr-stk-irrlicht)
+# add_subdirectory(./ufr-gtw-chart)
+# add_subdirectory(./cv_mat)
+
+
+
+# Install locally in the directory ./install
+# install(FILES ./etc/Makefile DESTINATION .)
+
 # Build examples
 if(BUILD_EXAMPLES)
     add_subdirectory(./examples/)
@@ -105,37 +151,3 @@ if(BUILD_TESTS)
     enable_testing()
     # add_test(NAME test_gtw_zmq COMMAND ./tests/test_topic "@new zmq:topic @port 2000")
 endif(BUILD_TESTS)
-
-if(BUILD_UFR_DEV_VIDEO)
-    # debian/ubuntu: sudo apt install libopencv-dev
-    add_subdirectory(./ufr-dev-video)
-    # include_directories(./cv_mat/include)
-    # add_subdirectory(./cv_mat)
-endif(BUILD_UFR_DEV_VIDEO)
-
-# add_subdirectory(./ufr-app-filesystem)
-# add_subdirectory(./ufr-app-proxy)
-# add_subdirectory(./ufr-gtw-qt)
-# add_subdirectory(./ufr-gtw-gtk)
-# add_subdirectory(./ufr-cdr-http)
-# add_subdirectory(./ufr-gtw-http)
-
-# debian/ubuntu: sudo apt install libssh-dev
-# add_subdirectory(./ufr-stk-ssh)
-# add_subdirectory(ufr-stk-irrlicht)
-# add_subdirectory(./ufr-stk-webots)
-# add_subdirectory(./ufr-gtw-chart)
-# add_subdirectory(./cv_mat)
-
-if(BUILD_UFR_STK_ROS1)
-    add_subdirectory(./ufr-stk-ros1)
-endif(BUILD_UFR_STK_ROS1)
-
-if(BUILD_UFR_STK_ROS2)
-    add_subdirectory(./ufr-stk-ros2)
-endif(BUILD_UFR_STK_ROS2)
-
-
-
-# install(FILES ./etc/Makefile DESTINATION .)
-

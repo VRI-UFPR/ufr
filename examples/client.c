@@ -40,13 +40,16 @@
 
 int main() {
     // abre um publicador
-    link_t client = ufr_client("@new mqtt @coder msgpack @host bombardelli.dedyn.io @log 4"); 
+    link_t client = ufr_client("@new socket @coder msgpack @log 4"); 
 
     // loop principal
-    for(int i=0; i<1; i++) {
+    for(int i=0; i<3; i++) {
         char response[1024];
-        ufr_put(&client, "s\n\n", "ping");
-        ufr_get(&client, "^s", response);
+
+        ufr_connect(&client);
+        ufr_put(&client, "%s\n\n", "ping");
+        ufr_get(&client, "> %s\n", response);
+
         printf("recv: %s\n", response);
         sleep(1);
     }

@@ -31,6 +31,7 @@
 
 #include <ufr.h>
 #include <stdlib.h>
+#include <webots/device.h>
 #include <webots/motor.h>
 #include <webots/robot.h>
 #include <string.h>
@@ -49,11 +50,37 @@ typedef struct {
 // ============================================================================
 
 static
-int ufr_enc_motors_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_motors_init(link_t* link, const ufr_args_t* args) {
+    // Search by motors
+    char const* dev_tag1_default = NULL;
+    char const* dev_tag2_default = NULL;
+    const int n_devices = wb_robot_get_number_of_devices();
+    for(int i=0; i<n_devices; i++) {
+        WbDeviceTag tag = wb_robot_get_device_by_index(i);
+        const char *name = wb_device_get_name(tag);
+        WbNodeType type = wb_device_get_node_type(tag);
+        if ( type == WB_NODE_ROTATIONAL_MOTOR ) {
+            if ( strstr(name, "left") != NULL ) {
+                dev_tag1_default = name;
+            } else if ( strstr(name, "right") != NULL ) {
+                dev_tag2_default = name;
+            }
+        }
+    }
+
+    // Open the motor devices
     char buffer1[UFR_ARGS_TOKEN];
     char buffer2[UFR_ARGS_TOKEN];
-    const char* dev_tag1_name = ufr_args_gets(args, buffer1, "@tag1", "left wheel");
-    const char* dev_tag2_name = ufr_args_gets(args, buffer2, "@tag2", "right wheel");
+    const char* dev_tag1_name = ufr_args_gets(args, buffer1, "@tag1", dev_tag1_default);
+    const char* dev_tag2_name = ufr_args_gets(args, buffer2, "@tag2", dev_tag2_default);
+
+    // Verify there are name for the motors
+    if ( dev_tag1_name == NULL ) {
+        return ufr_error(link, -1, "Left rotacional motor not found and @tag1 not provided");
+    }
+    if ( dev_tag2_name == NULL ) {
+        return ufr_error(link, -1, "Left rotacional motor not found and @tag1 not provided");
+    }
 
     // Prepare encoder
     ufr_log_ini(link, "Inicializando encoder para motores (%s, %s)", dev_tag1_name, dev_tag2_name);
@@ -63,7 +90,7 @@ int ufr_enc_motors_boot(link_t* link, const ufr_args_t* args) {
 
     enc->vel = 0.0;
     enc->rotvel = 0.0;
-    enc->index = 0;    
+    enc->index = 0;
 
     // Start the WeBots encoders
     wb_motor_set_position(enc->left, INFINITY);
@@ -78,18 +105,19 @@ int ufr_enc_motors_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_enc_motors_close(link_t* link) {
+void ufr_enc_motors_free(link_t* link) {
     if ( link->enc_obj ) {
         free(link->enc_obj);
     }
 }
 
 static
-void ufr_enc_motors_clear(link_t* link) {
+int ufr_enc_motors_clear(link_t* link) {
     enc_motors_t* enc = (enc_motors_t*) link->enc_obj;
     enc->vel = 0.0;
     enc->rotvel = 0.0;
     enc->index = 0;
+    return UFR_OK;
 }
 
 static
@@ -125,6 +153,10 @@ int ufr_enc_motors_put_i32(link_t* link, const int32_t val[], int nitems) {
 static
 int ufr_enc_motors_put_f32(link_t* link, const float val[], int nitems) {
     enc_motors_t* enc = (enc_motors_t*) link->enc_obj;
+    if ( enc == NULL ) {
+        return ufr_error(link, -1, "Encoder is NULL");
+    }
+
     int wrote = 0;
     for (; wrote < nitems; wrote++) {
         switch (enc->index) {
@@ -149,7 +181,7 @@ int ufr_enc_motors_put_u64(link_t* link, const uint64_t val[], int nitems) {
         }
         enc->index += 1;
     }
-    return UFR_OK;
+    return wrote;
 }
 
 static
@@ -164,7 +196,7 @@ int ufr_enc_motors_put_i64(link_t* link, const int64_t val[], int nitems) {
         }
         enc->index += 1;
     }
-    return UFR_OK;
+    return wrote;
 }
 
 static
@@ -220,10 +252,31 @@ int ufr_enc_motors_leave(link_t* link) {
 }
 
 static
+int ufr_enc_motors_next(link_t* link) {
+    enc_motors_t* enc = (enc_motors_t*) link->enc_obj;
+    if ( enc->index >= 2 ) {
+        return -1;
+    }
+    enc->index += 1;
+    return UFR_OK;
+}
+
+static
+int ufr_enc_motors_cmd_send(link_t* link) {
+    enc_motors_t* enc = (enc_motors_t*) link->enc_obj;
+    const double speed_left = enc->vel - enc->rotvel * 0.125; // HALF_DISTANCE_BETWEEN_WHEELS
+    const double speed_right = enc->vel + enc->rotvel * 0.125; // HALF_DISTANCE_BETWEEN_WHEELS
+    wb_motor_set_velocity(enc->left, speed_left);
+    wb_motor_set_velocity(enc->right, speed_right);
+    ufr_log(link, "Motor vel: %f, rotvel: %f", enc->vel, enc->rotvel);
+    ufr_enc_motors_clear(link);
+    return UFR_OK;
+}
+
+static
 ufr_enc_api_t ufr_enc_motors_api = {
-    .boot = ufr_enc_motors_boot,
-    .close = ufr_enc_motors_close,
-    .clear = ufr_enc_motors_clear,
+    .init = ufr_enc_motors_init,
+    .free = ufr_enc_motors_free,
 
     .put_u32 = ufr_enc_motors_put_u32,
     .put_i32 = ufr_enc_motors_put_i32,
@@ -233,18 +286,25 @@ ufr_enc_api_t ufr_enc_motors_api = {
     .put_i64 = ufr_enc_motors_put_i64,
     .put_f64 = ufr_enc_motors_put_f64,
 
-    .put_str = ufr_enc_motors_put_str,
     .put_cmd = ufr_enc_motors_put_cmd,
+    .put_str = ufr_enc_motors_put_str,
+    .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_enc_motors_enter,
-    .leave = ufr_enc_motors_leave,
+    // Commands
+    .cmd_enter = ufr_enc_motors_enter,
+    .cmd_leave = ufr_enc_motors_leave,
+    .cmd_next = ufr_enc_motors_next,
+    .cmd_clear = ufr_enc_motors_clear,
+    .cmd_send = ufr_enc_motors_cmd_send,
+    .cmd_eof = NULL
 };
 
 // ============================================================================
 //  Public Function
 // ============================================================================
 
-int ufr_enc_webots_new_motors(link_t* link, int type) {
+int ufr_enc_webots_new_motors(link_t* link, int type, const ufr_args_t* args) {
     link->enc_api = &ufr_enc_motors_api;
     return UFR_OK;
 }

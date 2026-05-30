@@ -207,23 +207,42 @@ int ufr_dcr_pose_leave(link_t* link) {
 
 static
 ufr_dcr_api_t dcr_pose_api = {
-    .boot = ufr_dcr_pose_boot,
-    .close = ufr_dcr_pose_close,
+    .init = ufr_dcr_pose_boot,
+    .free = ufr_dcr_pose_close,
+
+    // Receive
     .recv_cb = ufr_dcr_pose_recv_cb,
     .recv_async_cb = ufr_dcr_pose_recv_cb,
 
+    // 32 bits
     .get_u32 = ufr_dcr_pose_get_u32,
     .get_i32 = ufr_dcr_pose_get_i32,
     .get_f32 = ufr_dcr_pose_get_f32,
 
+    // 64 bits
     .get_u64 = ufr_dcr_pose_get_u64,
     .get_i64 = ufr_dcr_pose_get_i64,
     .get_f64 = ufr_dcr_pose_get_f64,
 
+    // Binary and String
+    .get_raw = NULL,
     .get_str = ufr_dcr_pose_get_str,
 
-    .enter = ufr_dcr_pose_enter,
-    .leave = ufr_dcr_pose_leave
+    // Meta Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Meta Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
+    // Commands
+    .cmd_enter = ufr_dcr_pose_enter,
+    .cmd_leave = ufr_dcr_pose_leave,
+    .cmd_next = NULL
 };
 
 // ============================================================================

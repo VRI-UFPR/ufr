@@ -1,9 +1,9 @@
 import ufr
 import time
 
-pub = ufr.Publisher("@new zmq @coder msgpack")
+link = ufr.Publisher("@new mqtt @coder msgpack")
 for i in range(5):
-    pub.put("iiis\n", 10,20,30, "opa")
+    link.put("%d %f %s\n", 10+i, 1.125*i, "opa"+str(i))
     time.sleep(1)
-pub.close()
+link.close()
 

@@ -179,23 +179,42 @@ int ufr_dcr_encoder_leave(link_t* link) {
 
 static
 ufr_dcr_api_t dcr_encoder_api = {
-    .boot = ufr_dcr_encoder_boot,
-    .close = ufr_dcr_encoder_close,
-	.recv_cb = ufr_dcr_encoder_recv_cb,
+    .init = ufr_dcr_encoder_boot,
+    .free = ufr_dcr_encoder_close,
+
+    // Receive
+    .recv_cb = ufr_dcr_encoder_recv_cb,
     .recv_async_cb = ufr_dcr_encoder_recv_cb,
 
+    // 32 bits
 	.get_u32 = ufr_dcr_encoder_get_u32,
 	.get_i32 = ufr_dcr_encoder_get_i32,
 	.get_f32 = ufr_dcr_encoder_get_f32,
 
+    // 64 bits
 	.get_u64 = ufr_dcr_encoder_get_u64,
 	.get_i64 = ufr_dcr_encoder_get_i64,
 	.get_f64 = ufr_dcr_encoder_get_f64,
 
-	.get_str = ufr_dcr_encoder_get_str,
+    // Binary and String
+    .get_raw = NULL,
+    .get_str = ufr_dcr_encoder_get_str,
 
-    .enter = ufr_dcr_encoder_enter,
-    .leave = ufr_dcr_encoder_leave
+    // Meta Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Meta Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
+    // Commands
+    .cmd_enter = ufr_dcr_encoder_enter,
+    .cmd_leave = ufr_dcr_encoder_leave,
+    .cmd_next = NULL
 };
 
 // ============================================================================

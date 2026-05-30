@@ -5,12 +5,19 @@
 #include <ufr.h>
 #include "opencv2/opencv.hpp"
 
+#define COLOR_GRAY  1
+#define COLOR_RGB   2
+#define COLOR_BGR   3
+
 using namespace std;
 using namespace cv;
 
 struct Gateway {
     VideoCapture capture;
     Mat frame;
+    int target_rows;
+    int target_cols;
+    int target_color;
 };
 
 // ============================================================================
@@ -18,13 +25,13 @@ struct Gateway {
 // ============================================================================
 
 static
-int ufr_dcr_opencv_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_opencv_init(link_t* link, const ufr_args_t* args) {
     link->dcr_obj_idx = 0;
     return UFR_OK;
 }
 
 static
-void ufr_dcr_opencv_close(link_t* link) {
+void ufr_dcr_opencv_free(link_t* link) {
 
 }
 
@@ -34,6 +41,7 @@ int ufr_dcr_opencv_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     return UFR_OK;
 }
 
+/*
 static
 int ufr_dcr_opencv_get_nbytes(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
@@ -51,6 +59,7 @@ uint8_t* ufr_dcr_opencv_get_rawptr(link_t* link) {
     Gateway* gtw = (Gateway*) link->gtw_obj;
     return (uint8_t*) gtw->frame.data;
 }
+*/
 
 static
 int ufr_dcr_opencv_get_u32(link_t* link, uint32_t* val, int maxlen) {
@@ -99,12 +108,12 @@ int ufr_dcr_opencv_get_str(link_t* link, char* val, int maxlen) {
 }
 
 static
-int ufr_dcr_opencv_enter(link_t* link) {
+int ufr_dcr_opencv_cmd_enter(link_t* link) {
     return UFR_OK;
 }
 
 static
-int ufr_dcr_opencv_leave(link_t* link) {
+int ufr_dcr_opencv_cmd_leave(link_t* link) {
     return UFR_OK;
 }
 
@@ -135,47 +144,18 @@ int ufr_dcr_opencv_get_hash(link_t* link, const char* hash, int* out_index) {
 }
 
 static
-int ufr_dcr_opencv_get_meta(link_t* link, int index, char type, item_t* out) {
-    Gateway* gtw = (Gateway*) link->gtw_obj;
-
-    // 
-    if ( index == 10 ) {
-        const int type = gtw->frame.type();
-        out->i32 = type;
-        return UFR_OK;
-    }
-
-    //
-    if ( index == 11 ) {
-        out->u64 = gtw->frame.cols;
-        return UFR_OK;
-    }
-
-    //
-    if ( index == 12 ) {
-        out->u64 = gtw->frame.rows;
-        return UFR_OK;
-    }
-
-    // error
-    return -1;
+int ufr_dcr_opencv_cmd_next(link_t* link) {
+    link->dcr_obj_idx += 1;
+    return UFR_OK;
 }
 
 static
 ufr_dcr_api_t ufr_dcr_opencv_api = {
-    .boot = ufr_dcr_opencv_boot,
-    .close = ufr_dcr_opencv_close,
+    .init = ufr_dcr_opencv_init,
+    .free = ufr_dcr_opencv_free,
+
     .recv_cb = ufr_dcr_opencv_recv_cb,
     .recv_async_cb = ufr_dcr_opencv_recv_cb,
-    .next = NULL,
-
-    .get_type = NULL,
-    .get_nbytes = ufr_dcr_opencv_get_nbytes,
-    .get_nitems = ufr_dcr_opencv_get_nitems,
-    .get_rawptr = ufr_dcr_opencv_get_rawptr,
-
-    .get_raw = NULL,
-    .get_str = ufr_dcr_opencv_get_str,
 
     .get_u32 = ufr_dcr_opencv_get_u32,
     .get_i32 = ufr_dcr_opencv_get_i32,
@@ -185,9 +165,13 @@ ufr_dcr_api_t ufr_dcr_opencv_api = {
     .get_i64 = NULL,
     .get_f64 = NULL,
 
-    .enter = ufr_dcr_opencv_enter,
-    .leave = ufr_dcr_opencv_leave,
-    .get_meta = ufr_dcr_opencv_get_meta
+    .get_raw = NULL,
+    .get_str = ufr_dcr_opencv_get_str,
+    .get_bin = NULL,
+
+    .cmd_enter = ufr_dcr_opencv_cmd_enter,
+    .cmd_leave = ufr_dcr_opencv_cmd_leave,
+    .cmd_next = ufr_dcr_opencv_cmd_next,
 };
 
 // ============================================================================
@@ -223,7 +207,20 @@ int  ufr_gtw_opencv_start(link_t* link, int type, const ufr_args_t* args) {
 
     if ( type == UFR_START_SUBSCRIBER ) {
         link->dcr_api = &ufr_dcr_opencv_api;
-        ufr_boot_dcr(link, args);
+        ufr_init_dcr(link, args);
+
+        gtw->target_cols = ufr_args_geti(args, "@cols", -1);
+        gtw->target_rows = ufr_args_geti(args, "@rows", -1);
+
+        char type_str[256];
+        ufr_args_gets(args, type_str, "@color", "bgr");
+        if ( strcmp(type_str, "gray") == 0 ) {
+            gtw->target_color = COLOR_GRAY;
+        } else if ( strcmp(type_str, "bgr") == 0 ) {
+            gtw->target_color = COLOR_BGR;
+        } else if ( strcmp(type_str, "rgb") == 0 ) {
+            gtw->target_color = COLOR_RGB;
+        }
 
         char buffer[UFR_ARGS_TOKEN];
         const char* filename = ufr_args_gets(args, buffer, "@file", NULL);
@@ -276,6 +273,45 @@ int ufr_gtw_opencv_recv(link_t* link) {
     if ( gtw->frame.empty() ) {
         return -1;
     }
+
+    // Case target color was defined
+    if ( gtw->target_color > 0 ) {
+        int target_color = 0;
+        int channels = gtw->frame.channels();
+        if ( channels == 3 ) {
+            if ( target_color == COLOR_GRAY ) {
+                target_color = cv::COLOR_BGR2GRAY;
+            } else if ( target_color == COLOR_RGB ) {
+                target_color = cv::COLOR_BGR2RGB;
+            }
+        }
+
+        if ( target_color > 0 ) {
+            cv::cvtColor(gtw->frame, gtw->frame, target_color);
+        }
+    }
+
+    // Case target cols was defined
+    if ( gtw->target_cols > 0 ) {
+        int target_rows = gtw->target_rows;
+        if ( target_rows < 0 ) {
+            const float fator = gtw->target_cols / (float)gtw->frame.cols;
+            target_rows = (int) gtw->frame.rows * fator;
+        }
+        cv::Size new_size(gtw->target_cols, target_rows);
+        cv::resize(gtw->frame, gtw->frame, new_size);
+
+    // Case target rows was defined
+    } else if ( gtw->target_rows > 0 ) {
+        int target_cols = gtw->target_cols;
+        if ( target_cols < 0 ) {
+            const float fator = gtw->target_rows/ (float)gtw->frame.rows;
+            target_cols = (int) gtw->frame.cols * fator;
+        }
+        cv::Size new_size(target_cols, gtw->target_rows);
+        cv::resize(gtw->frame, gtw->frame, new_size);
+    }
+
     link->dcr_api->recv_cb(link, NULL, 0);
     return UFR_OK;
 }
@@ -327,11 +363,3 @@ ufr_gtw_api_t ufr_gtw_opencv_api = {
 };
 
 }
-
-/*
-
-int index = ufr_hash()
-ufr_seek(index);
-ufr_get('f')
-
-*/

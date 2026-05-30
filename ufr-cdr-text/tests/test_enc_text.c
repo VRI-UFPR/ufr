@@ -48,8 +48,8 @@ void test_simple() {
     // test 1
     {
         char buffer[128];
-        UFR_TEST_EQUAL_I32( ufr_put(&link, "iii\n", 10, 20, 30), 3 );
-        UFR_TEST_OK( ufr_recv(&link) );
+        UFR_TEST_EQUAL_I32( ufr_put(&link, "%d %d %d\n", 10, 20, 30), 3 );
+        UFR_TEST_TRUE( ufr_recv(&link) );
         const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';

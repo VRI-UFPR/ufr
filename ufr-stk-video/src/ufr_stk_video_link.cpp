@@ -75,9 +75,8 @@ int ufr_enc_link_leave(link_t* link) {
 }
 
 ufr_enc_api_t ufr_enc_link_api = {
-    .boot = ufr_enc_link_boot,
-    .close = ufr_enc_link_close,
-    .clear = NULL,
+    .init = ufr_enc_link_boot,
+    .free = ufr_enc_link_close,
 
     .put_u32 = ufr_enc_link_put_u32,
     .put_i32 = ufr_enc_link_put_i32,
@@ -91,8 +90,9 @@ ufr_enc_api_t ufr_enc_link_api = {
     .put_str = ufr_enc_link_put_str,
     .put_raw = ufr_enc_link_put_raw,
 
-    .enter = ufr_enc_link_enter,
-    .leave = ufr_enc_link_leave
+    .cmd_enter = ufr_enc_link_enter,
+    .cmd_leave = ufr_enc_link_leave,
+    .cmd_clear = NULL
 };
 
 
@@ -101,13 +101,13 @@ ufr_enc_api_t ufr_enc_link_api = {
 // ============================================================================
 
 static
-int ufr_dcr_link_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_link_init(link_t* link, const ufr_args_t* args) {
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
-    return ufr_boot_dcr(&gtw->link, args);
+    return ufr_init_dcr(&gtw->link, args);
 }
 
 static
-void ufr_dcr_link_close(link_t* link) {
+void ufr_dcr_link_free(link_t* link) {
     
 }
 
@@ -127,9 +127,14 @@ int ufr_dcr_link_get_nitems(link_t* link) {
     return gtw->frame.cols;
 }
 
-uint8_t* ufr_dcr_link_get_raw_ptr(link_t* link) {
+void* ufr_dcr_link_get_ptr(link_t* link) {
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
-    return (uint8_t*) gtw->frame.data;
+    return (void*) gtw->frame.data;
+}
+
+int ufr_dcr_link_get_bin(link_t* link, char** out_mime, char** out_data, int* out_nbytes) {
+    GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
+    return ufr_get_bin(&gtw->link, out_mime, out_data, out_nbytes);
 }
 
 static
@@ -179,19 +184,11 @@ int ufr_dcr_link_leave(link_t* link) {
 }
 
 ufr_dcr_api_t ufr_dcr_link_api = {
-    .boot = ufr_dcr_link_boot,
-    .close = ufr_dcr_link_close,
+    .init = ufr_dcr_link_init,
+    .free = ufr_dcr_link_free,
+
     .recv_cb = ufr_dcr_link_recv_cb,
     .recv_async_cb = ufr_dcr_link_recv_cb,
-    .next = NULL,
-
-    .get_type = NULL,
-    .get_nbytes = ufr_dcr_link_get_nbytes,
-    .get_nitems = ufr_dcr_link_get_nitems,
-    .get_rawptr = ufr_dcr_link_get_raw_ptr,
-
-    .get_raw = NULL,
-    .get_str = ufr_dcr_link_get_str,
 
     .get_u32 = ufr_dcr_link_get_u32,
     .get_i32 = ufr_dcr_link_get_i32,
@@ -201,8 +198,14 @@ ufr_dcr_api_t ufr_dcr_link_api = {
     .get_i64 = NULL,
     .get_f64 = NULL,
 
-    .enter = ufr_dcr_link_enter,
-    .leave = ufr_dcr_link_leave
+    .get_raw = NULL,
+    .get_str = ufr_dcr_link_get_str,
+    .get_bin = ufr_dcr_link_get_bin,
+    .get_ptr = ufr_dcr_link_get_ptr,
+
+    .cmd_enter = ufr_dcr_link_enter,
+    .cmd_leave = ufr_dcr_link_leave,
+    .cmd_next = NULL
 };
 
 
@@ -283,9 +286,9 @@ size_t ufr_gtw_link_write(link_t* link, const char* buffer, size_t length) {
 int ufr_gtw_link_recv(link_t* link) {
     // recebe os dados
     GatewayLink* gtw = (GatewayLink*) link->gtw_obj;
-    const int res = ufr_recv(&gtw->link);
-    if ( res != UFR_OK ) {
-        return res;
+    const bool res = ufr_recv(&gtw->link);
+    if ( res == false ) {
+        return -1;
     }
 
     // limpa o index
@@ -293,40 +296,36 @@ int ufr_gtw_link_recv(link_t* link) {
 
     // protocolo A
     if ( gtw->protocol == PROTOCOL_BASIC ) {
-        char format[512];
-        int rows, cols;
-        ufr_get(&gtw->link, "sii", format, &rows, &cols);
-
-        const int nbytes = ufr_get_nbytes(&gtw->link);
-        if ( nbytes == 0 ){
-            return ufr_error(link, -1, "Image has 0 bytes");
+        char* mime;
+        char* data;
+        int nbytes; 
+        if ( ufr_get_bin(link, &mime, &data, &nbytes) == UFR_OK ) {
+            std::vector<uint8_t> image_raw(data, data + nbytes);
+            gtw->frame = imdecode(image_raw, cv::IMREAD_UNCHANGED);
+        } else {
+            ufr_error(link, 1, "Item is not a binary");
         }
-
-        const uint8_t* rawptr = ufr_get_rawptr(&gtw->link);
-        if ( rawptr == 0 ){
-            return ufr_error(link, -1, "Image has NULL pointer for image");
-        }
-
-        std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
-        gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
 
     // protocolo para mensagem do ROS
     } else if ( gtw->protocol == PROTOCOL_ROS ) {
         char format[16];
         ufr_get(&gtw->link, "s", format);
 
-        // printf("aaa %s\n", format);
         // mono8
         if ( strcmp(format, "mono8") == 0 ) {
+
+            /*
             int size[2] = {480, 640};
             void* data = (void*) ufr_get_rawptr(&gtw->link);
             if ( data == NULL ) {
                 return ufr_error(link, -1, "Image has NULL pointer for image");
             }
             gtw->frame = Mat(2, size, CV_8UC1, data, 0);
+            */
 
         // rgb8
         } else if ( strcmp(format, "rgb8") == 0 ) {
+            /*
             int size[2] = {480, 640};
             void* data = (void*) ufr_get_rawptr(&gtw->link);
             if ( data == NULL ) {
@@ -335,6 +334,7 @@ int ufr_gtw_link_recv(link_t* link) {
 
             gtw->frame = Mat(2, size, CV_8UC3, data, 0);
             cvtColor(gtw->frame, gtw->frame, COLOR_RGB2BGR);
+            */
         }
     }
 
@@ -348,21 +348,19 @@ int ufr_gtw_link_recv_async(link_t* link) {
     if ( res != UFR_OK ) {
         return res;
     }
+
     // const size_t size = ufr_get_nbytes(&gtw->link);
     // gtw->buffer.resize(size);
     
     //
     link->dcr_obj_idx = 0;
 
-    //
+/*
     char format[512];
     int rows, cols;
     ufr_get(&gtw->link, "sii", format, &rows, &cols);
 
-// printf("%s %d %d\n", format, rows, cols);
     const int nbytes = ufr_get_nbytes(&gtw->link);
-// printf("%d\n", nbytes);
-
     if ( nbytes == 0 ){
         return ufr_error(link, -1, "Image has 0 bytes");
     }
@@ -374,6 +372,7 @@ int ufr_gtw_link_recv_async(link_t* link) {
 
     std::vector<uint8_t> jpg_raw(rawptr, rawptr + nbytes);
     gtw->frame = imdecode(jpg_raw, cv::IMREAD_UNCHANGED);
+*/
 
     return UFR_OK;
 }

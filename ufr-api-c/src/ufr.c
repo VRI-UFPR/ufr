@@ -155,7 +155,7 @@ int ufr_set_state_ready(link_t* link) {
 //  UFR RECV
 // ============================================================================
 
-int ufr_recv(link_t* link) {
+bool ufr_recv(link_t* link) {
     ufr_log_ini(link, "receiving data from link");
     if ( link == NULL ) {
         ufr_fatal(link, 1, "link is null");
@@ -169,16 +169,17 @@ int ufr_recv(link_t* link) {
     }
     
     const int retval = link->gtw_api->recv(link);
-    if ( retval != UFR_OK ) {
-        return retval;
+    if ( retval < 0 ) {
+        return false;
     }
 
+    // Success
     link->state = UFR_STATE_GET;
     ufr_log_end(link, "received %d bytes data from link", retval);
-    return retval;
+    return true;
 }
 
-int ufr_recv_async(link_t* link) {
+bool ufr_recv_async(link_t* link) {
     if ( link == NULL ) {
         ufr_fatal(link, 1, "link is null");
     }
@@ -190,7 +191,7 @@ int ufr_recv_async(link_t* link) {
         }
     }
 
-    return link->gtw_api->recv_async(link);
+    return link->gtw_api->recv_async(link) == UFR_OK;
 }
 
 bool ufr_send(link_t* link) {
@@ -217,17 +218,17 @@ void ufr_close(link_t* link) {
     }
 
     // free Encoder
-    if ( link->enc_api != NULL && link->enc_api->close != NULL ) {
+    if ( link->enc_api != NULL && link->enc_api->free != NULL ) {
         ufr_info(link, "Free Encoder");
-        link->enc_api->close(link);
+        link->enc_api->free(link);
         link->enc_api = NULL;
         link->enc_obj = NULL;
     }
 
     // free Decoder
-    if ( link->dcr_api != NULL && link->dcr_api->close != NULL ) {
+    if ( link->dcr_api != NULL && link->dcr_api->free != NULL ) {
         ufr_info(link, "Free Decoder");
-        link->dcr_api->close(link);
+        link->dcr_api->free(link);
         link->dcr_api = NULL;
         link->dcr_obj = NULL;
     }
@@ -244,12 +245,12 @@ void ufr_close(link_t* link) {
     link->is_booted = 0;
 }
 
-int ufr_boot_enc(link_t* link, const ufr_args_t* args) {
-    return link->enc_api->boot(link, args);
+int ufr_init_enc(link_t* link, const ufr_args_t* args) {
+    return link->enc_api->init(link, args);
 }
 
-int ufr_boot_dcr(link_t* link, const ufr_args_t* args) {
-    return link->dcr_api->boot(link, args);
+int ufr_init_dcr(link_t* link, const ufr_args_t* args) {
+    return link->dcr_api->init(link, args);
 }
 
 // ============================================================================
@@ -294,6 +295,32 @@ size_t ufr_write(link_t* link, const char* buffer, size_t size) {
     }
 }
 
+bool ufr_accept(link_t* link) {
+    if ( link->log_level > 0 ) {
+        if ( link->gtw_api == NULL ) {
+            ufr_fatal(link, 1, "gtw_api is null");
+        } else if ( link->gtw_api->accept == NULL ) {
+            ufr_fatal(link, 1, "gtw_api->accept is null");
+        }
+    }
+
+    const int res = link->gtw_api->accept(link, NULL);
+    return res == UFR_OK;
+}
+
+bool ufr_connect(link_t* link) {
+    if ( link->log_level > 0 ) {
+        if ( link->gtw_api == NULL ) {
+            ufr_fatal(link, 1, "gtw_api is null");
+        } else if ( link->gtw_api->cmd_connect == NULL ) {
+            ufr_fatal(link, 1, "gtw_api->cmd_connect is null");
+        }
+    }
+
+    const int res = link->gtw_api->cmd_connect(link);
+    return res == UFR_OK;
+}
+
 // ============================================================================
 //  UFR DUMMY
 // ============================================================================
@@ -312,12 +339,6 @@ bool ufr_dummy_recv(link_t* link) {
 
 int ufr_dummy_send(link_t* link) {
     return 0;
-}
-
-link_t ufr_accept(link_t* link) {
-    link_t client;
-    link->gtw_api->accept(link, &client);
-    return client;
 }
 
 int ufr_recv_peer_name(link_t* link, char* buffer, size_t maxbuffer) {
@@ -543,8 +564,8 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
                 ufr_fatal(link, 1, "erro5");
             }
         }
-        if ( link->dcr_api->boot != NULL ) {
-            if ( link->dcr_api->boot(link, args) != UFR_OK ) {
+        if ( link->dcr_api->init != NULL ) {
+            if ( link->dcr_api->init(link, args) != UFR_OK ) {
                 ufr_fatal(&link, 1, "erro6");
             }
         }
@@ -612,7 +633,7 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
             }
         }
 
-        if ( link->enc_api->boot(link, args) != UFR_OK ) {
+        if ( link->enc_api->init(link, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro5");
         }
     }
@@ -659,7 +680,7 @@ int ufr_client_args(link_t* link, const ufr_args_t* args) {
             }
         }
 
-        if ( link->dcr_api->boot(link, args) != UFR_OK ) {
+        if ( link->dcr_api->init(link, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro5");
         }
     }
@@ -675,7 +696,7 @@ int ufr_client_args(link_t* link, const ufr_args_t* args) {
             }
         }
 
-        if ( link->enc_api->boot(link, args) != UFR_OK ) {
+        if ( link->enc_api->init(link, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro5");
         }
     }
@@ -737,7 +758,7 @@ int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
             }
         }
 
-        if ( link->dcr_api->boot(link, args) != UFR_OK ) {
+        if ( link->dcr_api->init(link, args) != UFR_OK ) {
             ufr_fatal(&link, 1, "erro5");
         }
     }
@@ -753,7 +774,7 @@ int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
             }
         }
 
-        if ( link->enc_api->boot(link, args) != UFR_OK ) {
+        if ( link->enc_api->init(link, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro5");
         }
     }

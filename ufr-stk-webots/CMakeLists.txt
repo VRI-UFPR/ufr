@@ -23,5 +23,5 @@ enable_testing()
 add_subdirectory(./tests)
 
 # Examples
-add_executable(e02_pioneer ./examples/e02_pioneer.c)
-target_link_libraries(e02_pioneer ufr)
+# add_executable(e02_pioneer ./examples/e02_pioneer.c)
+# target_link_libraries(e02_pioneer ufr)

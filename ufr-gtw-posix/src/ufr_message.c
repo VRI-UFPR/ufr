@@ -32,6 +32,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>    // read
+#include <sys/socket.h>
 
 #include "ufr_message.h"
 
@@ -39,7 +40,7 @@
 //  Message Functions
 // ============================================================================
 
-void message_init(message_t* message) {
+/*void message_init(message_t* message) {
     message->size = 0;
     message->max = MESSAGE_ITEM_SIZE;
     message->ptr = malloc(message->max);
@@ -47,15 +48,16 @@ void message_init(message_t* message) {
 
 void message_clear(message_t* message) {
     message->size = 0;
-}
+}*/
 
 bool message_write_from_fd(ufr_buffer_t* message, int fd) {
     bool is_ok = true;
+    message->size = 0;
 
     const uint32_t part_len = 1024;
     while(1) {
         ufr_buffer_check_size(message, part_len);
-        const size_t bytes = read(fd, &message->ptr[ message->size ], part_len-1);
+        const size_t bytes = recv(fd, &message->ptr[ message->size ], part_len-1, 0);
         if ( bytes == 0 ) {
             message->size += bytes;
             is_ok = false;
@@ -70,7 +72,7 @@ bool message_write_from_fd(ufr_buffer_t* message, int fd) {
             break;
         }
     }
-printf("fim1\n");
+
     message->ptr[message->size] = '\0';
     return is_ok;
 }

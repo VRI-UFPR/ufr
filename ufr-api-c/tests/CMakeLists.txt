@@ -13,3 +13,7 @@ add_test(NAME test_std_enc COMMAND test_std_enc)
 add_executable(test_buffer ./test_buffer.c)
 target_link_libraries(test_buffer ufr)
 add_test(NAME test_buffer COMMAND test_buffer)
+
+add_executable(test_ufr_args ./test_ufr_args.c)
+target_link_libraries(test_ufr_args ufr)
+add_test(NAME test_ufr_args COMMAND test_ufr_args)

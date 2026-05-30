@@ -77,23 +77,18 @@ void copy_str_replacing_symbols(ufr_buffer_t* buffer, const char* str, const siz
 //  Default Encoder
 // ============================================================================
 
-int ufr_enc_text_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_text_init(link_t* link, const ufr_args_t* args) {
     link->enc_obj = ufr_buffer_new();
     return UFR_OK;
 }
 
-void ufr_enc_text_close(link_t* link) {
+void ufr_enc_text_free(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     if ( buffer != NULL ) {
         ufr_buffer_free(buffer);
         free(buffer);
         link->enc_obj = NULL;
     }
-}
-
-void ufr_enc_text_clear(link_t* link) {
-    ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
-    ufr_buffer_clear(buffer);
 }
 
 int ufr_enc_text_put_u32(link_t* link, const uint32_t* val, int nitems) {
@@ -168,37 +163,51 @@ int ufr_enc_text_put_cmd(link_t* link, char cmd) {
     return UFR_OK;
 }
 
-int ufr_enc_text_enter(link_t* link, size_t maxsize) {
+int ufr_enc_text_cmd_enter(link_t* link, size_t maxsize) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_put_str(buffer, "[ ");
     return UFR_OK;
 }
 
-int ufr_enc_text_leave(link_t* link) {
+int ufr_enc_text_cmd_leave(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_put_str(buffer, "] ");
     return UFR_OK;
 }
 
-ufr_enc_api_t ufr_enc_text_api = {
-    .boot = ufr_enc_text_boot,
-    .close = ufr_enc_text_close,
-    .clear = ufr_enc_text_clear,
+int ufr_enc_text_cmd_clear(link_t* link) {
+    ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
+    ufr_buffer_clear(buffer);
+    return UFR_OK;
+}
 
+ufr_enc_api_t ufr_enc_text_api = {
+    .init = ufr_enc_text_init,
+    .free = ufr_enc_text_free,
+
+    // 32 bits
     .put_u32 = ufr_enc_text_put_u32,
     .put_i32 = ufr_enc_text_put_i32,
     .put_f32 = ufr_enc_text_put_f32,
 
+    // 64 bits
     .put_u64 = ufr_enc_text_put_u64,
     .put_i64 = ufr_enc_text_put_i64,
     .put_f64 = ufr_enc_text_put_f64,
 
+    // Single - 8 bits
     .put_cmd = ufr_enc_text_put_cmd,
     .put_str = ufr_enc_text_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_enc_text_enter,
-    .leave = ufr_enc_text_leave,
+    // Commands
+    .cmd_enter = ufr_enc_text_cmd_enter,
+    .cmd_leave = ufr_enc_text_cmd_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_text_cmd_clear,
+    .cmd_send = NULL,
+    .cmd_eof = NULL
 };
 
 // ============================================================================

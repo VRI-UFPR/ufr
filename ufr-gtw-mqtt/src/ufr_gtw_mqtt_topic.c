@@ -116,9 +116,14 @@ int urf_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
     // get the arguments
     char buffer_host[UFR_ARGS_TOKEN];
     const char* host = ufr_args_gets(args, buffer_host, "@host", "127.0.0.1");
+    ufr_info(link, "@host %s", host);
+
     const uint16_t port = ufr_args_geti(args, "@port", 1883);
+    ufr_info(link, "@port %d", port);
+
     char buffer_topic[UFR_ARGS_TOKEN];
     const char* topic = ufr_args_gets(args, buffer_topic, "@topic", "topic");
+    ufr_info(link, "@topic %s", topic);
 
     // prepare the shared object
     ll_shr_t* shr = malloc(sizeof(ll_shr_t));
@@ -170,7 +175,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
 
         // connect the mosquitto client
         ufr_info(link, "connecting on %s:%d", shr->broker_hostname, shr->broker_port);
-        if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 60) != MOSQ_ERR_SUCCESS) {
+        if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 1800) != MOSQ_ERR_SUCCESS) {
             return ufr_error(link, 1, "connecting to MQTT broker failed");
         }
         ufr_info(link, "MQTT connected");
@@ -188,7 +193,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
 
         // connect the mosquitto client
         ufr_info(link, "connecting on %s:%d", shr->broker_hostname, shr->broker_port);
-        if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 60) != MOSQ_ERR_SUCCESS) {
+        if ( mosquitto_connect(obj->mosq, shr->broker_hostname, shr->broker_port, 1800) != MOSQ_ERR_SUCCESS) {
             return ufr_error(link, 1, "connecting to MQTT broker failed");
         }
 
@@ -308,13 +313,14 @@ size_t urf_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
     }
 
     if ( obj->mosq == NULL ) {
-        return ufr_error(link, 1, "aaa");
+        return ufr_error(link, 1, "Mosquitto pointer is null");
     }
 
     ufr_info(link, "writing %ld bytes on %s", size, shr->topic_name);
     const int error = mosquitto_publish(obj->mosq, NULL, shr->topic_name, size, buffer, MQTT_QOS_0, false);
     if ( error != MOSQ_ERR_SUCCESS ) {
-        return ufr_error(link, 0, "error");
+        // printf("Error Code: %d %s\n", error, mosquitto_strerror(error));
+        return ufr_error(link, 0, mosquitto_strerror(error));
     }
     return size;
 }

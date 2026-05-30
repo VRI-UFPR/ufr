@@ -45,15 +45,11 @@ void test_simple() {
     link_t link = ufr_publisher("@new %p @coder %p @sep ;", 
         ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
 
-    // ufr_topic_message(&link, 3, "x", "y", "th")
-    // ufr_server_register(&link, "add");
-    // ufr_client_register(&link, "add");
-
     // test 1
     {
         char buffer[128];
-        UFR_TEST_EQUAL_I32( ufr_put(&link, "iii\n", 10, 20, 30), 3 );
-        UFR_TEST_OK( ufr_recv(&link) );
+        UFR_TEST_EQUAL_I32( ufr_put(&link, "%d %d %d\n", 10, 20, 30), 3 );
+        UFR_TEST_TRUE( ufr_recv(&link) );
         int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';
@@ -65,9 +61,9 @@ void test_simple() {
     // test 2
     {
         char buffer[128];
-        ufr_put(&link, "iii\n", 30, 20, 10);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(&link, "%d %d %d\n", 30, 20, 10);
+        UFR_TEST_TRUE( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "30;20;10\n");
@@ -77,9 +73,9 @@ void test_simple() {
     // test 3
     {
         char buffer[128];
-        ufr_put(&link, "sii\n", "string com espaco", 8759834, -712345);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(&link, "%s %d %d\n", "string com espaco", 8759834, -712345);
+        UFR_TEST_TRUE( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 34 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "string com espaco;8759834;-712345\n");
@@ -95,9 +91,9 @@ void test_simple_2() {
     // test 1
     {
         char buffer[128];
-        ufr_put(&link, "iii\n", 10, 20, 30);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(&link, "%d %d %d\n", 10, 20, 30);
+        UFR_TEST_TRUE( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "10,20,30\n");
@@ -106,9 +102,9 @@ void test_simple_2() {
     // test 2
     {
         char buffer[128];
-        ufr_put(&link, "iii\n", 30, 20, 10);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(&link, "%d %d %d\n", 30, 20, 10);
+        UFR_TEST_TRUE( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "30,20,10\n");
@@ -118,9 +114,9 @@ void test_simple_2() {
     // test 3
     {
         char buffer[128];
-        ufr_put(&link, "sii\n", "string com espaco", 8759834, -712345);
-        UFR_TEST_OK( ufr_recv(&link) );
-        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(&link, "%s %d %d\n", "string com espaco", 8759834, -712345);
+        UFR_TEST_TRUE( ufr_recv(&link) );
+        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 34 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "string com espaco,8759834,-712345\n");
@@ -137,7 +133,15 @@ void test_simple_without_recv() {
     // test 1
     {
         char buffer[128];
-        ufr_put(&link, "iii\n", 10, 20, 30);
+        ufr_put(&link, "%d %d %d\n", 10, 20, 30);
+        int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        UFR_TEST_EQUAL_I32( nbytes, 0 );
+    }
+
+    // test 1
+    {
+        char buffer[128];
+        ufr_put(&link, "range: %f, angle_max: %f, angle_min: %f, ranges: [%f, 1024]\n", 10, 20, 30);
         int nbytes = ufr_read(&link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 0 );
     }

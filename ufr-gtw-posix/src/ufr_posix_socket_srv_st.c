@@ -155,39 +155,28 @@ size_t ufr_posix_socket_srv_write(link_t* link, const char* buffer, size_t lengt
 
 static
 int ufr_posix_socket_srv_recv(link_t* link) {
-    if ( link->gtw_obj == NULL ) {
-        ll_srv_request_t* request = malloc(sizeof(ll_srv_request_t));
-        ufr_buffer_init(&request->message);
-        link->gtw_obj = request;
-    }
 
-    // Accept the connection
     ll_srv_request_t* request = link->gtw_obj;
-    ll_shr_t* shr = link->gtw_shr;
-
-    ufr_log(link, "waiting for requisition");
-    request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
-    if ( request->sockfd < 0 ) {
-        ufr_fatal(link, 1, strerror(errno) );
-    }
-    ufr_buffer_clear(&request->message);
+    // ll_shr_t* shr = link->gtw_shr;
 
     // Read the requisition
     int ret1 = 0;
-    do {
+    // do {
         ufr_log(link, "reading the message");
         if ( !message_write_from_fd(&request->message, request->sockfd) ) {
-            break;  // case of error, exit
+            // break;  // case of error, exit
         }
 
         if ( link->dcr_api != NULL ) {
             ret1 = link->dcr_api->recv_cb(link, request->message.ptr, request->message.size);
         }
-    } while ( ret1 == -2 );
+    // } while ( ret1 == -2 );
 
-
-
-    return UFR_OK;
+    // Fim
+    if ( request->message.size == 0 ) {
+        return -1;
+    }
+    return request->message.size;
 }
 
 static
@@ -234,47 +223,94 @@ int ufr_posix_socket_srv_recv_async(link_t* link) {
 }
 
 
+int ufr_posix_socket_srv_accept(link_t* link, link_t* out_client) {
+    // Clean and start the request struct
+    ll_srv_request_t* request = link->gtw_obj;
+    if ( request == NULL ) {
+        request = malloc(sizeof(ll_srv_request_t));
+        ufr_buffer_init(&request->message);
+        link->gtw_obj = request;
+    } else {
+        if ( request->sockfd > 0 ) {
+            close(request->sockfd);
+        }
+        request->sockfd = 0;
+        ufr_buffer_clear(&request->message);
+    } 
+
+    // Accept the connection
+    ll_shr_t* shr = link->gtw_shr;
+
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(shr->server_sockfd, &read_fds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;  // Tempo de espera em segundos
+    timeout.tv_usec = 50; // Tempo de espera em microsegundos
+    int activity = select(shr->server_sockfd + 1, &read_fds, NULL, NULL, &timeout);
+    if (activity <= 0 || !FD_ISSET(shr->server_sockfd, &read_fds)) {
+        return -1;
+    }
+
+    ufr_log(link, "Accept requisition");
+    request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
+    if ( request->sockfd < 0 ) {
+        return ufr_error(link, -1, strerror(errno) );
+    }
+    ufr_buffer_clear(&request->message);
+
+    // Success
+    return UFR_OK;
+}
+
+
+int ufr_posix_socket_srv_accept_sync(link_t* link, link_t* out_client) {
+    // Clean and start the request struct
+    ll_srv_request_t* request = link->gtw_obj;
+    if ( request == NULL ) {
+        request = malloc(sizeof(ll_srv_request_t));
+        ufr_buffer_init(&request->message);
+        link->gtw_obj = request;
+    } else {
+        if ( request->sockfd > 0 ) {
+            close(request->sockfd);
+        }
+        request->sockfd = 0;
+        ufr_buffer_clear(&request->message);
+    } 
+
+    // Accept the connection
+    ufr_log(link, "waiting for requisition");
+    ll_shr_t* shr = link->gtw_shr;
+    request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
+    if ( request->sockfd < 0 ) {
+        return ufr_error(link, -1, strerror(errno) );
+    }
+    ufr_buffer_clear(&request->message);
+
+    // Success
+    return UFR_OK;
+}
+
+
 ufr_gtw_api_t ufr_posix_socket_srv = {
     .name = "PosixSocketServerSt",
 	.type = ufr_posix_socket_type,
 	.state = ufr_posix_socket_state,
 	.size = ufr_posix_socket_size,
+
 	.boot = ufr_posix_socket_boot,
 	.start = ufr_posix_socket_start_server,
 	.stop = ufr_posix_socket_srv_stop,
 	.copy = ufr_posix_socket_copy,
+
 	.read = ufr_posix_socket_srv_read,
 	.write = ufr_posix_socket_srv_write,
+    
     .recv = ufr_posix_socket_srv_recv,
-    .recv_async = ufr_posix_socket_srv_recv_async
+    .recv_async = ufr_posix_socket_srv_recv_async,
+    .accept = ufr_posix_socket_srv_accept,
+
+    .ready = NULL
 };
-
-
-/*
-
-    Encoder(http-req)  ---->   GTW (client)
-    Decoder(http-ans)  --|
-
-    Decoder(http-req)  ---->   GTW (server)
-    Encoder(http-ans)  --|
-
-
-
-
-??? ---> Encoder(http-req) ---> GET /api?param1=value1&param2=value2 HTTP/1.1\r\n ...
-
-ufr_put("ss", "PUT", "/api?a=aa")
-ufr_put("ss", "host", "example.com")
-...
-ufr_put("ss\n\n", "host", "example.com")
-
-
-GET /api?param1=value1&param2=value2 HTTP/1.1\r\n ---> Decoder(http-req) ---> ???
-
-
-
-HTTP/1.1 200 OK ---> Decoder(http-ans) ---> ???
-??? ---> Encoder(http-ans)
-
-
-*/

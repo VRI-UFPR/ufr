@@ -339,30 +339,42 @@ int ufr_dcr_lidar_get_meta(link_t* link, int index, char type, item_t* out) {
 
 static
 ufr_dcr_api_t dcr_lidar_api = {
-    .boot = ufr_dcr_lidar_boot,
-    .close = ufr_dcr_lidar_close,
-	.recv_cb = ufr_dcr_lidar_recv_cb,
+    .init = ufr_dcr_lidar_boot,
+    .free = ufr_dcr_lidar_close,
+
+    // Receive
+    .recv_cb = ufr_dcr_lidar_recv_cb,
     .recv_async_cb = ufr_dcr_lidar_recv_cb,
 
-    .next = ufr_dcr_lidar_next,
+    // 32 bits
+    .get_u32 = ufr_dcr_lidar_get_u32,
+    .get_i32 = ufr_dcr_lidar_get_i32,
+    .get_f32 = ufr_dcr_lidar_get_f32,
 
-    .get_type = ufr_dcr_lidar_get_type,
-    .get_nbytes = ufr_dcr_lidar_get_nbytes,
-    .get_nitems = ufr_dcr_lidar_get_nitems,
-    .get_rawptr = ufr_dcr_lidar_get_raw_ptr,
+    // 64 bits
+    .get_u64 = ufr_dcr_lidar_get_u64,
+    .get_i64 = ufr_dcr_lidar_get_i64,
+    .get_f64 = ufr_dcr_lidar_get_f64,
 
-	.get_u32 = ufr_dcr_lidar_get_u32,
-	.get_i32 = ufr_dcr_lidar_get_i32,
-	.get_f32 = ufr_dcr_lidar_get_f32,
+    // Binary and String
+    .get_raw = NULL,
+    .get_str = ufr_dcr_lidar_get_str,
 
-	.get_u64 = ufr_dcr_lidar_get_u64,
-	.get_i64 = ufr_dcr_lidar_get_i64,
-	.get_f64 = ufr_dcr_lidar_get_f64,
+    // Meta Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
 
-	.get_str = ufr_dcr_lidar_get_str,
+    // Meta Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
 
-    .enter = ufr_dcr_lidar_enter,
-    .leave = ufr_dcr_lidar_leave
+    // Commands
+    .cmd_enter = ufr_dcr_lidar_enter,
+    .cmd_leave = ufr_dcr_lidar_leave,
+    .cmd_next = ufr_dcr_lidar_next,
 };
 
 // ============================================================================

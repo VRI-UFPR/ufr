@@ -43,11 +43,6 @@
 
 #include "ufr_posix_socket.h"
 
-/*typedef struct {
-    size_t size;
-    size_t max;
-    char* ptr;
-} message_t;*/
 
 typedef struct {
     int lenght;
@@ -76,8 +71,16 @@ size_t ufr_posix_socket_size(const link_t* link, int type){
 }
 
 int ufr_posix_socket_boot(link_t* link, const ufr_args_t* args) {
+    // Create the Shared Object
     ll_shr_t* shr = malloc(sizeof(ll_shr_t));
     shr->server_sockfd = 0;
+    strcpy(shr->args_text, args->text);
+    for (int i=0; i<7; i++) {
+        shr->args.arg[i].ptr = args->arg[i].ptr;
+    }
+    shr->args.text = shr->args_text;
+
+    // Update the link
     link->gtw_shr = shr;
 	return 0;
 }
