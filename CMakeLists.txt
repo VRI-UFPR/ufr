@@ -151,3 +151,23 @@ if(BUILD_TESTS)
     enable_testing()
     # add_test(NAME test_gtw_zmq COMMAND ./tests/test_topic "@new zmq:topic @port 2000")
 endif(BUILD_TESTS)
+
+
+
+
+# 1. Adiciona suporte para gerar pacote DEB
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_NAME "ufr")
+set(CPACK_PACKAGE_VERSION "0.7")
+set(CPACK_PACKAGE_VENDOR "VRI - UFPR")
+set(CPACK_PACKAGE_CONTACT "felipebombardelli@gmail.com") # Mandatory for DEB
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Unified Framework for Robotics")
+
+## Optional: Auto-detect library dependencies (e.g., libc, libstdc++)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+## This line MUST be at the end of the file
+include(CPack)
+
+## Gerar o arquivo deb
+# cpack -G DEB

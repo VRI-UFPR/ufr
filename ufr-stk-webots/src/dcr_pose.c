@@ -1,3 +1,30 @@
+/* BSD 2-Clause License
+ * 
+ * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
+ *  - Felipe Bombardelli <felipebombardelli@gmail.com>
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 // ============================================================================
 //  Header
 // ============================================================================
@@ -5,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <webots/device.h>
 #include <webots/position_sensor.h>
 #include <webots/robot.h>
 #include <ufr.h>
@@ -14,9 +42,9 @@
 typedef struct {
     WbDeviceTag left;
     WbDeviceTag right;
-    float wheel_left, wheel_right;
-    float wheel_left_last, wheel_right_last;
-    float x,y,th;
+    double wheel_left, wheel_right;
+    double wheel_left_last, wheel_right_last;
+    double x,y,th;
     bool is_first_read;
     uint8_t index;
 } dcr_encoders_t;
@@ -26,7 +54,7 @@ typedef struct {
 // ============================================================================
 
 static
-int ufr_dcr_pose_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_pose_init(link_t* link, const ufr_args_t* args) {
     // new decoder
     dcr_encoders_t* dcr = malloc(sizeof(dcr_encoders_t));
     dcr->index = 0;
@@ -35,14 +63,38 @@ int ufr_dcr_pose_boot(link_t* link, const ufr_args_t* args) {
     dcr->y = 0.0;
     dcr->th = 0.0;
 
+
+    // Search by position sensors
+    char const* left_name = NULL;
+    char const* right_name = NULL;
+    const int n_devices = wb_robot_get_number_of_devices();
+    for(int i=0; i<n_devices; i++) {
+        WbDeviceTag tag = wb_robot_get_device_by_index(i);
+        const char *name = wb_device_get_name(tag);
+        WbNodeType type = wb_device_get_node_type(tag);
+        if ( type == WB_NODE_POSITION_SENSOR ) {
+            if ( strstr(name, "left") != NULL ) {
+                left_name = name;
+            } else if ( strstr(name, "right") != NULL ) {
+                right_name = name;
+            }
+        }
+    }
+
+    if ( left_name == NULL || right_name == NULL ) {
+        return ufr_error(link, 1, "Not found left or right positional sensor");
+    }
+
     // get sensor for both wheels
-    dcr->left = wb_robot_get_device("left wheel sensor");
-    dcr->right = wb_robot_get_device("right wheel sensor");
+    ufr_log_ini(link, "Inicializando o par de sensores: (%s, %s)", left_name, right_name);
+    dcr->left = wb_robot_get_device(left_name);
+    dcr->right = wb_robot_get_device(right_name);
 
     // enable the encoders
     const int time_step = ufr_gtw_webots_get_time_step();
     wb_position_sensor_enable(dcr->left, time_step);
     wb_position_sensor_enable(dcr->right, time_step);
+    
 
     // success
     link->dcr_obj = dcr;
@@ -50,7 +102,7 @@ int ufr_dcr_pose_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_dcr_pose_close(link_t* link) {
+void ufr_dcr_pose_free(link_t* link) {
     dcr_encoders_t* dcr = (dcr_encoders_t*) link->dcr_obj;
     if ( dcr ) {
         free(dcr);
@@ -69,8 +121,8 @@ int ufr_dcr_pose_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
 
         // case is not first read
         if ( dcr->is_first_read == false ) {
-            const float diff_left = dcr->wheel_left - dcr->wheel_left_last;
-            const float diff_right = dcr->wheel_right - dcr->wheel_right_last;
+            const double diff_left = dcr->wheel_left - dcr->wheel_left_last;
+            const double diff_right = dcr->wheel_right - dcr->wheel_right_last;
             dcr->x += ((diff_left + diff_right) * cos(dcr->th)) / 100.0;
             dcr->y += ((diff_left + diff_right) * sin(dcr->th)) / 100.0;
             dcr->th += (diff_left - diff_right) * 0.3;
@@ -207,8 +259,8 @@ int ufr_dcr_pose_leave(link_t* link) {
 
 static
 ufr_dcr_api_t dcr_pose_api = {
-    .init = ufr_dcr_pose_boot,
-    .free = ufr_dcr_pose_close,
+    .init = ufr_dcr_pose_init,
+    .free = ufr_dcr_pose_free,
 
     // Receive
     .recv_cb = ufr_dcr_pose_recv_cb,

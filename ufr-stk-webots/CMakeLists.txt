@@ -23,5 +23,9 @@ enable_testing()
 add_subdirectory(./tests)
 
 # Examples
-# add_executable(e02_pioneer ./examples/e02_pioneer.c)
-# target_link_libraries(e02_pioneer ufr)
+add_executable(ex01_cmdvel ./examples/ex01_cmdvel.c)
+target_link_libraries(ex01_cmdvel ufr)
+add_executable(ex02_pose ./examples/ex02_pose.c)
+target_link_libraries(ex02_pose ufr)
+add_executable(ex03_lidar ./examples/ex03_lidar.c)
+target_link_libraries(ex03_lidar ufr)
