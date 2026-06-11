@@ -40,7 +40,7 @@
 #include "ufr_webots.h"
 
 typedef struct {
-    WbDeviceTag lidar;
+    WbDeviceTag tag_lidar;
     float const* range_ptr;
     uint16_t range_size;
 
@@ -101,9 +101,10 @@ int ufr_dcr_lidar_boot(link_t* link, const ufr_args_t* args) {
 
     // Open lidar
     const int time_step = ufr_gtw_webots_get_time_step();
-    dcr->lidar = wb_robot_get_device(dev_tag_name);
+    dcr->tag_lidar = wb_robot_get_device(dev_tag_name);
     dcr->range_size = 0;
-    wb_lidar_enable(dcr->lidar, time_step);
+    
+    wb_lidar_enable(dcr->tag_lidar, time_step);
 
     // success
     ufr_log(link, "Opened the device %s", dev_tag_name);
@@ -153,9 +154,13 @@ static
 int ufr_dcr_lidar_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     decoder_t* dcr = (decoder_t*) link->dcr_obj;
     if ( dcr ) {
-        dcr->range_ptr = wb_lidar_get_range_image(dcr->lidar);
-        dcr->range_size = wb_lidar_get_horizontal_resolution(dcr->lidar);
-        dcr->range_max = wb_lidar_get_max_range(dcr->lidar);
+        dcr->range_ptr = wb_lidar_get_range_image(dcr->tag_lidar);
+        dcr->range_size = wb_lidar_get_horizontal_resolution(dcr->tag_lidar);
+        dcr->range_max = wb_lidar_get_max_range(dcr->tag_lidar);
+
+        dcr->angle_min = 0.0;
+        dcr->angle_max = wb_lidar_get_fov(dcr->tag_lidar);
+        dcr->angle_increment = dcr->angle_max / wb_lidar_get_horizontal_resolution(dcr->tag_lidar);
         dcr->index = 0;
     }
     return UFR_OK;
