@@ -43,3 +43,15 @@ if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(./tests)
 endif(BUILD_TESTS)
+
+
+
+# Socket
+add_executable(server ./exemplos/server.c)
+target_link_libraries(server ufr)
+
+add_executable(client ./exemplos/client.c)
+target_link_libraries(client ufr)
+
+add_executable(processo ./exemplos/processo.c)
+target_link_libraries(processo ufr)

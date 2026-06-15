@@ -80,8 +80,9 @@ int ufr_zmq_socket_type(const link_t* link) {
 
 static
 int ufr_zmq_socket_start(link_t* link, int type, const ufr_args_t* args) {
-fprintf(stderr, "opaaaa1\n");
+
     if ( type == UFR_START_CLIENT ) {
+/*
         ufr_log_ini(link, "creating a socket for client");
         const ll_shr_t* shr = link->gtw_shr;
         void* socket = zmq_socket (shr->context, ZMQ_REQ);
@@ -108,7 +109,7 @@ fprintf(stderr, "opaaaa1\n");
         // set timeout
         int time = ufr_args_geti(args, "@timeout", 30000);
         zmq_setsockopt(socket, ZMQ_RCVTIMEO, &time, sizeof(time));
-
+*/
     } else if ( type == UFR_START_SERVER_ST || type == UFR_START_SERVER_MT ) {
 
         // create the socket
@@ -140,6 +141,39 @@ fprintf(stderr, "opaaaa1\n");
     return 0;
 }
 
+int ufr_zmq_accept(link_t* link, link_t* out) {
+    return UFR_OK;
+}
+
+int ufr_zmq_cmd_connect(link_t* link) {
+    ufr_log_ini(link, "creating a socket for client");
+    const ll_shr_t* shr = link->gtw_shr;
+    void* socket = zmq_socket (shr->context, ZMQ_REQ);
+    if ( socket == NULL ) {
+        return ufr_log_error(link, errno, "%s (context: %p)", zmq_strerror(errno), shr->context);
+    }
+    ufr_log_end(link, "socket created");
+
+    // connect
+    ufr_log_ini(link, "connecting to the server");
+    char url[512];
+    snprintf(url, sizeof(url), "tcp://%s:%d", shr->host, shr->port);
+    if ( zmq_connect (socket, url) != 0 ) {
+        return ufr_log_error(link, errno, "%s", zmq_strerror(errno));
+    }
+    ufr_log_end(link, "connected to the server at URL %s", url);
+    
+    // update the gtw_obj
+    ufr_log_ini(link, "updating the gateway object");
+    ll_obj_t* obj = link->gtw_obj;
+    obj->socket = socket;
+    ufr_log_end(link, "gateway object updated");
+
+    // set timeout
+    const int time = 30000; //ufr_args_geti(args, "@timeout", 30000);
+    zmq_setsockopt(socket, ZMQ_RCVTIMEO, &time, sizeof(time));
+}
+
 static
 ufr_gtw_api_t ufr_zmq_socket_st_api = {
     .name = "zmq",
@@ -155,7 +189,8 @@ ufr_gtw_api_t ufr_zmq_socket_st_api = {
 	.read = ufr_zmq_read,
 	.write = ufr_zmq_socket_write,
     .accept = NULL,
-    .recv_peer_name = ufr_zmq_recv_peer_name
+    .recv_peer_name = ufr_zmq_recv_peer_name,
+    .ufr_zmq_cmd_connect = ufr_zmq_cmd_connect
 };
 
 // ============================================================================

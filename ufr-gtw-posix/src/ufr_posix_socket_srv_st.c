@@ -58,7 +58,6 @@ typedef struct {
 
 static
 int ufr_posix_socket_start_server(link_t* link, int type, const ufr_args_t* args) {
-link->log_level = 10;
     // get the parameters for the server
     const uint16_t port = ufr_args_geti(args, "@port", 2000);
 
@@ -74,7 +73,7 @@ link->log_level = 10;
     // start the socket
     ufr_log_ini(link, "start the socket");
     int server_sockfd = socket(AF_INET, SOCK_STREAM, protoent->p_proto);
-    if (server_sockfd == -1) {
+    if (server_sockfd <= -1) {
         return ufr_error(link, 1, "error to open socket");
     }
     ufr_log_end(link, "socket started");
@@ -88,11 +87,12 @@ link->log_level = 10;
 
     // bind the socket
     struct sockaddr_in server_address;
+    memset(&server_address, 0, sizeof(server_address));     // linha necessaria, sem apagar isso, pode gerar problemas no accept
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(port);
     int error = bind( server_sockfd, (struct sockaddr*)&server_address, sizeof(server_address) );
-    if ( error == -1 ) {
+    if ( error <= -1 ) {
         perror("bind");
         return ufr_error(link, 1, "error to bind the port");
     }
@@ -115,12 +115,25 @@ link->log_level = 10;
 
 static
 void ufr_posix_socket_srv_stop(link_t* link, int type) {
-    ll_srv_request_t* request = link->gtw_obj;
+    ll_srv_request_t* request = link->gtw_shr;
     if ( request != NULL ) {
         if ( request->sockfd > 0 ) {
+            ufr_info(link, "close request %d\n", request->sockfd);
             close(request->sockfd);
         }
         request->sockfd = 0;
+    }
+
+    // close the socket
+    ufr_log_ini(link, "closing the socket");
+    ll_shr_t* shr = link->gtw_shr;
+    if ( shr != NULL && shr->server_sockfd > 0 ) {
+        const int socket_closed = shr->server_sockfd;
+        close(socket_closed);
+        shr->server_sockfd = 0;
+        free(shr);
+        link->gtw_shr = NULL;
+        ufr_log_end(link, "Socket %d closed", socket_closed);
     }
 }
 
@@ -143,6 +156,7 @@ size_t ufr_posix_socket_srv_write(link_t* link, const char* buffer, size_t lengt
             wrote = send(request->sockfd, buffer, length, 0);
         }
         close(request->sockfd);
+        request->sockfd = -1;
 
     // Send a message
     } else {
@@ -162,7 +176,7 @@ int ufr_posix_socket_srv_recv(link_t* link) {
     // Read the requisition
     int ret1 = 0;
     // do {
-        ufr_log(link, "reading the message");
+        ufr_log_ini(link, "reading the message");
         if ( !message_write_from_fd(&request->message, request->sockfd) ) {
             // break;  // case of error, exit
         }
@@ -170,12 +184,16 @@ int ufr_posix_socket_srv_recv(link_t* link) {
         if ( link->dcr_api != NULL ) {
             ret1 = link->dcr_api->recv_cb(link, request->message.ptr, request->message.size);
         }
+
     // } while ( ret1 == -2 );
 
-    // Fim
+    // End, got EOF
     if ( request->message.size == 0 ) {
         return -1;
     }
+
+    // End, receive a new message
+    ufr_log_end(link, "read the message");
     return request->message.size;
 }
 
@@ -183,6 +201,8 @@ static
 int ufr_posix_socket_srv_recv_async(link_t* link) {
     if ( link->gtw_obj == NULL ) {
         ll_srv_request_t* request = malloc(sizeof(ll_srv_request_t));
+        request->lenght = sizeof(request->address);
+        memset(&request->address, 0, request->lenght);
         ufr_buffer_init(&request->message);
         link->gtw_obj = request;
     }
@@ -194,7 +214,6 @@ int ufr_posix_socket_srv_recv_async(link_t* link) {
     fd_set read_fds;
     FD_ZERO(&read_fds);
     FD_SET(shr->server_sockfd, &read_fds);
-
     struct timeval timeout;
     timeout.tv_sec = 0;  // Tempo de espera em segundos
     timeout.tv_usec = 10; // Tempo de espera em microsegundos
@@ -253,12 +272,13 @@ int ufr_posix_socket_srv_accept(link_t* link, link_t* out_client) {
         return -1;
     }
 
-    ufr_log(link, "Accept requisition");
+    ufr_log_ini(link, "Accepting requisition");
     request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
     if ( request->sockfd < 0 ) {
         return ufr_error(link, -1, strerror(errno) );
     }
     ufr_buffer_clear(&request->message);
+    ufr_log_end(link, "Requisition accepted");
 
     // Success
     return UFR_OK;
@@ -281,13 +301,14 @@ int ufr_posix_socket_srv_accept_sync(link_t* link, link_t* out_client) {
     } 
 
     // Accept the connection
-    ufr_log(link, "waiting for requisition");
+    ufr_log_ini(link, "waiting for requisition");
     ll_shr_t* shr = link->gtw_shr;
     request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
     if ( request->sockfd < 0 ) {
         return ufr_error(link, -1, strerror(errno) );
     }
     ufr_buffer_clear(&request->message);
+    ufr_log_end(link, "requisition accepted");
 
     // Success
     return UFR_OK;

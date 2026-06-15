@@ -151,6 +151,16 @@ int ufr_set_state_ready(link_t* link) {
     return UFR_OK;
 }
 
+uint32_t ufr_hash_djb2(const char* str) {
+    int c;
+    uint32_t hash = 5381;
+    // Percorre cada caractere do texto
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; 
+    }
+    return hash;
+}
+
 // ============================================================================
 //  UFR RECV
 // ============================================================================
@@ -439,7 +449,7 @@ void ufr_log_put(link_t* link, uint8_t level, const char* func_name, const char*
     va_list list;
     va_start(list, format);
     // adicionar depois : const char* name = ufr_api_name(link);
-    fprintf(stderr, "# info: %s: ", func_name);
+    fprintf(stderr, "# info-%x: %s: ", link->hash, func_name);
     vfprintf(stderr, format, list);
     fprintf(stderr, "\n");
     va_end(list);
@@ -454,7 +464,7 @@ int ufr_log_put_error(link_t* link, int error, const char* func_name, const char
 
     // show the debug
     if ( link->log_level > 0 ) {
-        fprintf(stderr, "\x1B[31m# erro: %s\033[0m: ", func_name);
+        fprintf(stderr, "\x1B[31m# erro-%x: %s\033[0m: ", link->hash, func_name);
         fprintf(stderr, "%s", &link->errstr[0]);
         fprintf(stderr, "\n");
     }
@@ -523,6 +533,7 @@ link_t ufr_subscriber(const char* format, ...) {
 int ufr_subscriber_args(link_t* link, const ufr_args_t* args) {
     // Clean the link
     ufr_link_init(link, NULL);
+    link->hash = ufr_hash_djb2(args->text);
 
     // Prepare Gateway
     ufr_log(link, "preparing the Gateway");
@@ -605,6 +616,7 @@ link_t ufr_publisher(const char* format, ...) {
 int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
     // Clean the link
     ufr_link_init(link, NULL);
+    link->hash = ufr_hash_djb2(args->text);
 
     // Prepare Gateway
     int(*func_gtw_new)(link_t*,int,const ufr_args_t*) = ufr_args_getfunc(args, "gtw", "@new", NULL);
@@ -652,6 +664,7 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
 int ufr_client_args(link_t* link, const ufr_args_t* args) {
     // Clean the link
     ufr_link_init(link, NULL);
+    link->hash = ufr_hash_djb2(args->text);
 
     // Prepare Gateway
     int(*func_gtw_new)(link_t*,int,const ufr_args_t*) = ufr_args_getfunc(args, "gtw", "@new", NULL);
@@ -730,6 +743,7 @@ link_t ufr_client(const char* format, ...) {
 int ufr_server_st_args(link_t* link, const ufr_args_t* args) {
     // Clean the link
     ufr_link_init(link, NULL);
+    link->hash = ufr_hash_djb2(args->text);
 
     // Prepare Gateway
     int(*func_gtw_new)(link_t*,int,const ufr_args_t*) = ufr_args_getfunc(args, "gtw", "@new", NULL);

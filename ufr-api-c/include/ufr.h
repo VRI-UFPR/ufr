@@ -248,6 +248,7 @@ typedef struct _link {
     uint8_t type_started;
     uint8_t log_level;
     uint8_t status;
+    uint32_t hash;
 
     union {
         struct{
@@ -258,7 +259,7 @@ typedef struct _link {
     };
 
     uint16_t put_count;
-    char errstr[172];
+    char errstr[168];
 } link_t;
 
 typedef struct {
@@ -646,6 +647,7 @@ void ufr_log_put_fatal(int error, const char* func_name, const char* format, ...
 #define ufr_warn(link, ...) ufr_log_put(link, 1, __func__, __VA_ARGS__)
 #define ufr_info(link, ...) ufr_log_put(link, 2, __func__, __VA_ARGS__)
 #define ufr_log(link, ...) ufr_log_put(link, 2, __func__, __VA_ARGS__)
+
 #define ufr_log_end(link, ...) ufr_log_put(link, 3, __func__, __VA_ARGS__)
 #define ufr_log_ini(link, ...) ufr_log_put(link, 4, __func__, __VA_ARGS__)
 #define ufr_log_error(link, error, ...) ufr_log_put_error(link, error, __func__, __VA_ARGS__);
