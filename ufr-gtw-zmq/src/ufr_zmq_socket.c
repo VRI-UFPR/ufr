@@ -190,7 +190,7 @@ ufr_gtw_api_t ufr_zmq_socket_st_api = {
 	.write = ufr_zmq_socket_write,
     .accept = NULL,
     .recv_peer_name = ufr_zmq_recv_peer_name,
-    .ufr_zmq_cmd_connect = ufr_zmq_cmd_connect
+    .cmd_connect = ufr_zmq_cmd_connect
 };
 
 // ============================================================================

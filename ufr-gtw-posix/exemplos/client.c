@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 int main() {
-    link_t client = ufr_client("@new socket @coder msgpack @port %d @log 0", 7000);
+    link_t client = ufr_client("@new socket @coder msgpack @port %d @log 10", 7000);
 
     for (int i=0; i<2; i++) {
         int resultado = 0;

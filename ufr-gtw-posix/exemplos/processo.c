@@ -1,6 +1,6 @@
 #include <ufr.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 
 
@@ -8,6 +8,7 @@ link_t processos[5];
 
 
 bool is_process_ok(int id) {
+    printf("Testando o processo %d\n", id);
     int resultado;
     link_t* sendto = &processos[id];
     if ( ufr_connect(sendto) ) {
@@ -31,11 +32,11 @@ int main(int argc, char** argv) {
     int id = atoi(argv[1]);
     int N = 3;
 
-    link_t server = ufr_server_st("@new socket @coder msgpack @port %d @log 0", id+7000);
+    link_t server = ufr_server_st("@new socket @coder msgpack @port %d @log 4", id+7000);
 
 
     for (int i=0; i<N; i++) {
-        processos[i] = ufr_client("@new socket @coder msgpack @port %d @log 0", 7000+i);
+        processos[i] = ufr_client("@new socket @coder msgpack @port %d @log 4", 7000+i);
     }
 
 
@@ -54,7 +55,7 @@ int main(int argc, char** argv) {
         if ( ufr_recv_async(&timer) ) {
             for (int i=0; i<N; i++) {
                 if ( i == id ) continue;
-                is_process_ok(i );
+                is_process_ok(i);
             }
         }
 

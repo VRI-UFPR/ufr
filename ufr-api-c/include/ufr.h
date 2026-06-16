@@ -248,7 +248,6 @@ typedef struct _link {
     uint8_t type_started;
     uint8_t log_level;
     uint8_t status;
-    uint32_t hash;
 
     union {
         struct{
@@ -258,9 +257,12 @@ typedef struct _link {
         };
     };
 
+    uint32_t hash;
+
     uint16_t put_count;
-    char errstr[168];
+    char errstr[168+2];
 } link_t;
+
 
 typedef struct {
     char const* name;

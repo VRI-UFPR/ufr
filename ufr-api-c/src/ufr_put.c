@@ -320,6 +320,7 @@ int ufr_put_eof(link_t* link) {
 
     // send the last message
     link->state = UFR_STATE_SEND_LAST;
+    printf("aaa %d\n", link->state);
     const int retval = link->enc_api->cmd_eof(link);
 
     // update the state of the link

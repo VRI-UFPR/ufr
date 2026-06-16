@@ -150,6 +150,8 @@ size_t ufr_posix_socket_srv_write(link_t* link, const char* buffer, size_t lengt
     ll_srv_request_t* request = link->gtw_obj;
     size_t wrote = 0;
 
+printf("bbb %d\n", link->state);
+
     // Last message
     if ( link->state == UFR_STATE_SEND_LAST ) {
         if ( length > 0 ) {
@@ -211,7 +213,7 @@ int ufr_posix_socket_srv_recv_async(link_t* link) {
     ll_shr_t* shr = link->gtw_shr;
 
 
-    fd_set read_fds;
+    /*fd_set read_fds;
     FD_ZERO(&read_fds);
     FD_SET(shr->server_sockfd, &read_fds);
     struct timeval timeout;
@@ -219,8 +221,7 @@ int ufr_posix_socket_srv_recv_async(link_t* link) {
     timeout.tv_usec = 10; // Tempo de espera em microsegundos
 
     int activity = select(shr->server_sockfd + 1, &read_fds, NULL, NULL, &timeout);
-
-    if (activity > 0 && FD_ISSET(shr->server_sockfd, &read_fds)) {
+    if (activity > 0 && FD_ISSET(shr->server_sockfd + 1, &read_fds)) {*/
         request->sockfd = accept(shr->server_sockfd, &request->address, &request->lenght);
 
         if ( request->sockfd < 0 ) {
@@ -235,7 +236,7 @@ int ufr_posix_socket_srv_recv_async(link_t* link) {
 
         // success
         return UFR_OK;
-    }
+    // }
 
     // error;
     return -1;

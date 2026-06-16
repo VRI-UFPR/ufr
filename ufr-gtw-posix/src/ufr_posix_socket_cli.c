@@ -79,7 +79,7 @@ static int ufr_posix_socket_cli_cmd_connect(link_t* link) {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(address);
-    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);  
+    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero); 
     const int rc = connect(sockfd, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
     if ( rc != 0 ) {
         return ufr_error(link, 1, "Nao foi possivel conectar %s:%d", address, port);
@@ -123,6 +123,8 @@ size_t ufr_posix_socket_cli_write(link_t* link, const char* buffer, size_t lengt
     // Begin
     ll_conn_t* conn = link->gtw_obj;
     size_t wrote = 0;
+
+printf("bbb %d --\n", link->state);
 
     // Send the last Message
     if ( link->state == UFR_STATE_SEND_LAST ) {
