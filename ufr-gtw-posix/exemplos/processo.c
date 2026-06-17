@@ -32,11 +32,11 @@ int main(int argc, char** argv) {
     int id = atoi(argv[1]);
     int N = 3;
 
-    link_t server = ufr_server_st("@new socket @coder msgpack @port %d @log 4", id+7000);
+    link_t server = ufr_server_st("@new socket @coder msgpack @port %d @log 0", id+7000);
 
 
     for (int i=0; i<N; i++) {
-        processos[i] = ufr_client("@new socket @coder msgpack @port %d @log 4", 7000+i);
+        processos[i] = ufr_client("@new socket @coder msgpack @port %d @log 0", 7000+i);
     }
 
 

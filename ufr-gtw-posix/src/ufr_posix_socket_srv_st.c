@@ -150,8 +150,6 @@ size_t ufr_posix_socket_srv_write(link_t* link, const char* buffer, size_t lengt
     ll_srv_request_t* request = link->gtw_obj;
     size_t wrote = 0;
 
-printf("bbb %d\n", link->state);
-
     // Last message
     if ( link->state == UFR_STATE_SEND_LAST ) {
         if ( length > 0 ) {

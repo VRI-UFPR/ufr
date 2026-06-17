@@ -124,8 +124,6 @@ size_t ufr_posix_socket_cli_write(link_t* link, const char* buffer, size_t lengt
     ll_conn_t* conn = link->gtw_obj;
     size_t wrote = 0;
 
-printf("bbb %d --\n", link->state);
-
     // Send the last Message
     if ( link->state == UFR_STATE_SEND_LAST ) {
         // Send the last message
