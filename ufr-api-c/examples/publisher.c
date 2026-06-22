@@ -40,7 +40,7 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new zmq @coder csv @port 3000 @log 0"); 
+    link_t pub = ufr_publisher("@new zmq @coder influx @port 3000 @log 0"); 
 
     // loop principal
     for(int i=0; i<40; i++) {

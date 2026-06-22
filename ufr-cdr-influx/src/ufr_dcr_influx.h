@@ -1,7 +1,6 @@
 /* BSD 2-Clause License
  * 
- * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
- *  - Felipe Bombardelli <felipebombardelli@gmail.com>
+ * Copyright (c) 2023, Felipe Bombardelli
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -16,7 +15,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL aTHE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
@@ -24,38 +23,28 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-	
+
 // ============================================================================
 //  Header
 // ============================================================================
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ufr.h>
-#include <unistd.h>
-#include <pthread.h>
+#pragma once
 
-// ============================================================================
-//  Main
-// ============================================================================
+typedef struct {
+    msgpack_unpacked result;
+    uint8_t* pack_data;
+    uint32_t pack_nbytes;
+    int  pack_nitems;
 
-int main() {
-    // abre um publicador
-    // link_t pub = ufr_publisher("@new zmq @coder msgpack @log 5 @port 5000");
-    // link_t pub = ufr_publisher("@new mqtt @coder text @log 5 @host 185.159.82.136 @topic intercampi");
-    // link_t pub = ufr_publisher("@new posix:file @coder csv @log 5 @path saida.txt");
-    // link_t pub = ufr_publisher("@new ros2 @coder ros2:tf @frame teste1 @child aaa");
-    // link_t pub = ufr_publisher("@new webots @topic cmd_vel");
+    // Current cursor and item
+    size_t cursor;
+    msgpack_object object;
 
-    link_t pub = ufr_publisher("@new mqtt @coder influx @topic teste @host 177.153.62.174");
+    // enter
+    msgpack_object_array l0_array;
+    size_t l0_idx;
 
-    // loop principal
-    int i=0;
-    while( ufr_loop_ok() ) {
-        ufr_put(&pub, "x: %d vel: %d\n", i, 450);
-        sleep(1);
-        i += 1;
-    }
+    // meta
+    bool is_pack_scalar;
+} ll_decoder_t;
 
-    return 0;
-}

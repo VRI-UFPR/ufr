@@ -24,12 +24,12 @@ struct GatewayLink {
 // ============================================================================
 
 static
-int ufr_enc_link_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_link_init(link_t* link, const ufr_args_t* args) {
 	return UFR_OK;
 }
 
 static
-void ufr_enc_link_close(link_t* link) {
+void ufr_enc_link_free(link_t* link) {
     if ( link->dcr_obj != NULL ) {
         
     }
@@ -74,9 +74,29 @@ int ufr_enc_link_leave(link_t* link) {
     return UFR_OK;
 }
 
+int ufr_enc_link_cmd_next(link_t* link) {
+    return UFR_OK;
+}
+
+int ufr_enc_link_cmd_clear(link_t* link) {
+    return UFR_OK;
+}
+
+int ufr_enc_link_cmd_send(link_t* link) {
+    return UFR_OK;
+}
+
+int ufr_enc_link_cmd_eof(link_t* link) {
+    return UFR_OK;
+}
+
+int ufr_enc_link_cmd_seek_str(link_t* link, const char* name) {
+    return UFR_OK;
+}
+
 ufr_enc_api_t ufr_enc_link_api = {
-    .init = ufr_enc_link_boot,
-    .free = ufr_enc_link_close,
+    .init = ufr_enc_link_init,
+    .free = ufr_enc_link_free,
 
     .put_u32 = ufr_enc_link_put_u32,
     .put_i32 = ufr_enc_link_put_i32,
@@ -86,13 +106,17 @@ ufr_enc_api_t ufr_enc_link_api = {
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_enc_link_put_cmd,
     .put_str = ufr_enc_link_put_str,
     .put_raw = ufr_enc_link_put_raw,
 
     .cmd_enter = ufr_enc_link_enter,
     .cmd_leave = ufr_enc_link_leave,
-    .cmd_clear = NULL
+    .cmd_next = ufr_enc_link_cmd_next,
+    .cmd_clear = ufr_enc_link_cmd_clear,
+    .cmd_send = ufr_enc_link_cmd_send,
+    .cmd_eof = ufr_enc_link_cmd_eof,
+
+    .cmd_seek_str = ufr_enc_link_cmd_seek_str
 };
 
 

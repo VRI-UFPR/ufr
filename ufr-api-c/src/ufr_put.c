@@ -46,8 +46,8 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             if ( link->enc_api == NULL ) {
                 ufr_fatal(link, 0, "Encoder is not loaded");
             }
-            if ( link->enc_api->put_cmd == NULL ) {
-                ufr_fatal(link, 0, "Function put_cmd is NULL");
+            if ( link->enc_api->cmd_send == NULL ) {
+                ufr_fatal(link, 0, "Function cmd_send is NULL");
             }
             if ( link->enc_api->put_u32 == NULL ) {
                 ufr_fatal(link, -1, "Function put_u32 is NULL");
@@ -67,6 +67,9 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
     }
 
     int count = 0;
+    char name[256];
+    name[0] = '\0';
+    uint8_t name_i = 0;
 	while( true ) {
         const char type = *format;
         format += 1;
@@ -95,7 +98,7 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             // case just one \n and there is data in the link to send
             } else {
                 link->state = UFR_STATE_SEND;
-			    link->enc_api->put_cmd(link, '\n');
+			    link->enc_api->cmd_send(link);
                 link->put_count = 0;
                 ufr_put_begin_package(link);
             }
@@ -163,6 +166,22 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
                 link->put_count += 1;
                 count += 1;
             }
+
+        // Case ':'
+        } else if ( type == ':' ) {
+            name[name_i] = '\0';
+            link->enc_api->cmd_seek_str(link, name);
+
+            name_i = 0;
+            name[0] = '\0';
+        // Case ' '
+        } else if ( type == ' ' ) {
+            // Descarta blank space
+
+        // Case of A-Za-z
+        } else {
+            name[name_i] = type;
+            name_i += 1;
         }
 	}
     return count;

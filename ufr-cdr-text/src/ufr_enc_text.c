@@ -153,13 +153,11 @@ int ufr_enc_text_put_str(link_t* link, const char* val) {
     return UFR_OK;
 }
 
-int ufr_enc_text_put_cmd(link_t* link, char cmd) {
-    if ( cmd == '\n' ) {
-        ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
-        ufr_buffer_put_chr(buffer, '\n');
-        ufr_write(link, buffer->ptr, buffer->size);
-        ufr_buffer_clear(buffer);
-    }
+int ufr_enc_text_cmd_send(link_t* link) {
+    ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
+    ufr_buffer_put_chr(buffer, '\n');
+    ufr_write(link, buffer->ptr, buffer->size);
+    ufr_buffer_clear(buffer);
     return UFR_OK;
 }
 
@@ -196,7 +194,6 @@ ufr_enc_api_t ufr_enc_text_api = {
     .put_f64 = ufr_enc_text_put_f64,
 
     // Single - 8 bits
-    .put_cmd = ufr_enc_text_put_cmd,
     .put_str = ufr_enc_text_put_str,
     .put_raw = NULL,
     .put_bin = NULL,
@@ -206,8 +203,10 @@ ufr_enc_api_t ufr_enc_text_api = {
     .cmd_leave = ufr_enc_text_cmd_leave,
     .cmd_next = NULL,
     .cmd_clear = ufr_enc_text_cmd_clear,
-    .cmd_send = NULL,
-    .cmd_eof = NULL
+    .cmd_send = ufr_enc_text_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================

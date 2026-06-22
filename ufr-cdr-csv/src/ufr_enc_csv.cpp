@@ -151,6 +151,7 @@ int ufr_enc_csv_put_f32(link_t* link, const float* val, int nitems) {
     return wrote;
 }
 
+/*
 static
 int ufr_enc_csv_put_cmd(link_t* link, char cmd) {
     if ( cmd == '\n' ) {
@@ -163,6 +164,9 @@ int ufr_enc_csv_put_cmd(link_t* link, char cmd) {
     
     return ufr_error(link, -1, "Command invalid");
 }
+*/
+
+
 
 static
 int ufr_enc_csv_put_str(link_t* link, const char* val) {
@@ -197,6 +201,22 @@ int ufr_enc_csv_cmd_leave(link_t* link) {
     return UFR_OK;
 }
 
+static
+int ufr_enc_csv_cmd_send(link_t* link) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    enc_obj->line += '\n';
+    ufr_write(link, enc_obj->line.c_str(), enc_obj->line.size());
+    enc_obj->line.clear();
+    return UFR_OK;
+}
+
+static
+int ufr_enc_csv_cmd_clear(link_t* link) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    enc_obj->line.clear();
+    return UFR_OK;
+}
+
 ufr_enc_api_t ufr_enc_std_csv_api = {
     .init = ufr_enc_csv_init,
     .free = ufr_enc_csv_free,
@@ -212,7 +232,7 @@ ufr_enc_api_t ufr_enc_std_csv_api = {
     .put_f64 = NULL,
 
     // Single - 8 bits
-    .put_cmd = ufr_enc_csv_put_cmd,
+    // .put_cmd = ufr_enc_csv_put_cmd,
     .put_str = ufr_enc_csv_put_str,
     .put_raw = NULL,
     .put_bin = NULL,
@@ -221,9 +241,11 @@ ufr_enc_api_t ufr_enc_std_csv_api = {
     .cmd_enter = ufr_enc_csv_cmd_enter,
     .cmd_leave = ufr_enc_csv_cmd_leave,
     .cmd_next = NULL,
-    .cmd_clear = NULL,
-    .cmd_send = NULL,
-    .cmd_eof = NULL
+    .cmd_clear = ufr_enc_csv_cmd_clear,
+    .cmd_send = ufr_enc_csv_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================

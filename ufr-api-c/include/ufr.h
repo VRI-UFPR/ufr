@@ -205,7 +205,7 @@ typedef struct {
     int (*put_f64)(struct _link* link, const double* val, int nitems);
 
     // Single - 8 bits
-    int (*put_cmd)(struct _link* link, char cmd);
+    // int (*put_cmd)(struct _link* link, char cmd);
     int (*put_str)(struct _link* link, const char* val);
     int (*put_raw)(struct _link* link, const uint8_t* val, int nbytes);
     int (*put_bin)(struct _link* link, const char* mime, const char* data, int nbytes);
@@ -217,6 +217,8 @@ typedef struct {
     int (*cmd_clear)(struct _link* link);
     int (*cmd_send)(struct _link* link);
     int (*cmd_eof)(struct _link* link);
+    int (*cmd_seek_str)(struct _link* link, const char* name);
+
 } ufr_enc_api_t;
 
 // ============================================================================

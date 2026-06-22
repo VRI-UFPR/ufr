@@ -250,12 +250,7 @@ void ufr_buffer_put_u32_as_str(ufr_buffer_t* buffer, uint32_t val) {
     }
     ufr_buffer_check_size(buffer, 15);
     char* base = &buffer->ptr[buffer->size];
-    size_t size = 0;
-    if ( buffer->size == 0 ) {
-        size = snprintf(base, 15, "%u", val);
-    } else {
-        size = snprintf(base, 15, " %u", val);
-    }
+    const size_t size = snprintf(base, 15, "%u", val);
     buffer->size += size;
 }
 
@@ -326,10 +321,10 @@ void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text) {
     }
 
     const size_t size = strlen(text); // Calcula o tamanho da string 
-    if ( buffer->size == 0 ) {
+    // if ( buffer->size == 0 ) {
         ufr_buffer_put(buffer, text, size); // Se eh a primeira string, Adiciona a string sem divisor
-    } else {
+    /*} else {
         ufr_buffer_put(buffer, " ", 1);
         ufr_buffer_put(buffer, text, size); // Adiciona a string com espaco antes da frase
-    }
+    }*/
 }

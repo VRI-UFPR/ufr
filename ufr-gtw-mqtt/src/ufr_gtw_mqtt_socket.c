@@ -344,7 +344,7 @@ size_t ufr_gtw_mqtt_server_write(link_t* link, const char* buffer, size_t size) 
         const int val[2] = {obj->socket_msg_id, MQTT_MESSAGE_STATE_END};
         link->enc_api->cmd_clear(link);
         link->enc_api->put_i32(link, val, 2);
-        link->enc_api->put_cmd(link, '\n');
+        link->enc_api->cmd_send(link);
         link->state = UFR_STATE_SEND_LAST;
         
     } else {
@@ -377,7 +377,7 @@ size_t ufr_gtw_mqtt_client_write(link_t* link, const char* buffer, size_t size) 
         const int val[2] = {obj->socket_msg_id, MQTT_MESSAGE_STATE_END};
         link->enc_api->cmd_clear(link);
         link->enc_api->put_i32(link, val, 2);
-        link->enc_api->put_cmd(link, '\n');
+        link->enc_api->cmd_send(link);
         link->state = UFR_STATE_SEND_LAST;
 
     } else {

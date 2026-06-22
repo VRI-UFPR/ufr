@@ -211,12 +211,15 @@ bool ufr_send(link_t* link) {
     if ( link->log_level > 0 ) {
         if ( link->enc_api == NULL ) {
             ufr_fatal(link, 1, "gtw_api is null");
-        } else if ( link->enc_api->put_cmd == NULL ) {
-            ufr_fatal(link, 1, "enc_api->put_cmd is null");
+        } else if ( link->enc_api->cmd_send == NULL ) {
+            ufr_fatal(link, 1, "enc_api->cmd_send is null");
+        } else if ( link->enc_api->cmd_clear == NULL ) {
+            ufr_fatal(link, 1, "enc_api->cmd_clear is null");
         }
     }
 
-    int error = link->enc_api->put_cmd(link, '\n');
+    const int error = link->enc_api->cmd_send(link);
+    link->enc_api->cmd_clear(link);
     link->put_count = 0;
     return error == UFR_OK;
 }
@@ -648,12 +651,16 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args) {
         if ( link->enc_api->init(link, args) != UFR_OK ) {
             ufr_fatal(link, 1, "erro5");
         }
+
     }
 
     // start
     if ( link->gtw_api->start(link, UFR_START_PUBLISHER, args) != UFR_OK ) {
         ufr_fatal(link, 1, "erro6");
     }
+
+    // Clear the first message
+    link->enc_api->cmd_clear(link);
 
     // success
     ufr_set_state_ready(link);
