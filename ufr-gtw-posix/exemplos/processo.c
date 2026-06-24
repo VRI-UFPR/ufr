@@ -10,7 +10,7 @@ link_t* processos[5];
 bool is_process_ok(int id) {
     printf("Testando o processo %d\n", id);
     int resultado;
-    link_t* sendto = &processos[id];
+    link_t* sendto = processos[id];
     if ( ufr_connect(sendto) ) {
         ufr_put(sendto, "%d\n\n", 1);
         ufr_get(sendto, "> %d\n", &resultado);
