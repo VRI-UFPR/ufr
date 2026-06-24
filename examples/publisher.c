@@ -47,7 +47,7 @@ int main() {
     // link_t pub = ufr_publisher("@new ros2 @coder ros2:tf @frame teste1 @child aaa");
     // link_t pub = ufr_publisher("@new webots @topic cmd_vel");
 
-    link_t pub = ufr_publisher("@new mqtt @coder influx @topic teste @host 177.153.62.174");
+    link_t pub = ufr_publisher("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
 
     // loop principal
     int i=0;

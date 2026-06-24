@@ -4,7 +4,7 @@
 
 
 
-link_t processos[5];
+link_t* processos[5];
 
 
 bool is_process_ok(int id) {
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     int id = atoi(argv[1]);
     int N = 3;
 
-    link_t server = ufr_server_st("@new socket @coder msgpack @port %d @log 0", id+7000);
+    link_t* server = ufr_server_st("@new socket @coder msgpack @port %d @log 0", id+7000);
 
 
     for (int i=0; i<N; i++) {
@@ -40,15 +40,15 @@ int main(int argc, char** argv) {
     }
 
 
-    link_t timer = ufr_subscriber("@new timer @time 2s");
+    link_t* timer = ufr_subscriber("@new timer @time 2s");
 
     while ( ufr_loop() ) {
-        if ( ufr_accept(&server) ) {
+        if ( ufr_accept(server) ) {
             int code;
             char comando[1024];
-            const int res = ufr_get(&server, "> %d\n", &code);
+            const int res = ufr_get(server, "> %d\n", &code);
             if ( code == 1 ) {
-                ufr_put(&server, "%d\n\n", 99);
+                ufr_put(server, "%d\n\n", 99);
             }
         }
 

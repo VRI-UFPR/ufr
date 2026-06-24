@@ -63,7 +63,7 @@ extern volatile bool g_is_ok;
 // ============================================================================
 
 static
-void urf_gtw_mqtt_recv_cb(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message) {
+void ufr_gtw_mqtt_recv_cb(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message) {
     ll_obj_t* obj = userdata;
     // ufr_info(link, "received %ld bytes %p", message->payloadlen, obj);
     // printf("received %ld bytes %p\n", message->payloadlen, obj);
@@ -87,22 +87,22 @@ void urf_gtw_mqtt_recv_cb(struct mosquitto *mosq, void *userdata, const struct m
 // ============================================================================
 
 static
-int urf_gtw_mqtt_type(const link_t* link) {
+int ufr_gtw_mqtt_type(const link_t* link) {
     return 0;
 }
 
 static
-int urf_gtw_mqtt_state(const link_t* link) {
+int ufr_gtw_mqtt_state(const link_t* link) {
     return 0;
 }
 
 static
-size_t urf_gtw_mqtt_size(const link_t* link, int type) {
+size_t ufr_gtw_mqtt_size(const link_t* link, int type) {
     return 0;
 }
 
 static
-int urf_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
+int ufr_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
     // initialize the mosquitto library on first time
     if ( g_mosq_count == 0 ) {
         mosquitto_lib_init();
@@ -159,7 +159,7 @@ int urf_gtw_mqtt_boot (link_t* link, const ufr_args_t* args) {
 }
 
 static
-int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
+int ufr_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
     ll_shr_t* shr = link->gtw_shr;
     ll_obj_t* obj = link->gtw_obj;
 
@@ -199,7 +199,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
 
         // configure the subscriber
         mosquitto_subscribe(obj->mosq, NULL, shr->topic_name, 0);
-        mosquitto_message_callback_set(obj->mosq, urf_gtw_mqtt_recv_cb);
+        mosquitto_message_callback_set(obj->mosq, ufr_gtw_mqtt_recv_cb);
         ufr_info(link, "MQTT connected");
         obj->start_type = UFR_START_SUBSCRIBER;
     }
@@ -209,7 +209,7 @@ int urf_gtw_mqtt_start (link_t* link, int type, const ufr_args_t* args) {
 }
 
 static
-void urf_gtw_mqtt_stop(link_t* link, int type) {
+void ufr_gtw_mqtt_stop(link_t* link, int type) {
     if ( type == UFR_STOP_CLOSE ) {
         // free the private object
         ufr_info(link, "close link");
@@ -230,7 +230,7 @@ void urf_gtw_mqtt_stop(link_t* link, int type) {
 }
 
 static
-int urf_gtw_mqtt_recv(link_t* link) {
+int ufr_gtw_mqtt_recv(link_t* link) {
     ll_obj_t* obj = link->gtw_obj;
     if (obj->start_type != UFR_START_SUBSCRIBER) {
         ufr_error(link, 1, "link is not subscriber");
@@ -253,7 +253,7 @@ int urf_gtw_mqtt_recv(link_t* link) {
 }
 
 static
-int urf_gtw_mqtt_recv_async(link_t* link) {
+int ufr_gtw_mqtt_recv_async(link_t* link) {
     ll_obj_t* obj = link->gtw_obj;
     if (obj->start_type != UFR_START_SUBSCRIBER) {
         ufr_error(link, 1, "link is not subscriber");
@@ -281,7 +281,7 @@ int urf_gtw_mqtt_recv_async(link_t* link) {
 }
 
 static
-size_t urf_gtw_mqtt_read(link_t* link, char* buffer, size_t max_size) {
+size_t ufr_gtw_mqtt_read(link_t* link, char* buffer, size_t max_size) {
     ll_obj_t* obj = link->gtw_obj;
 
     if ( obj == NULL || obj->msg_data == NULL ) {
@@ -304,7 +304,7 @@ size_t urf_gtw_mqtt_read(link_t* link, char* buffer, size_t max_size) {
 }
 
 static
-size_t urf_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
+size_t ufr_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
     ll_shr_t* shr = link->gtw_shr;
     ll_obj_t* obj = link->gtw_obj;
     if (obj->start_type != UFR_START_PUBLISHER) {
@@ -326,19 +326,19 @@ size_t urf_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
 }
 
 static
-ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
+ufr_gtw_api_t ufr_gtw_mqtt_topic_api = {
     .name = "mqtt/topic",
-    .type = urf_gtw_mqtt_type,
-    .state = urf_gtw_mqtt_state,
-    .size = urf_gtw_mqtt_size,
-    .boot = urf_gtw_mqtt_boot,
-    .start = urf_gtw_mqtt_start,
-    .stop = urf_gtw_mqtt_stop,
+    .type = ufr_gtw_mqtt_type,
+    .state = ufr_gtw_mqtt_state,
+    .size = ufr_gtw_mqtt_size,
+    .boot = ufr_gtw_mqtt_boot,
+    .start = ufr_gtw_mqtt_start,
+    .stop = ufr_gtw_mqtt_stop,
     .copy = NULL,
-    .recv = urf_gtw_mqtt_recv,
-    .recv_async = urf_gtw_mqtt_recv_async,
-    .read = urf_gtw_mqtt_read,
-    .write = urf_gtw_mqtt_write
+    .recv = ufr_gtw_mqtt_recv,
+    .recv_async = ufr_gtw_mqtt_recv_async,
+    .read = ufr_gtw_mqtt_read,
+    .write = ufr_gtw_mqtt_write
 };
 
 // ============================================================================
@@ -346,7 +346,7 @@ ufr_gtw_api_t urf_gtw_mqtt_topic_api = {
 // ============================================================================
 
 int ufr_gtw_mqtt_new_topic(link_t* link, int type) {
-    ufr_link_init(link, &urf_gtw_mqtt_topic_api);
+    ufr_link_init(link, &ufr_gtw_mqtt_topic_api);
     return UFR_OK;
 }
 

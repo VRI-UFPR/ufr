@@ -44,22 +44,22 @@ int ufr_gtw_zmq_new_topic(link_t* link, const int type);
 
 void test1_publisher() {
     printf("Starting publisher\n");
-    link_t link = ufr_publisher("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
-    ufr_put(&link, "%d %d %d\n", 10, 20, 30);
-    ufr_close(&link);
+    link_t* link = ufr_publisher("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
+    ufr_put(link, "%d %d %d\n", 10, 20, 30);
+    ufr_close(link);
 }
 
 void* test1_subscriber(void* ptr) {
     printf("Starting subscriber\n");
-    link_t link = ufr_subscriber("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
+    link_t* link = ufr_subscriber("@new %p @host 127.0.0.1 @port 3000", ufr_gtw_zmq_new_topic);
 
     int a=0,b=0,c=0;
-    ufr_get(&link, "^ %d %d %d", &a, &b, &c);
+    ufr_get(link, "^ %d %d %d", &a, &b, &c);
     UFR_TEST_EQUAL_I32( a, 10 );
     UFR_TEST_EQUAL_I32( b, 20 );
     UFR_TEST_EQUAL_I32( c, 30 );
 
-    ufr_close(&link);
+    ufr_close(link);
     return NULL;
 }
 

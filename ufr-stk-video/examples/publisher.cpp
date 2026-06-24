@@ -15,7 +15,7 @@ using namespace cv;
 
 int main() {
     // Open publisher link
-    link_t video = ufr_publisher("@new mqtt @coder msgpack @topic camera1");
+    link_t* video = ufr_publisher("@new mqtt @coder msgpack @topic camera1");
 
     // Open the camera
     cv::VideoCapture cap(0);
@@ -50,12 +50,12 @@ int main() {
         count = 0;
         printf("%d %d\n", frame.cols, frame.rows);
         imencode(".jpg", frame, buffer);
-        ufr_put_file(&video, "image/jpeg", (const char*) &buffer[0], buffer.size());
-        ufr_send(&video);
+        ufr_put_file(video, "image/jpeg", (const char*) &buffer[0], buffer.size());
+        ufr_send(video);
 
     }
 
     // End
-    ufr_close(&video);
+    ufr_close(video);
     return 0;
 }

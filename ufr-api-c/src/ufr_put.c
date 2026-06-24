@@ -170,10 +170,13 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
         // Case ':'
         } else if ( type == ':' ) {
             name[name_i] = '\0';
-            link->enc_api->cmd_seek_str(link, name);
+            if ( link->enc_api->cmd_seek_str != NULL ) {
+                link->enc_api->cmd_seek_str(link, name);
+            }
 
             name_i = 0;
             name[0] = '\0';
+
         // Case ' '
         } else if ( type == ' ' ) {
             // Descarta blank space

@@ -42,15 +42,15 @@ int ufr_dcr_text_new(link_t* link);
 // ============================================================================
 
 void test_simple() {
-    link_t link = ufr_subscriber("@new %p @coder %p", 
+    link_t* link = ufr_subscriber("@new %p @coder %p", 
         ufr_gtw_posix_new_pipe, ufr_dcr_text_new);
 
     // test 1 - simples string
     {
         char recv[512];
         const char* send = "10 20 30";
-        ufr_write(&link, send, strlen(send));
-        ufr_get(&link, "> %s", &recv);
+        ufr_write(link, send, strlen(send));
+        ufr_get(link, "> %s", &recv);
         UFR_TEST_EQUAL_STR(recv, send);
     }
 
@@ -58,8 +58,8 @@ void test_simple() {
     {
         char recv[512];
         const char* send = "10 20 30\n20 30 50 60\n40 50 70\nççç&5%";
-        ufr_write(&link, send, strlen(send));
-        ufr_get(&link, "> %s", &recv);
+        ufr_write(link, send, strlen(send));
+        ufr_get(link, "> %s", &recv);
         UFR_TEST_EQUAL_STR(recv, send);
     }
 
@@ -70,8 +70,8 @@ void test_simple() {
         for (int i=0; i<1024; i++){
             send1[i] = 'a';
         }
-        ufr_write(&link, send1, 1024);
-        ufr_get(&link, "^s", &recv);
+        ufr_write(link, send1, 1024);
+        ufr_get(link, "^s", &recv);
         char correct1[512];
         for (int i=0; i<512; i++){
             correct1[i] = 'a';
@@ -80,7 +80,7 @@ void test_simple() {
         UFR_TEST_EQUAL_STR(recv, send1);
     }*/
 
-    ufr_close(&link);
+    ufr_close(link);
 }
 
 // ============================================================================

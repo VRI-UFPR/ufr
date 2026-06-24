@@ -11,7 +11,7 @@ using namespace cv;
 // global variables
 bool cap_is_started = false;
 cv::VideoCapture cap;
-link_t video;
+link_t* video = NULL;
 
 // constantes
 const char* args_frame = "@new mqtt @host 177.153.62.174 @coder msgpack @topic /pioneer/camera/frame";
@@ -40,7 +40,7 @@ void camera_stop() {
     if ( cap_is_started ) {
         cap.release();
         cap_is_started = false;
-        ufr_close(&video);
+        ufr_close(video);
     }
 }
 
@@ -49,7 +49,7 @@ void camera_stop() {
 // ============================================================================
 
 int main() {
-    link_t control = ufr_subscriber(args_ctrl);
+    link_t* control = ufr_subscriber(args_ctrl);
 
     Mat frame;
     int count = 0;
@@ -58,9 +58,9 @@ int main() {
         if ( cap_is_started ) {
             cap >> frame;
 
-            if ( ufr_recv_async(&control) ) {
+            if ( ufr_recv_async(control) ) {
                 char buffer[1024];
-                ufr_get(&control, "%s", buffer);
+                ufr_get(control, "%s", buffer);
                 if ( strncmp(buffer, "start", 5) == 0 ) {
                     camera_start();
                 } else if ( strncmp(buffer, "stop", 4) == 0 ) {
@@ -83,13 +83,13 @@ int main() {
             count = 0;
             printf("%d %d\n", frame.cols, frame.rows);
             imencode(".jpg", frame, buffer);
-            ufr_put_bin(&video, "image/jpeg", (const char*) &buffer[0], buffer.size());
-            ufr_send(&video);
+            ufr_put_bin(video, "image/jpeg", (const char*) &buffer[0], buffer.size());
+            ufr_send(video);
 
         } else {
             printf("Esperando START para iniciar a camera\n");
             char buffer[1024];
-            ufr_get(&control, "> %s", buffer);
+            ufr_get(control, "> %s", buffer);
             if ( strncmp(buffer, "start", 5) == 0 ) {
                 camera_start();
             } else if ( strncmp(buffer, "stop", 4) == 0 ) {
@@ -101,6 +101,6 @@ int main() {
 
     }
 
-    ufr_close(&video);
+    ufr_close(video);
     return 0;
 }

@@ -38,13 +38,13 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @host intercampi @host 185.159.82.136");
+    link_t* sub = ufr_subscriber("@new mqtt @host intercampi @host 185.159.82.136");
 
     // aaa
     char buffer[512];
-    ufr_get(&sub, "^s", &buffer);
+    ufr_get(sub, "^ %s", &buffer);
 
     // end
-    ufr_close(&sub);
+    ufr_close(sub);
     return 0;
 }

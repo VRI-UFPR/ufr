@@ -40,18 +40,18 @@
 
 int main() {
     // configure the output
-    link_t link = ufr_client("@new posix:socket @coder http @host 127.0.0.1 @port 5000");
+    link_t* link = ufr_client("@new posix:socket @coder http @host 127.0.0.1 @port 5000");
 
     // for (int i=0; i<3; i++) {
         char buffer[1024];
         char body[1024];
 
-        ufr_put(&link, "ss\n\n", "GET", "/");
-        ufr_get(&link, "^ss", buffer, body);
+        ufr_put(link, "%s %s\n\n", "GET", "/");
+        ufr_get(link, "^ %s %s", buffer, body);
         printf("%s %s\n", buffer, body);
     // }
 
     // end
-    ufr_close(&link);
+    ufr_close(link);
     return 0;
 }

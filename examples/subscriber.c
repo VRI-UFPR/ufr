@@ -38,7 +38,7 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @topic teste @coder msgpack @host 127.0.0.1");
+    link_t sub = ufr_subscriber("@new mqtt @topic teste @coder msgpack @host vriufpr.ddns.net");
 
     // link_t cam = ufr_subscriber("@new video @id 0");
     // link_t pub = ufr_subscriber("@new video @@new mqtt @@coder msgpack @@host 10.0.0.6 @@topic camera1");
@@ -49,14 +49,14 @@ int main() {
     // for (int i=0; i<3; i++) {
         char* data;
         int a,b,nbytes;
-        ufr_recv(&sub);
+        // ufr_recv(&sub);
         
         // ufr_get_bin(&sub, &mime, &data, &nbytes);
         // printf("%s %d %p\n", mime, nbytes, data);
 
 
-        // ufr_get(&sub, "> %d %d", &a, &b);
-        // printf("%d %d\n", a, b);
+        ufr_get(&sub, "> %d %d", &a, &b);
+        printf("%d %d\n", a, b);
     // }
 
     // end

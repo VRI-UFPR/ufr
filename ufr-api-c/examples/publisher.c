@@ -40,16 +40,16 @@
 
 int main() {
     // abre um publicador
-    link_t pub = ufr_publisher("@new zmq @coder influx @port 3000 @log 0"); 
+    link_t* pub = ufr_publisher("@new zmq @coder influx @port 3000 @log 0"); 
 
     // loop principal
     for(int i=0; i<40; i++) {
         char buffer[1024];
-        ufr_put(&pub, "iii\n", 10,20,30);
+        ufr_put(pub, "%d %d %d\n", 10,20,30);
         sleep(1);
     }
 
     // fim
-    ufr_close(&pub);
+    ufr_close(pub);
     return 0;
 }

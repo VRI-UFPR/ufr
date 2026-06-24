@@ -41,16 +41,16 @@ int ufr_gtw_posix_new_file(link_t* link, int type);
 // ============================================================================
 
 void test_write() {
-    link_t link = ufr_publisher("@new %p @path ./teste.txt", ufr_gtw_posix_new_file);
-    assert( ufr_write(&link, "OPA\n", 4) == 4 );
-    ufr_close(&link);
+    link_t* link = ufr_publisher("@new %p @path ./teste.txt", ufr_gtw_posix_new_file);
+    assert( ufr_write(link, "OPA\n", 4) == 4 );
+    ufr_close(link);
 }
 
 void test_read() {
     char buffer[8];
-    link_t link = ufr_subscriber("@new %p @path ./teste.txt", ufr_gtw_posix_new_file);
-    assert( ufr_read(&link, buffer, 8) == 4 );
-    ufr_close(&link);
+    link_t* link = ufr_subscriber("@new %p @path ./teste.txt", ufr_gtw_posix_new_file);
+    assert( ufr_read(link, buffer, 8) == 4 );
+    ufr_close(link);
 }
 
 // ============================================================================

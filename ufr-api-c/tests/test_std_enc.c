@@ -41,14 +41,14 @@
 // ============================================================================
 
 void test_simple() {
-    link_t link = ufr_publisher("@new %p @coder %p", ufr_gtw_posix_new_pipe, ufr_enc_sys_new_std);
+    link_t* link = ufr_publisher("@new %p @coder %p", ufr_gtw_posix_new_pipe, ufr_enc_sys_new_std);
 
     // test 1
     {
         char buffer[128];
-        ufr_put(&link, "%d %d %d\n", 10, 20, 30);
-        UFR_TEST_TRUE( ufr_recv(&link) );
-        const int nbytes = ufr_read(&link, buffer, sizeof(buffer));
+        ufr_put(link, "%d %d %d\n", 10, 20, 30);
+        UFR_TEST_TRUE( ufr_recv(link) );
+        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
         UFR_TEST_EQUAL_I32( nbytes, 9 );
         buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "10 20 30\n");
@@ -76,7 +76,7 @@ void test_simple() {
         UFR_TEST_EQUAL_STR(buffer, "\"string com espaco\" 8759834 -712345\n");
     }*/
 
-    ufr_close(&link);
+    ufr_close(link);
 }
 
 // ============================================================================

@@ -42,19 +42,19 @@ int ufr_gtw_posix_new_pipe(link_t* link, int type);
 
 void test_simple() {
     char buffer[8];
-    link_t link = ufr_;
+    link_t* link;
     ufr_args_t args = {.text=""};
-    assert( ufr_gtw_posix_new_pipe(&link, 0) == UFR_OK );
-    assert( ufr_boot_gtw(&link, &args) == UFR_OK );
-    assert( ufr_start(&link, 0, &args) == UFR_OK );    
+    assert( ufr_gtw_posix_new_pipe(link, 0) == UFR_OK );
+    assert( ufr_boot_gtw(link, &args) == UFR_OK );
+    assert( ufr_start(link, 0, &args) == UFR_OK );    
 
-    assert( ufr_write(&link, "Opa!", 4) == 4 );
-    assert( ufr_recv(&link) == UFR_OK );
+    assert( ufr_write(link, "Opa!", 4) == 4 );
+    assert( ufr_recv(link) == UFR_OK );
 
-    assert( ufr_read(&link, buffer, sizeof(buffer)) == 4 );
+    assert( ufr_read(link, buffer, sizeof(buffer)) == 4 );
     buffer[4] = '\0';
     assert( strcmp(buffer, "Opa!") == 0 );
-    ufr_close(&link);
+    ufr_close(link);
     printf("OK - test_simple\n");
 }
 

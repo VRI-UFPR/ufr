@@ -321,7 +321,10 @@ int ufr_new(link_t* link, int type, const char* format, ...);
  * @param text parameters for the publisher. Example "@new zmq:topic @coder msgpack"
  * @return link_t opened link
  */
-link_t ufr_publisher(const char* text, ...);
+link_t* ufr_publisher(const char* text, ...);
+
+link_t* ufr_publisher_env(const char* varname);
+
 int ufr_publisher_args(link_t* link, const ufr_args_t* args);
 
 /**
@@ -330,7 +333,10 @@ int ufr_publisher_args(link_t* link, const ufr_args_t* args);
  * @param text 
  * @return link_t 
  */
-link_t ufr_subscriber(const char* text, ...);
+link_t* ufr_subscriber(const char* text, ...);
+
+link_t* ufr_subscriber_env(const char* varname);
+
 int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
 
 /**
@@ -344,7 +350,10 @@ int ufr_subscriber_args(link_t* link, const ufr_args_t* args);
  * 
  * @version 1.0
  */
-link_t ufr_client(const char* text, ...);
+link_t* ufr_client(const char* text, ...);
+
+// link_t* ufr_client_env(const char* varname);
+
 
 /**
  * @brief Create a link as client with ufr_args parameter
@@ -361,7 +370,7 @@ int ufr_client_args(link_t* link, const ufr_args_t* args);
  * @param text 
  * @return link_t 
  */
-link_t ufr_server(const char* text, ...);
+link_t* ufr_server(const char* text, ...);
 
 /**
  * @brief Create a new single thread server
@@ -369,7 +378,7 @@ link_t ufr_server(const char* text, ...);
  * @param text 
  * @return link_t 
  */
-link_t ufr_server_st(const char* text, ...);
+link_t* ufr_server_st(const char* text, ...);
 int ufr_server_st_args(link_t* link, const ufr_args_t* args);
 
 /**
@@ -378,7 +387,7 @@ int ufr_server_st_args(link_t* link, const ufr_args_t* args);
  * @param text 
  * @return link_t 
  */
-link_t ufr_server_mt(const char* text, ...);
+link_t* ufr_server_mt(const char* text, ...);
 
 // ============================================================================
 //  UFR CLOSE
