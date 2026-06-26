@@ -321,10 +321,10 @@ int ufr_dcr_msgpack_array_get_i32(link_t* link, int32_t* val, int max_nitems) {
 }
 
 static
-int ufr_dcr_msgpack_array_get_f32(link_t* link, float* out_val, int max_nitems) {
+int ufr_dcr_msgpack_array_get_f32(link_t* link, float out_val[], int max_nitems) {
     // set 0 as return default
     *out_val = 0.0;
-    
+
     // get Decoder
     ll_decoder_t* decoder = link->dcr_obj;
     if ( decoder == NULL ) {
@@ -332,25 +332,29 @@ int ufr_dcr_msgpack_array_get_f32(link_t* link, float* out_val, int max_nitems) 
     }
 
     // return the value
-    if ( decoder->l0_idx < decoder->l0_array.size ) {
-        const msgpack_object item = decoder->l0_array.ptr[ decoder->l0_idx ];
-        const int type = item.type;
-        if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
-            *out_val = (float) item.via.u64;
-        } else if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
-            *out_val = (float) item.via.i64;
-        } else if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            *out_val = (float) item.via.f64;
+    int read_i = 0;
+    for (; read_i<max_nitems; read_i++) {
+        if ( decoder->l0_idx < decoder->l0_array.size ) {
+            const msgpack_object item = decoder->l0_array.ptr[ decoder->l0_idx ];
+            const int type = item.type;
+            if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
+                out_val[read_i] = (float) item.via.u64;
+            } else if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
+                out_val[read_i] = (float) item.via.i64;
+            } else if ( type == MSGPACK_OBJECT_FLOAT32 ) {
+                out_val[read_i] = (float) item.via.f64;
+            } else {
+                break;
+            }
         } else {
-            return -1;
+            break;
         }
-    } else {
-        return -1;
+
+        ufr_dcr_msgpack_array_cmd_next(link);
     }
 
     // success
-    ufr_dcr_msgpack_array_cmd_next(link);
-    return UFR_OK;
+    return read_i;
 }
 
 int ufr_dcr_msgpack_array_cmd_enter(link_t* link) {

@@ -297,7 +297,7 @@ int ufr_dcr_msgpack_get_f32(link_t* link, float out_val[], int max_nitems) {
             // printf("error %d\n", type);
         }
 
-        // success
+        // Case of error, break the loop
         if ( ufr_dcr_msgpack_next(link) != UFR_OK ) {
             wrote += 1;
             break;
