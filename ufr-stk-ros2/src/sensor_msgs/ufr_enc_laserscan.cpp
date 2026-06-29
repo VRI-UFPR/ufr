@@ -61,7 +61,7 @@ int ufr_enc_ros_humble_new_laser_scan(link_t* link, int type);
 // ============================================================================
 
 static
-int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_init(link_t* link, const ufr_args_t* args) {
     char buffer[UFR_ARGS_TOKEN];
 
     // New Encoder and set Parameters
@@ -83,7 +83,7 @@ int ufr_enc_ros_humble_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_enc_ros_humble_close(link_t* link) {
+void ufr_enc_ros2_free(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj != NULL ) {
         delete(enc_obj);
@@ -92,7 +92,7 @@ void ufr_enc_ros_humble_close(link_t* link) {
 }
 
 static
-void ufr_enc_ros_humble_clear(link_t* link) {
+int ufr_enc_ros2_cmd_clear(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     enc_obj->message.angle_min = 0;
     enc_obj->message.angle_max = 0;
@@ -103,10 +103,11 @@ void ufr_enc_ros_humble_clear(link_t* link) {
     enc_obj->message.range_min = 0;
     enc_obj->message.range_min = 0;
     enc_obj->message.range_max = 0;
+    return UFR_OK;
 }
 
 static
-int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_ros2_put_u32(link_t* link, const uint32_t* val, int nitems) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj ) {
         return -1;
@@ -131,7 +132,7 @@ int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_humble_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_ros2_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -156,7 +157,7 @@ int ufr_enc_ros_humble_put_i32(link_t* link, const int32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_humble_put_f32(link_t* link, const float* val, int nitems) {
+int ufr_enc_ros2_put_f32(link_t* link, const float* val, int nitems) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -207,7 +208,7 @@ int ufr_enc_ros_humble_put_f32(link_t* link, const float* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_humble_put_str(link_t* link, const char* val) {
+int ufr_enc_ros2_put_str(link_t* link, const char* val) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj ) {
 
@@ -216,20 +217,20 @@ int ufr_enc_ros_humble_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_ecr_ros_humble_put_cmd(link_t* link, char cmd) {
+int ufr_enc_ros2_cmd_send(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
-    if ( cmd == '\n' ) {
-        enc_obj->publisher->publish(enc_obj->message);
-        enc_obj->index = 0;
-        enc_obj->message.header.stamp = rclcpp::Clock().now();
-        enc_obj->message.header.frame_id = enc_obj->frame_id;
-        ufr_info(link, "sent message sensors/LaserScan");
-    }
+
+    enc_obj->message.header.stamp = rclcpp::Clock().now();
+    enc_obj->message.header.frame_id = enc_obj->frame_id;
+
+    enc_obj->publisher->publish(enc_obj->message);
+    enc_obj->index = 0;
+    ufr_info(link, "sent message sensors/LaserScan");
     return 0;
 }
 
 static
-int ufr_ros_topic_enter(struct _link* link, size_t maxsize) {
+int ufr_enc_ros2_cmd_enter(struct _link* link, size_t maxsize) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj->index == 7 ) {
         enc_obj->message.ranges.resize(maxsize);
@@ -245,7 +246,7 @@ int ufr_ros_topic_enter(struct _link* link, size_t maxsize) {
 }
 
 static
-int ufr_ros_topic_leave(struct _link* link) {
+int ufr_enc_ros2_cmd_leave(struct _link* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
     if ( enc_obj->index == 7 || enc_obj->index == 8 ) {
         enc_obj->index += 1;
@@ -257,24 +258,29 @@ int ufr_ros_topic_leave(struct _link* link) {
 
 static
 ufr_enc_api_t ufr_enc_ros_api = {
-    .boot = ufr_enc_ros_humble_boot,
-    .close = ufr_enc_ros_humble_close,
-    .clear = ufr_enc_ros_humble_clear,
+    .init = ufr_enc_ros2_init,
+    .free = ufr_enc_ros2_free,
 
-    .put_u32 = ufr_enc_ros_humble_put_u32,
-    .put_i32 = ufr_enc_ros_humble_put_i32,
-    .put_f32 = ufr_enc_ros_humble_put_f32,
+    .put_u32 = ufr_enc_ros2_put_u32,
+    .put_i32 = ufr_enc_ros2_put_i32,
+    .put_f32 = ufr_enc_ros2_put_f32,
 
     .put_u64 = NULL,
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_ecr_ros_humble_put_cmd,
-    .put_str = ufr_enc_ros_humble_put_str,
+    .put_str = ufr_enc_ros2_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = ufr_ros_topic_enter,
-    .leave = ufr_ros_topic_leave,
+    .cmd_enter = ufr_enc_ros2_cmd_enter,
+    .cmd_leave = ufr_enc_ros2_cmd_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros2_cmd_clear,
+    .cmd_send = ufr_enc_ros2_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================

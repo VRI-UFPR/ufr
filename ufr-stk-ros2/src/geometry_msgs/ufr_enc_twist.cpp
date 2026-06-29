@@ -53,7 +53,7 @@ struct ll_encoder_twist {
 // ============================================================================
 
 static
-int ufr_enc_ros2_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_init(link_t* link, const ufr_args_t* args) {
     char buffer[UFR_ARGS_TOKEN];
     std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_encoder_twist* enc_obj = new ll_encoder_twist();
@@ -64,6 +64,10 @@ int ufr_enc_ros2_boot(link_t* link, const ufr_args_t* args) {
     ufr_info(link, "loaded encoder for geometry/twist");
 
     return UFR_OK;
+}
+
+static
+void ufr_enc_ros2_free(link_t* link) {
 }
 
 static
@@ -145,21 +149,39 @@ int ufr_enc_ros2_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_ecr_ros2_put_cmd(link_t* link, char cmd) {
-	ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
-	if ( cmd == '\n' ) {
-		enc_obj->publisher->publish(enc_obj->message);
-        enc_obj->index = 0;
-        ufr_info(link, "sent message geometry/twist");
-	}
-	return 0;
+int ufr_enc_ros2_cmd_clear(link_t* link) {
+    return UFR_OK;
 }
 
 static
-ufr_enc_api_t ufr_enc_ros_api = {
-    .boot = ufr_enc_ros2_boot,
-    .close = NULL,
-    .clear = NULL,
+int ufr_enc_ros2_cmd_send(link_t* link) {
+	ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
+    enc_obj->publisher->publish(enc_obj->message);
+    enc_obj->index = 0;
+    ufr_info(link, "sent message geometry/twist");
+	return UFR_OK;
+}
+
+static
+int ufr_enc_ros2_cmd_seek_str(link_t* link, const char* name) {
+    ll_encoder_twist* enc_obj = (ll_encoder_twist*) link->enc_obj;
+    if ( strcmp(name, "vel") == 0 ) {
+        enc_obj->index = 0;
+        return UFR_OK;
+    } 
+    
+    if ( strcmp(name, "rotvel") == 0 ) {
+        enc_obj->index = 1;
+        return UFR_OK;
+    }
+
+    return -1;
+}
+
+static
+ufr_enc_api_t ufr_enc_ros2_api = {
+    .init = ufr_enc_ros2_init,
+    .free = ufr_enc_ros2_free,
 
     .put_u32 = ufr_enc_ros2_put_u32,
     .put_i32 = ufr_enc_ros2_put_i32,
@@ -169,12 +191,18 @@ ufr_enc_api_t ufr_enc_ros_api = {
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_ecr_ros2_put_cmd,
     .put_str = ufr_enc_ros2_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = NULL,
-    .leave = NULL,
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros2_cmd_clear,
+    .cmd_send = ufr_enc_ros2_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = ufr_enc_ros2_cmd_seek_str
 };
 
 // ============================================================================
@@ -183,7 +211,7 @@ ufr_enc_api_t ufr_enc_ros_api = {
 
 extern "C"
 int ufr_enc_ros2_new_twist(link_t* link, int type) {
-    link->enc_api = &ufr_enc_ros_api;
+    link->enc_api = &ufr_enc_ros2_api;
 	return UFR_OK;
 }
 

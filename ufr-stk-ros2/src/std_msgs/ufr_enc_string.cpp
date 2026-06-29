@@ -50,7 +50,7 @@ struct ll_encoder_t {
 // ============================================================================
 
 static
-int ufr_enc_ros_string_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_string_init(link_t* link, const ufr_args_t* args) {
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
     ll_encoder_t* enc_obj = new ll_encoder_t();
     enc_obj->publisher = gtw_obj->m_node->create_publisher<std_msgs::msg::String>("topic", 10);
@@ -59,12 +59,12 @@ int ufr_enc_ros_string_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_enc_ros_string_close(link_t* link) {
+void ufr_enc_ros2_string_free(link_t* link) {
     
 }
 
 static
-int ufr_enc_ros_string_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_ros2_string_put_u32(link_t* link, const uint32_t* val, int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
         
@@ -73,7 +73,7 @@ int ufr_enc_ros_string_put_u32(link_t* link, const uint32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_string_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_ros2_string_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
 
@@ -82,7 +82,7 @@ int ufr_enc_ros_string_put_i32(link_t* link, const int32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_string_put_f32(link_t* link, const float* val, int nitems) {
+int ufr_enc_ros2_string_put_f32(link_t* link, const float* val, int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
         
@@ -91,7 +91,7 @@ int ufr_enc_ros_string_put_f32(link_t* link, const float* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_string_put_str(link_t* link, const char* val) {
+int ufr_enc_ros2_string_put_str(link_t* link, const char* val) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
         enc_obj->message.data += val;
@@ -100,35 +100,53 @@ int ufr_enc_ros_string_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_enc_ros_string_put_cmd(link_t* link, char cmd) {
+int ufr_enc_ros2_string_cmd_send(link_t* link) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
-    if ( cmd == '\n' ) {
-        enc_obj->publisher->publish(enc_obj->message);
-        enc_obj->message.data = "";
-    }
+    enc_obj->publisher->publish(enc_obj->message);
+    enc_obj->message.data = "";
+    return 0;
+}
+
+static
+int ufr_enc_ros2_string_cmd_eof(link_t* link) {
+    ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
+    enc_obj->publisher->publish(enc_obj->message);
+    enc_obj->message.data = "";
+    return 0;
+}
+
+static
+int ufr_enc_ros2_string_cmd_clear(link_t* link) {
+    ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
+    enc_obj->message.data = "";
     return 0;
 }
 
 static
 ufr_enc_api_t ufr_enc_ros_string = {
-    .boot = ufr_enc_ros_string_boot,
-    .close = ufr_enc_ros_string_close,
-    .clear = NULL,
+    .init = ufr_enc_ros2_string_init,
+    .free = ufr_enc_ros2_string_free,
 
-    .put_u32 = ufr_enc_ros_string_put_u32,
-    .put_i32 = ufr_enc_ros_string_put_i32,
-    .put_f32 = ufr_enc_ros_string_put_f32,
+    .put_u32 = ufr_enc_ros2_string_put_u32,
+    .put_i32 = ufr_enc_ros2_string_put_i32,
+    .put_f32 = ufr_enc_ros2_string_put_f32,
 
     .put_u64 = NULL,
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_enc_ros_string_put_cmd,
-    .put_str = ufr_enc_ros_string_put_str,
+    .put_str = ufr_enc_ros2_string_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = NULL,
-    .leave = NULL,
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros2_string_cmd_clear,
+    .cmd_send = ufr_enc_ros2_string_cmd_send,
+    .cmd_eof = ufr_enc_ros2_string_cmd_eof,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================
@@ -136,7 +154,7 @@ ufr_enc_api_t ufr_enc_ros_string = {
 // ============================================================================
 
 extern "C"
-int ufr_ecr_ros2_new_string(link_t* link, const int type) {
+int ufr_enc_ros2_new_string(link_t* link, const int type) {
     link->enc_api = &ufr_enc_ros_string;
     return 0;
 }

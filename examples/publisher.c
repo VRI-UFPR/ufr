@@ -47,15 +47,20 @@ int main() {
     // link_t pub = ufr_publisher("@new ros2 @coder ros2:tf @frame teste1 @child aaa");
     // link_t pub = ufr_publisher("@new webots @topic cmd_vel");
 
-    link_t pub = ufr_publisher("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
+    // link_t* pub = ufr_publisher("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
+    // link_t* pub = ufr_publisher("@new ros2 @coder ros2:string @topic teste @log 5");
+    link_t* pub = ufr_publisher("@new ros2 @coder ros2:twist @topic teste @log 5");
 
     // loop principal
     int i=0;
     while( ufr_loop_ok() ) {
-        ufr_put(&pub, "x: %d vel: %d\n", i, 450);
+        ufr_put(pub, "%f %f\n", 0.5, 0.2);
+        // ufr_put(&pub, "x: %d vel: %d\n", i, 450);
         sleep(1);
         i += 1;
     }
 
+    // fim
+    ufr_close(pub);
     return 0;
 }

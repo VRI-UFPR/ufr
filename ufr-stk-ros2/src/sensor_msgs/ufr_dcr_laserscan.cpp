@@ -206,20 +206,49 @@ int ufr_dcr_ros_humble_leave(link_t* link) {
 
 static
 ufr_dcr_api_t ufr_dcr_ros_driver = {
-    .boot = ufr_dcr_ros_humble_boot,
+    // Init/Free
+    .init = ufr_dcr_ros_humble_boot,
+    .free = NULL,
+
+    // recv
     .recv_cb = ufr_dcr_ros_humble_recv_cb,
     .recv_async_cb = ufr_dcr_ros_humble_recv_async_cb,
 
-    .get_type = ufr_dcr_ros_humble_get_type,
-    // .get_size = ufr_dcr_ros_humble_get_size,
-
+    // 32 bits
     .get_u32 = ufr_dcr_ros_humble_get_u32,
     .get_i32 = ufr_dcr_ros_humble_get_i32,
     .get_f32 = ufr_dcr_ros_humble_get_f32,
 
-    // .get_str = ufr_dcr_ros_humble_get_str
-    .enter = ufr_dcr_ros_humble_enter,
-    .leave = ufr_dcr_ros_humble_leave,
+    // 64 bits
+    .get_u64 = NULL,
+    .get_i64 = NULL,
+    .get_f64 = NULL,
+
+    // 8 bits
+    .get_raw = NULL,
+    .get_str = NULL,
+    .get_bin = NULL,
+    .get_ptr = NULL,
+
+    // enter/leave
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
+
+    // remove
+    .meta_get = NULL,
+    
+    // Metadata for Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Metadata for Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
 };
 
 // ============================================================================

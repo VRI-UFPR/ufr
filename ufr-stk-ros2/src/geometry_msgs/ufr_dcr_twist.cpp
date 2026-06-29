@@ -42,7 +42,7 @@ typedef ufr_ros_decoder_t<geometry_msgs::msg::Twist> ll_decoder_t;
 // ============================================================================
 
 static
-int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
+int ufr_dcr_ros2_init(link_t* link, const ufr_args_t* args) {
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
 
     char buffer[UFR_ARGS_TOKEN];
@@ -53,7 +53,7 @@ int ufr_dcr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
     return UFR_OK;
 }
 
-void ufr_dcr_ros_humble_close(link_t* link) {
+void ufr_dcr_ros2_free(link_t* link) {
 }
 
 static
@@ -138,25 +138,48 @@ int ufr_dcr_ros_humble_recv_async_cb(link_t* link, char* msg_data, size_t msg_si
 
 static
 ufr_dcr_api_t ufr_dcr_ros_driver = {
-    .boot = ufr_dcr_ros_humble_boot,
-    .close = ufr_dcr_ros_humble_close,
-    .recv_cb = ufr_dcr_ros_humble_recv_cb,
-    .recv_async_cb = ufr_dcr_ros_humble_recv_async_cb,
-    .next = NULL,
-    .get_type = NULL,
-    .get_nbytes = NULL,
-    .get_nitems = NULL,
-    .get_rawptr = NULL,
-    .get_raw = NULL,
-    .get_str = ufr_dcr_ros_humble_get_str,
-    .get_u32 = ufr_dcr_ros_humble_get_u32,
-    .get_i32 = ufr_dcr_ros_humble_get_i32,
-    .get_f32 = ufr_dcr_ros_humble_get_f32,
+    // Init/Free
+    .init = ufr_dcr_ros2_init,
+    .free = ufr_dcr_ros2_free,
+
+    // recv
+    .recv_cb = ufr_dcr_ros2_recv_cb,
+    .recv_async_cb = ufr_dcr_ros2_recv_cb,
+
+    // 32 bits
+    .get_u32 = ufr_dcr_ros2_get_u32,
+    .get_i32 = ufr_dcr_ros2_get_i32,
+    .get_f32 = ufr_dcr_ros2_get_f32,
+
+    // 64 bits
     .get_u64 = NULL,
     .get_i64 = NULL,
     .get_f64 = NULL,
-    .enter = NULL,
-    .leave = NULL
+
+    // 8 bits
+    .get_raw = NULL,
+    .get_str = NULL,
+    .get_bin = NULL,
+    .get_ptr = NULL,
+
+    // enter/leave
+    .cmd_enter = ufr_dcr_ros2_cmd_enter,
+    .cmd_leave = ufr_dcr_ros2_cmd_leave,
+    .cmd_next = ufr_dcr_ros2_cmd_next,
+
+    // remove
+    .meta_get = NULL,
+    
+    // Metadata for Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Metadata for Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
 };
 
 // ============================================================================

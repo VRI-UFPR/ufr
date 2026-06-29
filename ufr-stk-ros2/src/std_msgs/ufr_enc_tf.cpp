@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <string>
 #include <ufr.h>
+#include <math.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
@@ -59,7 +60,7 @@ struct ll_encoder_t {
 // ============================================================================
 
 static
-int ufr_enc_ros2_tf_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_tf_init(link_t* link, const ufr_args_t* args) {
     ufr_log(link, "Inicializing TF message");
     
     //
@@ -79,7 +80,7 @@ int ufr_enc_ros2_tf_boot(link_t* link, const ufr_args_t* args) {
 }
 
 static
-void ufr_enc_ros2_tf_close(link_t* link) {
+void ufr_enc_ros2_tf_free(link_t* link) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     delete(enc_obj->tf_broadcaster);
     delete(enc_obj);
@@ -134,43 +135,52 @@ int ufr_enc_ros2_tf_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_enc_ros2_tf_put_cmd(link_t* link, char cmd) {
+int ufr_enc_ros2_tf_cmd_send(link_t* link) {
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
 
-    if ( cmd == '\n' ) {
-        // set zero on translation.z
-        enc_obj->message.transform.translation.z = 0.0;
+    // set zero on translation.z
+    enc_obj->message.transform.translation.z = 0.0;
 
-        // set transform.rotation
-        enc_obj->message.transform.rotation.x = 0.0;
-        enc_obj->message.transform.rotation.y = 0.0;
-        enc_obj->message.transform.rotation.z = sin(enc_obj->th / 2.0);
-        enc_obj->message.transform.rotation.w = cos(enc_obj->th / 2.0);
+    // set transform.rotation
+    enc_obj->message.transform.rotation.x = 0.0;
+    enc_obj->message.transform.rotation.y = 0.0;
+    enc_obj->message.transform.rotation.z = sin(enc_obj->th / 2.0);
+    enc_obj->message.transform.rotation.w = cos(enc_obj->th / 2.0);
 
-        // set header
-        enc_obj->message.header.stamp = gtw_obj->m_node->now();
-        enc_obj->message.header.frame_id = enc_obj->frame_id;
-        enc_obj->message.child_frame_id = enc_obj->child_frame_id;
+    // set header
+    enc_obj->message.header.stamp = gtw_obj->m_node->now();
+    enc_obj->message.header.frame_id = enc_obj->frame_id;
+    enc_obj->message.child_frame_id = enc_obj->child_frame_id;
 
-        // send TF message
-        enc_obj->tf_broadcaster->sendTransform(enc_obj->message);
-        // enc_obj->message.data = "";
+    // send TF message
+    enc_obj->tf_broadcaster->sendTransform(enc_obj->message);
+    // enc_obj->message.data = "";
 
-        // clear message
-        enc_obj->th = 0.0;
-        enc_obj->message.transform.translation.x = 0.0;
-        enc_obj->message.transform.translation.y = 0.0;
-        enc_obj->index = 0;
-    }
+    // clear message
+    enc_obj->th = 0.0;
+    enc_obj->message.transform.translation.x = 0.0;
+    enc_obj->message.transform.translation.y = 0.0;
+    enc_obj->index = 0;
+
     return 0;
 }
 
 static
+int ufr_enc_ros2_tf_cmd_clear(link_t* link) {
+    ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
+    enc_obj->th = 0.0;
+    enc_obj->message.transform.translation.x = 0.0;
+    enc_obj->message.transform.translation.y = 0.0;
+    enc_obj->index = 0;
+    return UFR_OK;
+}
+
+
+static
 ufr_enc_api_t ufr_enc_ros2_tf = {
-    .boot = ufr_enc_ros2_tf_boot,
-    .close = ufr_enc_ros2_tf_close,
-    .clear = NULL,
+    .init = ufr_enc_ros2_tf_init,
+    .free = ufr_enc_ros2_tf_free,
 
     .put_u32 = ufr_enc_ros2_tf_put_u32,
     .put_i32 = ufr_enc_ros2_tf_put_i32,
@@ -180,12 +190,18 @@ ufr_enc_api_t ufr_enc_ros2_tf = {
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_enc_ros2_tf_put_cmd,
     .put_str = ufr_enc_ros2_tf_put_str,
     .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = NULL,
-    .leave = NULL,
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros2_tf_cmd_clear,
+    .cmd_send = ufr_enc_ros2_tf_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================

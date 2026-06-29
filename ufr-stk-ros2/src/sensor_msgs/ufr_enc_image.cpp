@@ -55,7 +55,7 @@ struct ll_enc_obj_t {
 // ============================================================================
 
 static 
-int ufr_ecr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
+int ufr_enc_ros2_init(link_t* link, const ufr_args_t* args) {
     char buffer[UFR_ARGS_TOKEN];
     std::string topic_name = ufr_args_gets(args, buffer, "@topic", "topico");
     ll_enc_obj_t* enc_obj = new ll_enc_obj_t();
@@ -68,7 +68,10 @@ int ufr_ecr_ros_humble_boot(link_t* link, const ufr_args_t* args) {
     return UFR_OK;
 }
 
-int ufr_ecr_ros_put_raw(struct _link* link, const uint8_t* val, int size) {
+void ufr_enc_ros2_free(link_t* link) {
+}
+
+int ufr_enc_ros2_put_raw(struct _link* link, const uint8_t* val, int size) {
     ll_enc_obj_t* enc_obj = (ll_enc_obj_t*) link->enc_obj;
     enc_obj->message.data.resize(size);
     memcpy(&enc_obj->message.data[0], val, size);
@@ -77,7 +80,7 @@ int ufr_ecr_ros_put_raw(struct _link* link, const uint8_t* val, int size) {
 
 
 static
-int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_ros2_put_u32(link_t* link, const uint32_t* val, int nitems) {
     ll_enc_obj_t* enc_obj = (ll_enc_obj_t*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -115,7 +118,7 @@ int ufr_enc_ros_humble_put_u32(link_t* link, const uint32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_humble_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_ros2_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_enc_obj_t* enc_obj = (ll_enc_obj_t*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -161,7 +164,7 @@ int ufr_enc_ros_humble_put_f32(link_t* link, const float* val, int nitems) {
 }
 
 static
-int ufr_enc_ros_humble_put_str(link_t* link, const char* val) {
+int ufr_enc_ros2_put_str(link_t* link, const char* val) {
     ll_enc_obj_t* enc_obj = (ll_enc_obj_t*) link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -171,36 +174,44 @@ int ufr_enc_ros_humble_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_ecr_ros_humble_put_cmd(link_t* link, char cmd) {
+int ufr_enc_ros2_cmd_clear(link_t* link) {
+    return UFR_OK;
+}
+
+static
+int ufr_enc_ros2_cmd_send(link_t* link) {
     ll_enc_obj_t* enc_obj = (ll_enc_obj_t*) link->enc_obj;
-    if ( cmd == '\n' ) {
-        enc_obj->publisher->publish(enc_obj->message);
-        enc_obj->index = 0;
-        ufr_info(link, "sent message  %d %d sensor_msgs/Image", enc_obj->message.step, enc_obj->message.height );
-    }
+    enc_obj->publisher->publish(enc_obj->message);
+    enc_obj->index = 0;
+    ufr_info(link, "sent message  %d %d sensor_msgs/Image", enc_obj->message.step, enc_obj->message.height );
     return 0;
 }
 
 static
 ufr_enc_api_t ufr_enc_ros_image = {
-    .boot = ufr_ecr_ros_humble_boot,
-    .close = NULL,
-    .clear = NULL,
+    .init = ufr_enc_ros2_init,
+    .free = ufr_enc_ros2_free,
 
-    .put_u32 = ufr_enc_ros_humble_put_u32,
-    .put_i32 = ufr_enc_ros_humble_put_i32,
-    .put_f32 = ufr_enc_ros_humble_put_f32,
+    .put_u32 = ufr_enc_ros2_put_u32,
+    .put_i32 = ufr_enc_ros2_put_i32,
+    .put_f32 = NULL,
 
     .put_u64 = NULL,
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_cmd = ufr_ecr_ros_humble_put_cmd,
-    .put_str = ufr_enc_ros_humble_put_str,
-    .put_raw = ufr_ecr_ros_put_raw,
+    .put_str = ufr_enc_ros2_put_str,
+    .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter = NULL,
-    .leave = NULL,
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros2_cmd_clear,
+    .cmd_send = ufr_enc_ros2_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = NULL
 };
 
 // ============================================================================
