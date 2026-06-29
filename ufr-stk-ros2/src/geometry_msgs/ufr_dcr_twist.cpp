@@ -57,7 +57,7 @@ void ufr_dcr_ros2_free(link_t* link) {
 }
 
 static
-int ufr_dcr_ros_humble_get_u32(link_t* link, uint32_t* val, int nitems) {
+int ufr_dcr_ros2_get_u32(link_t* link, uint32_t* val, int nitems) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     if ( dcr ) {
         switch(dcr->index) {
@@ -76,7 +76,7 @@ int ufr_dcr_ros_humble_get_u32(link_t* link, uint32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val, int nitems) {
+int ufr_dcr_ros2_get_i32(link_t* link, int32_t* val, int nitems) {
 	ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
 	if ( dcr ) {
         switch(dcr->index) {
@@ -95,7 +95,7 @@ int ufr_dcr_ros_humble_get_i32(link_t* link, int32_t* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_f32(link_t* link, float* val, int nitems) {
+int ufr_dcr_ros2_get_f32(link_t* link, float* val, int nitems) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     if ( dcr ) {
         switch(dcr->index) {
@@ -114,7 +114,7 @@ int ufr_dcr_ros_humble_get_f32(link_t* link, float* val, int nitems) {
 }
 
 static
-int ufr_dcr_ros_humble_get_str(link_t* link, char* val, int maxbytes) {
+int ufr_dcr_ros2_get_str(link_t* link, char* val, int maxbytes) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     if ( dcr ) {
 
@@ -123,14 +123,14 @@ int ufr_dcr_ros_humble_get_str(link_t* link, char* val, int maxbytes) {
 }
 
 static 
-int ufr_dcr_ros_humble_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
+int ufr_dcr_ros2_recv_cb(link_t* link, char* msg_data, size_t msg_size) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     ll_gateway_t* gtw = (ll_gateway_t*) link->gtw_obj;
     return dcr->recv(gtw);
 }
 
 static 
-int ufr_dcr_ros_humble_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
+int ufr_dcr_ros2_recv_async_cb(link_t* link, char* msg_data, size_t msg_size) {
     ll_decoder_t* dcr = (ll_decoder_t*) link->dcr_obj;
     ll_gateway_t* gtw = (ll_gateway_t*) link->gtw_obj;
     return dcr->recv_async(gtw);
@@ -144,7 +144,7 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 
     // recv
     .recv_cb = ufr_dcr_ros2_recv_cb,
-    .recv_async_cb = ufr_dcr_ros2_recv_cb,
+    .recv_async_cb = ufr_dcr_ros2_recv_async_cb,
 
     // 32 bits
     .get_u32 = ufr_dcr_ros2_get_u32,
@@ -158,17 +158,13 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
 
     // 8 bits
     .get_raw = NULL,
-    .get_str = NULL,
+    .get_str = ufr_dcr_ros2_get_str,
     .get_bin = NULL,
     .get_ptr = NULL,
 
-    // enter/leave
-    .cmd_enter = ufr_dcr_ros2_cmd_enter,
-    .cmd_leave = ufr_dcr_ros2_cmd_leave,
-    .cmd_next = ufr_dcr_ros2_cmd_next,
-
     // remove
     .meta_get = NULL,
+    .meta_set = NULL,
     
     // Metadata for Item
     .meta_item_type = NULL,
@@ -180,6 +176,11 @@ ufr_dcr_api_t ufr_dcr_ros_driver = {
     .meta_pack_mime = NULL,
     .meta_pack_nbytes = NULL,
     .meta_pack_nitems = NULL,
+
+    // enter/leave
+    .cmd_enter = NULL,
+    .cmd_leave = NULL,
+    .cmd_next = NULL,
 };
 
 // ============================================================================

@@ -38,35 +38,23 @@
 // ============================================================================
 
 int main() {
-    link_t sub = ufr_subscriber("@new mqtt @topic teste @coder msgpack @host vriufpr.ddns.net");
-
-    // link_t cam = ufr_subscriber("@new video @id 0");
-    // link_t pub = ufr_subscriber("@new video @@new mqtt @@coder msgpack @@host 10.0.0.6 @@topic camera1");
-    // ufr_get(&cam, ">", ???);
-    // ufr_put(&cam, "???\n", ???);
+    link_t* sub = ufr_subscriber("@new ros2 @topic /cmd_vel @coder ros2:twist");
 
     // aaa
-    // for (int i=0; i<3; i++) {
+    for (int i=0; i<3; i++) {
         char* data;
-        int a,b,nbytes;
+        float a,b,nbytes;
         // ufr_recv(&sub);
         
         // ufr_get_bin(&sub, &mime, &data, &nbytes);
         // printf("%s %d %p\n", mime, nbytes, data);
 
 
-        ufr_get(&sub, "> %d %d", &a, &b);
-        printf("%d %d\n", a, b);
-    // }
+        ufr_get(sub, "> %f %f", &a, &b);
+        printf("%f %f\n", a, b);
+    }
 
     // end
-    ufr_close(&sub);
+    ufr_close(sub);
     return 0;
 }
-
-
-// meta_get(MESSAGE_CLASS, )
-// ROS2     -> twist
-// msgpack  -> generic
-// tipos de mensagem
-//   com uma unica informação

@@ -41,13 +41,17 @@ target_link_libraries(ufr_gtw_ros2 ufr)
 install(TARGETS ufr_gtw_ros2 DESTINATION lib)
 
 # Encoder
-add_library(ufr_cdr_ros2 SHARED 
+add_library(ufr_cdr_ros2 SHARED
+    # Encoders
     src/std_msgs/ufr_enc_string.cpp
     src/std_msgs/ufr_enc_tf.cpp
     src/geometry_msgs/ufr_enc_pose.cpp
     src/geometry_msgs/ufr_enc_twist.cpp
     src/sensor_msgs/ufr_enc_image.cpp
     src/sensor_msgs/ufr_enc_laserscan.cpp
+
+    # Decoders
+    src/geometry_msgs/ufr_dcr_twist.cpp
     )
 ament_target_dependencies(ufr_cdr_ros2 rclcpp std_msgs geometry_msgs sensor_msgs turtlesim tf2_ros)
 target_link_libraries(ufr_cdr_ros2 ufr)
@@ -57,7 +61,7 @@ install(TARGETS ufr_cdr_ros2 DESTINATION lib)
 # add_library(ufr_dcr_ros2 SHARED
 #    src/std_msgs/ufr_dcr_string.cpp
 #    src/geometry_msgs/ufr_dcr_pose.cpp
-#    src/geometry_msgs/ufr_dcr_twist.cpp
+#    
 #    src/sensor_msgs/ufr_dcr_image.cpp
 #    src/sensor_msgs/ufr_dcr_laserscan.cpp
 #    )
