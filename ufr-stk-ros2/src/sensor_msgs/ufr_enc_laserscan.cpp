@@ -168,9 +168,10 @@ int ufr_enc_ros2_put_f32(link_t* link, const float* val, int nitems) {
 
     // array Ranges
     if ( enc_obj->index == 7 ) {
-        if ( ( (size_t) enc_obj->index2 + nitems) > enc_obj->message.intensities.size() ) {
-            nitems = enc_obj->message.intensities.size() - enc_obj->index2;
+        if ( ( (size_t) enc_obj->index2 + nitems) > enc_obj->message.ranges.size() ) {
+            nitems = enc_obj->message.ranges.size() - enc_obj->index2;
         }
+
         for (i=0; i<nitems; i++) {
             enc_obj->message.ranges[enc_obj->index2++] = val[i];
         }
@@ -289,6 +290,12 @@ ufr_enc_api_t ufr_enc_ros_api = {
 
 extern "C"
 int ufr_enc_ros2_new_laser_scan(link_t* link, int type) {
+    link->enc_api = &ufr_enc_ros_api;
+    return UFR_OK;
+}
+
+extern "C"
+int ufr_enc_ros2_new_laserscan(link_t* link, int type) {
     link->enc_api = &ufr_enc_ros_api;
     return UFR_OK;
 }
