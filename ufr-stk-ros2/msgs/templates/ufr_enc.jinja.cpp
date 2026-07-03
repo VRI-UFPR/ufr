@@ -204,13 +204,19 @@ static
 int ufr_enc_ros2_put_str(link_t* link, const char* val) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
+        switch(enc_obj->index) {
         {% for field in fields -%}
 
-        {% if field.type.type_id == 11 %}
-        enc_obj->message.{{field.name}} = val[0];
-        {%- endif %}
+            {% if field.type.type_id in [10,11] %}
+            case {{field.index}} : enc_obj->message.{{field.name}} = std::stof(val);
+            {% elif field.type.type_id in [3,5,7,9, 2,4,6,8] %}
+            case {{field.index}} : enc_obj->message.{{field.name}} = std::stoi(val);
+            {% elif field.type.type_id == 17 %}
+            case {{field.index}} : enc_obj->message.{{field.name}} = val;
+            {%- endif %}
 
         {%- endfor %}
+        }
     }
     return 0;
 }

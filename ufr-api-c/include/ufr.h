@@ -265,6 +265,9 @@ typedef struct _link {
     char errstr[168+2];
 } link_t;
 
+// Renomeia link_t para UFILE
+typedef link_t  UFILE;
+
 
 typedef struct {
     char const* name;
@@ -596,6 +599,24 @@ int ufr_put_leave(link_t* link);
 
 
 int ufr_put_af32(link_t* link, const float* array, int nitems);
+
+
+
+
+int ufr_printf(const char* format, ...);
+int ufr_scanf(const char* format, ...);
+
+int ufr_fprintf(UFILE* fd, const char* format, ...);
+int ufr_fscanf(UFILE* fd, const char* format, ...);
+
+
+int ufr_stdin(const char* format, ...);
+int ufr_stdin_env(const char* varname);
+
+int ufr_stdout(const char* format, ...);
+int ufr_stdout_env(const char* varname);
+
+
 
 
 // ============================================================================
