@@ -598,7 +598,9 @@ int ufr_put_enter(link_t* link, int max_nitems);
 int ufr_put_leave(link_t* link);
 
 
-int ufr_put_af32(link_t* link, const float* array, int nitems);
+
+int ufr_put_ai32(link_t* link, const int32_t array[], int nitems);
+int ufr_put_af32(link_t* link, const float array[], int nitems);
 
 
 

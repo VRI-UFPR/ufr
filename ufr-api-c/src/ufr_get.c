@@ -192,6 +192,7 @@ int ufr_get(link_t* link, const char* format, ...) {
     return retval;
 }
 
+
 void ufr_get_eof(link_t* link) {
     uint8_t count;
     for (count=0; count<32; count++) {
@@ -344,4 +345,103 @@ int ufr_get_af32(link_t* link, float buffer[], int max_items) {
 
 
     return items_read;
+}
+
+
+
+
+
+
+
+
+#define UFR_UFILE_STDOUT   0
+#define UFR_UFILE_STDIN    1
+#define UFR_UFILE_STDERR   2
+
+
+UFILE* g_files[4] = {NULL, NULL, NULL, NULL};
+
+int ufr_fprintf(UFILE* fd, const char* format, ...) {
+    va_list list;
+    va_start(list, format);
+    const int nitems = ufr_put_va(fd, format, list);
+    va_end(list);
+    return nitems;
+}
+
+int ufr_printf(const char* format, ...) {
+    if ( g_files[UFR_UFILE_STDOUT] == NULL ) {
+        ufr_stdout("@new posix:stdout @coder text");
+    }
+
+    va_list list;
+    va_start(list, format);
+    const int nitems = ufr_put_va(g_files[UFR_UFILE_STDOUT], format, list);
+    va_end(list);
+    return nitems;
+}
+
+
+int ufr_fscanf(UFILE* fd, const char* format, ...) {
+    va_list list;
+    va_start(list, format);
+    const int nitems = ufr_get_va(fd, format, list);
+    va_end(list);
+    return nitems;
+}
+
+int ufr_scanf(const char* format, ...) {
+    if ( g_files[UFR_UFILE_STDIN] == NULL ) {
+        ufr_stdin("@new posix:stdin @coder text");
+    }
+
+    va_list list;
+    va_start(list, format);
+    const int nitems = ufr_get_va(g_files[UFR_UFILE_STDIN], format, list);
+    va_end(list);
+    return nitems;
+}
+
+int ufr_stdin(const char* format, ...) {
+    if ( g_files[UFR_UFILE_STDIN] != NULL ) {
+        ufr_close(g_files[UFR_UFILE_STDIN]);
+        g_files[UFR_UFILE_STDIN] = NULL;
+    }
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Open link
+    link_t* link = malloc(sizeof(link_t));
+    ufr_subscriber_args(link, &args);
+
+    // success
+    g_files[UFR_UFILE_STDIN] = link;
+    return UFR_OK;
+}
+
+int ufr_stdout(const char* format, ...) {
+    if ( g_files[UFR_UFILE_STDOUT] != NULL ) {
+        ufr_close(g_files[UFR_UFILE_STDOUT]);
+        g_files[UFR_UFILE_STDOUT] = NULL;
+    }
+
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // Open link
+    link_t* link = malloc(sizeof(link_t));
+    ufr_publisher_args(link, &args);
+
+    // success
+    g_files[UFR_UFILE_STDOUT] = link;
+    return UFR_OK;
 }

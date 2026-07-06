@@ -122,13 +122,13 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
                 const int32_t arr_size = va_arg(list, int32_t);
                 if ( arr_type == 'i' ) {
                     const int32_t* arr_ptr = va_arg(list, int32_t*);
-                    ufr_put_pi32(link, arr_ptr, arr_size);
+                    ufr_put_ai32(link, arr_ptr, arr_size);
                 } else if ( arr_type == 'f' ) {
                     const float* arr_ptr = va_arg(list, float*);
-                    ufr_put_pf32(link, arr_ptr, arr_size);
+                    ufr_put_af32(link, arr_ptr, arr_size);
                 } else if ( arr_type == 'b' ) {
-                    const int8_t* arr_ptr = va_arg(list, int8_t*);
-                    ufr_put_raw(link, (uint8_t*) arr_ptr, arr_size);
+                    // const int8_t* arr_ptr = va_arg(list, int8_t*);
+                    // ufr_put_raw(link, (uint8_t*) arr_ptr, arr_size);
                 } 
 
             // s, i or f
@@ -293,6 +293,37 @@ int ufr_put_pf64(link_t* link, const double* array, int nitems) {
     return wrote_nitems;
 }
 
+
+
+int ufr_put_ai32(link_t* link, const int32_t* array, int nitems) {
+    if ( link->log_level > 0 ) {
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, 0, "Encoder is null");
+        }
+        if ( link->enc_api->cmd_enter == NULL ) {
+            return ufr_error(link, 0, "Function enter of encoder is null");
+        }
+        if ( link->enc_api->cmd_leave == NULL ) {
+            return ufr_error(link, 0, "Function leave of encoder is null");
+        }
+        if ( link->enc_api->put_f32 == NULL ) {
+            return ufr_error(link, 0, "Function put_i32 of encoder is null");
+        }
+    }
+
+    if ( link->enc_api->cmd_enter(link, nitems) != UFR_OK ) {
+        return -1;
+    }
+
+    const int wrote_nitems = link->enc_api->put_i32(link, array, nitems);
+    if ( wrote_nitems > 0 ) {
+        link->put_count += wrote_nitems;
+    }
+    if ( link->enc_api->cmd_leave(link) != UFR_OK ) {
+        ufr_warn(link, "Function leave returned with error");
+    }
+    return wrote_nitems;
+}
 
 int ufr_put_af32(link_t* link, const float* array, int nitems) {
     if ( link->log_level > 0 ) {

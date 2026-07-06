@@ -49,18 +49,17 @@ int main() {
 
     // link_t* pub = ufr_publisher("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
     // link_t* pub = ufr_publisher("@new ros2 @coder ros2:string @topic teste @log 5");
-    link_t* pub = ufr_publisher("@new ros2 @coder ros2:twist @topic teste @log 5");
+    // link_t* pub = ufr_publisher("@new ros2 @coder ros2:twist @topic teste @log 5");
+
+    ufr_stdout("@new posix:stdout @coder text @log 5 @host 177.153.62.174 @topic teste");
 
     // loop principal
-    int i=0;
+    float vetor[10] = {1.0, 2.0, 3.0, 4.6, 5.6, 6.2, 7.8, 8.1, 9.0, 10.0};
     while( ufr_loop_ok() ) {
-        ufr_put(pub, "%f %f\n", 0.5, 0.2);
-        // ufr_put(&pub, "x: %d vel: %d\n", i, 450);
+        ufr_printf("teste: %f aaa: %f vetor: %af  %af\n", 0.5, 0.2, 10, vetor);
         sleep(1);
-        i += 1;
     }
 
     // fim
-    ufr_close(pub);
     return 0;
 }
