@@ -98,35 +98,4 @@ int main() {
 %m:ld:3:4       (copia uma matriz 3x4 de int64_t)
 %m:lf:3:4       (copia uma matriz 3x4 de double)
 
-
-// 
-
-#define EVENTO_>   1
-#define EVENTO_>>  2
-#define EVENTO_n   3
-#define EVENTO_%   4
-
-#define TIPO_C      1
-
-#define TIPO_U16     2
-#define TIPO_U32      2
-#define TIPO_U64     2
-
-#define TIPO_D16     2
-#define TIPO_D32      2
-#define TIPO_D64    2
-
-#define TIPO_F32      2
-#define TIPO_F64     2
-
-
-typedef struct {
-    char evento;
-    char tipo;
-    int  tamanho[2];
-}
-
-bool parser("%s %m:lf:3:4 ", &cursor, &evento);
-
-
 */

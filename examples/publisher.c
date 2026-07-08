@@ -35,6 +35,20 @@
 #include <unistd.h>
 #include <pthread.h>
 
+struct timespec start, end;
+
+void time_begin() {
+    clock_gettime(CLOCK_MONOTONIC, &start);
+}
+
+void time_end() {
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    int64_t elapsed_ns = (end.tv_sec - start.tv_sec) * 1000000000LL + 
+            (end.tv_nsec - start.tv_nsec);
+
+    printf("Time: %ld nanoseconds\n", elapsed_ns);
+}
+
 // ============================================================================
 //  Main
 // ============================================================================
@@ -51,12 +65,19 @@ int main() {
     // link_t* pub = ufr_publisher("@new ros2 @coder ros2:string @topic teste @log 5");
     // link_t* pub = ufr_publisher("@new ros2 @coder ros2:twist @topic teste @log 5");
 
-    ufr_stdout("@new posix:stdout @coder text @log 5 @host 177.153.62.174 @topic teste");
+
+    ufr_stdout("@new ros2 @coder ros2:twist @topic cmd_vel @log 5");
+    // ufr_stdout("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
+    // ufr_stdout("@new posix:stdout @coder text @log 5 @host 177.153.62.174 @topic teste");
 
     // loop principal
     float vetor[10] = {1.0, 2.0, 3.0, 4.6, 5.6, 6.2, 7.8, 8.1, 9.0, 10.0};
     while( ufr_loop_ok() ) {
-        ufr_printf("teste: %f aaa: %f vetor: %af  %af\n", 0.5, 0.2, 10, vetor);
+
+        time_begin();
+        ufr_printf("%f %f\n", 0.5, 0.2);
+        time_end();
+
         sleep(1);
     }
 

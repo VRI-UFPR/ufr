@@ -67,7 +67,10 @@ int ufr_enc_ros2_tf_init(link_t* link, const ufr_args_t* args) {
     ll_encoder_t* enc_obj = new ll_encoder_t();
     char buffer[UFR_ARGS_TOKEN];
     enc_obj->frame_id = ufr_args_gets(args, buffer, "@frame", "frame");
+    ufr_log(link, "@frame %s", enc_obj->frame_id.c_str());
+
     enc_obj->child_frame_id = ufr_args_gets(args, buffer, "@child", "child");
+    ufr_log(link, "@child %s", enc_obj->child_frame_id.c_str());
 
     //
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
@@ -88,7 +91,7 @@ void ufr_enc_ros2_tf_free(link_t* link) {
 }
 
 static
-int ufr_enc_ros2_tf_put_u32(link_t* link, const uint32_t* val, int nitems) {
+int ufr_enc_ros2_tf_put_u32(link_t* link, const uint32_t val[], int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
         
@@ -97,7 +100,7 @@ int ufr_enc_ros2_tf_put_u32(link_t* link, const uint32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros2_tf_put_i32(link_t* link, const int32_t* val, int nitems) {
+int ufr_enc_ros2_tf_put_i32(link_t* link, const int32_t val[], int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
 
@@ -106,7 +109,7 @@ int ufr_enc_ros2_tf_put_i32(link_t* link, const int32_t* val, int nitems) {
 }
 
 static
-int ufr_enc_ros2_tf_put_f32(link_t* link, const float* val, int nitems) {
+int ufr_enc_ros2_tf_put_f32(link_t* link, const float val[], int nitems) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     if ( enc_obj ) {
         switch(enc_obj->index) {

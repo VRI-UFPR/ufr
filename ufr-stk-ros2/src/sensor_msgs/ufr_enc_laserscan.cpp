@@ -37,12 +37,17 @@
 #include <ufr.h>
 
 #include "rclcpp/rclcpp.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "ufr_gtw_ros2.hpp"
 
+
 struct ll_encoder {
+    tf2_ros::TransformBroadcaster* tf_broadcaster;
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher;
     sensor_msgs::msg::LaserScan message;
+    std::string parent_id;
     std::string frame_id;
     int index;
     int index2;
@@ -67,14 +72,21 @@ int ufr_enc_ros2_init(link_t* link, const ufr_args_t* args) {
     // New Encoder and set Parameters
     ll_encoder* enc_obj = new ll_encoder();
     enc_obj->frame_id = ufr_args_gets(args, buffer, "@frame_id", "laser");
+    ufr_log(link, "@frame_id %s", enc_obj->frame_id.c_str());
 
     // enc_obj->def_angle_max = ufr_args_getf(args, "@angle_max", 0.0);
     // @order angle_max,angle_min,ranges @default {range_min: 0, range_max: 10}
 
     // Open the publisher
     ll_gateway_t* gtw_obj = (ll_gateway_t*) link->gtw_obj;
-    std::string topic_name = ufr_args_gets(args, buffer, "@topic", "/scan");
+    const std::string topic_name = ufr_args_gets(args, buffer, "@topic", "/scan");
+    ufr_log(link, "@topic %s", topic_name.c_str());
     enc_obj->publisher = gtw_obj->m_node->create_publisher<sensor_msgs::msg::LaserScan>(topic_name, 10);
+
+    // Open the TF Broadcast
+    enc_obj->parent_id = ufr_args_gets(args, buffer, "@parent_id", "base_footprint");
+    ufr_log(link, "@parent_id %s", enc_obj->parent_id.c_str());
+    enc_obj->tf_broadcaster = new tf2_ros::TransformBroadcaster(gtw_obj->m_node);
 
     // Success
     link->enc_obj = enc_obj;
@@ -94,6 +106,7 @@ void ufr_enc_ros2_free(link_t* link) {
 static
 int ufr_enc_ros2_cmd_clear(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
+    enc_obj->index = 0;
     enc_obj->message.angle_min = 0;
     enc_obj->message.angle_max = 0;
     enc_obj->message.angle_increment = 0;
@@ -221,13 +234,38 @@ static
 int ufr_enc_ros2_cmd_send(link_t* link) {
     ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
 
-    enc_obj->message.header.stamp = rclcpp::Clock().now();
-    enc_obj->message.header.frame_id = enc_obj->frame_id;
+    // get the timestamp
+    auto stamp = rclcpp::Clock().now();
 
+    // send data to TF
+    geometry_msgs::msg::TransformStamped message;
+    
+    // set header
+    message.header.stamp = stamp;
+    message.header.frame_id = enc_obj->parent_id;
+    message.child_frame_id = enc_obj->frame_id;
+
+    // set zero on translation.z
+    message.transform.translation.z = 0.025;
+
+    // set transform.rotation
+    message.transform.rotation.x = 0.0;
+    message.transform.rotation.y = 0.0;
+    message.transform.rotation.z = sin(0.0 / 2.0);
+    message.transform.rotation.w = cos(0.0 / 2.0);
+
+    // send TF message
+    enc_obj->tf_broadcaster->sendTransform(message);
+
+    // send data to Topic
+    enc_obj->message.header.stamp = stamp;
+    enc_obj->message.header.frame_id = enc_obj->frame_id;
     enc_obj->publisher->publish(enc_obj->message);
     enc_obj->index = 0;
+
+    // Success
     ufr_info(link, "sent message sensors/LaserScan");
-    return 0;
+    return UFR_OK;
 }
 
 static
@@ -258,6 +296,16 @@ int ufr_enc_ros2_cmd_leave(struct _link* link) {
 }
 
 static
+int ufr_enc_ros2_cmd_next(struct _link* link) {
+    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
+    if ( enc_obj->index > 8 ) {
+        return -1;
+    }
+    enc_obj->index += 1;
+    return UFR_OK;
+}
+
+static
 ufr_enc_api_t ufr_enc_ros_api = {
     .init = ufr_enc_ros2_init,
     .free = ufr_enc_ros2_free,
@@ -276,10 +324,10 @@ ufr_enc_api_t ufr_enc_ros_api = {
 
     .cmd_enter = ufr_enc_ros2_cmd_enter,
     .cmd_leave = ufr_enc_ros2_cmd_leave,
-    .cmd_next = NULL,
+    .cmd_next = ufr_enc_ros2_cmd_next,
     .cmd_clear = ufr_enc_ros2_cmd_clear,
     .cmd_send = ufr_enc_ros2_cmd_send,
-    .cmd_eof = NULL,
+    .cmd_eof = ufr_enc_ros2_cmd_send,
 
     .cmd_seek_str = NULL
 };

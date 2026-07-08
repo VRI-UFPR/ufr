@@ -402,34 +402,28 @@ int ufr_scanf(const char* format, ...) {
     return nitems;
 }
 
-int ufr_stdin(const char* format, ...) {
+
+
+static
+int ufr_stdin_args(const char* format, const ufr_args_t* args) {
     if ( g_files[UFR_UFILE_STDIN] != NULL ) {
         ufr_close(g_files[UFR_UFILE_STDIN]);
         g_files[UFR_UFILE_STDIN] = NULL;
     }
 
-    // load variable arguments to args
-    ufr_args_t args;
-    va_list list;
-    va_start(list, format);
-    ufr_args_load_from_va(&args, format, list);
-    va_end(list);
-
     // Open link
     link_t* link = malloc(sizeof(link_t));
-    ufr_subscriber_args(link, &args);
+    if ( link == NULL ) {
+        return -1;
+    }
+    ufr_subscriber_args(link, args);
 
     // success
     g_files[UFR_UFILE_STDIN] = link;
     return UFR_OK;
 }
 
-int ufr_stdout(const char* format, ...) {
-    if ( g_files[UFR_UFILE_STDOUT] != NULL ) {
-        ufr_close(g_files[UFR_UFILE_STDOUT]);
-        g_files[UFR_UFILE_STDOUT] = NULL;
-    }
-
+int ufr_stdin(const char* format, ...) {
     // load variable arguments to args
     ufr_args_t args;
     va_list list;
@@ -437,11 +431,61 @@ int ufr_stdout(const char* format, ...) {
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
 
+    // 
+    return ufr_stdin_args(format, &args);
+}
+
+int ufr_stdin_env(const char* name) {
+    const char* text = getenv(name);
+    if ( text == NULL ){
+        ufr_fatal(NULL, 1, "Environment variable %s is not defined");
+    }
+
+    //
+    const ufr_args_t args = {.text=text};
+    return ufr_stdin_args(name, &args);
+}
+
+
+
+static
+int ufr_stdout_args(const char* format, const ufr_args_t* args) {
+    if ( g_files[UFR_UFILE_STDOUT] != NULL ) {
+        ufr_close(g_files[UFR_UFILE_STDOUT]);
+        g_files[UFR_UFILE_STDOUT] = NULL;
+    }
+
     // Open link
     link_t* link = malloc(sizeof(link_t));
-    ufr_publisher_args(link, &args);
+    if ( link == NULL ) {
+        return -1;
+    }
+    ufr_publisher_args(link, args);
 
     // success
     g_files[UFR_UFILE_STDOUT] = link;
     return UFR_OK;
+}
+
+int ufr_stdout(const char* format, ...) {
+    // load variable arguments to args
+    ufr_args_t args;
+    va_list list;
+    va_start(list, format);
+    ufr_args_load_from_va(&args, format, list);
+    va_end(list);
+
+    // 
+    return ufr_stdout_args(format, &args);
+}
+
+int ufr_stdout_env(const char* name) {
+    const char* text = getenv(name);
+    if ( text == NULL ){
+        ufr_fatal(NULL, 1, "Environment variable %s is not defined");
+    }
+
+    //
+    const ufr_args_t args = {.text=text};
+    return ufr_stdout_args(name, &args);
 }

@@ -536,7 +536,7 @@ link_t* ufr_subscriber(const char* format, ...) {
 link_t* ufr_subscriber_env(const char* varname) {
     const char* text = getenv(varname);
     if ( text == NULL ) {
-        ufr_fatal(link, 1, "%s is not defined", varname);
+        ufr_fatal(NULL, 1, "%s is not defined", varname);
     }
 
     const ufr_args_t args = {.text=text};
@@ -635,7 +635,7 @@ link_t* ufr_publisher(const char* format, ...) {
 link_t* ufr_publisher_env(const char* varname) {
     const char* text = getenv(varname);
     if ( text == NULL ) {
-        ufr_fatal(link, 1, "%s is not defined", varname);
+        ufr_fatal(NULL, 1, "%s is not defined", varname);
     }
 
     const ufr_args_t args = {.text=text};
@@ -853,7 +853,7 @@ link_t* ufr_server_st(const char* format, ...) {
     ufr_args_load_from_va(&args, format, list);
     va_end(list);
 
-    ufr_server_st_args(&link, &args);
+    ufr_server_st_args(link, &args);
 
     // success
     return link;
