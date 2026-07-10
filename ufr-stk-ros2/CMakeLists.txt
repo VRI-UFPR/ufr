@@ -50,7 +50,7 @@ add_library(ufr_cdr_ros2 SHARED
     src/sensor_msgs/ufr_enc_image.cpp
     src/sensor_msgs/ufr_enc_laserscan.cpp
 
-    src/std_msgs/ufr_enc_byte.cpp
+    # src/std_msgs/ufr_enc_byte.cpp
 
     # Decoders
     src/geometry_msgs/ufr_dcr_twist.cpp

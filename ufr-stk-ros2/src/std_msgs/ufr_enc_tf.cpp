@@ -175,6 +175,7 @@ int ufr_enc_ros2_tf_cmd_clear(link_t* link) {
     enc_obj->th = 0.0;
     enc_obj->message.transform.translation.x = 0.0;
     enc_obj->message.transform.translation.y = 0.0;
+    enc_obj->message.transform.translation.z = 0.0;
     enc_obj->index = 0;
     return UFR_OK;
 }

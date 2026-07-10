@@ -135,6 +135,8 @@ endif(BUILD_UFR_STK_VIDEO)
 # add_subdirectory(./cv_mat)
 
 
+add_subdirectory(./ufr-stk-gnuplot)
+
 
 # Install locally in the directory ./install
 # install(FILES ./etc/Makefile DESTINATION .)

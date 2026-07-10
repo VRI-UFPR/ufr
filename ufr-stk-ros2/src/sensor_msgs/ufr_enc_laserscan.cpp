@@ -55,6 +55,9 @@ struct ll_encoder {
     float def_angle_min;
     float def_angle_max;
 
+    float tf_x, tf_y, tf_z, tf_th;
+    geometry_msgs::msg::TransformStamped tf_msg;
+
     ll_encoder() : index{0}, index2{0} {}
 };
 
@@ -87,6 +90,31 @@ int ufr_enc_ros2_init(link_t* link, const ufr_args_t* args) {
     enc_obj->parent_id = ufr_args_gets(args, buffer, "@parent_id", "base_footprint");
     ufr_log(link, "@parent_id %s", enc_obj->parent_id.c_str());
     enc_obj->tf_broadcaster = new tf2_ros::TransformBroadcaster(gtw_obj->m_node);
+
+    // Set the TF position
+    const float tf_x = ufr_args_getf(args, "@tf_x", 0.0);
+    ufr_log(link, "@tf_x %f", tf_x);
+    const float tf_y = ufr_args_getf(args, "@tf_y", 0.0);
+    ufr_log(link, "@tf_y %f", tf_y);
+    const float tf_z = ufr_args_getf(args, "@tf_z", 0.0);
+    ufr_log(link, "@tf_z %f", tf_z);
+    const float tf_th = ufr_args_getf(args, "@tf_th", 0.0);
+    ufr_log(link, "@tf_th %f", tf_th);
+
+    // Set TF Message header
+    enc_obj->tf_msg.header.frame_id = enc_obj->parent_id;
+    enc_obj->tf_msg.child_frame_id = enc_obj->frame_id;
+
+    // Set on translation
+    enc_obj->tf_msg.transform.translation.x = tf_x;
+    enc_obj->tf_msg.transform.translation.y = tf_y;
+    enc_obj->tf_msg.transform.translation.z = tf_z;
+
+    // Set on transform rotation
+    enc_obj->tf_msg.transform.rotation.x = 0;
+    enc_obj->tf_msg.transform.rotation.y = 0;
+    enc_obj->tf_msg.transform.rotation.z = sin(tf_th / 2.0);
+    enc_obj->tf_msg.transform.rotation.w = cos(tf_th / 2.0);
 
     // Success
     link->enc_obj = enc_obj;
@@ -236,26 +264,10 @@ int ufr_enc_ros2_cmd_send(link_t* link) {
 
     // get the timestamp
     auto stamp = rclcpp::Clock().now();
-
-    // send data to TF
-    geometry_msgs::msg::TransformStamped message;
-    
-    // set header
-    message.header.stamp = stamp;
-    message.header.frame_id = enc_obj->parent_id;
-    message.child_frame_id = enc_obj->frame_id;
-
-    // set zero on translation.z
-    message.transform.translation.z = 0.025;
-
-    // set transform.rotation
-    message.transform.rotation.x = 0.0;
-    message.transform.rotation.y = 0.0;
-    message.transform.rotation.z = sin(0.0 / 2.0);
-    message.transform.rotation.w = cos(0.0 / 2.0);
-
+   
     // send TF message
-    enc_obj->tf_broadcaster->sendTransform(message);
+    enc_obj->tf_msg.header.stamp = stamp;
+    enc_obj->tf_broadcaster->sendTransform(enc_obj->tf_msg);
 
     // send data to Topic
     enc_obj->message.header.stamp = stamp;
