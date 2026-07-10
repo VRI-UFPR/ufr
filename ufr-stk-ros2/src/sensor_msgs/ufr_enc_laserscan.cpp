@@ -318,6 +318,27 @@ int ufr_enc_ros2_cmd_next(struct _link* link) {
 }
 
 static
+int ufr_enc_ros2_cmd_seek_str(struct _link* link, const char* name) {
+    static const char* names[] = {
+        "angle_min", "angle_max", "angle_increment", "time_increment", "scan_time",
+        "range_min", "range_max", "ranges", "intensities"
+    };
+
+    // busca o indice
+    ll_encoder* enc_obj = (ll_encoder*) link->enc_obj;
+    for (int i=0; i<9; i++) {
+        if ( strcmp(name, names[i]) == 0 ){
+            enc_obj->index = i;
+            return UFR_OK;
+        } 
+    }
+
+    // Error, nao encontrou
+    return -1;
+}
+
+
+static
 ufr_enc_api_t ufr_enc_ros_api = {
     .init = ufr_enc_ros2_init,
     .free = ufr_enc_ros2_free,
@@ -341,7 +362,7 @@ ufr_enc_api_t ufr_enc_ros_api = {
     .cmd_send = ufr_enc_ros2_cmd_send,
     .cmd_eof = ufr_enc_ros2_cmd_send,
 
-    .cmd_seek_str = NULL
+    .cmd_seek_str = ufr_enc_ros2_cmd_seek_str
 };
 
 // ============================================================================

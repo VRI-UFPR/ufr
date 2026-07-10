@@ -31,124 +31,158 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <string.h>
 #include <unistd.h>
-#include <telebot.h>
 #include <ufr.h>
+#include <stdbool.h>
+
+#define MAX 20
 
 typedef struct {
-    FILE* gnuplot_pipe;
-
+    FILE* pipe;
 } gtw_obj_t;
 
 typedef struct {
-    int a;
-} ll_decoder_t;
+    float labels[MAX];
+    float values[MAX];
+    int index;
+    bool is_values;
+} encoder_t;
 
 
 // ============================================================================
 //  Encoder
 // ============================================================================
 
-int ufr_enc_gnuplot_boot(link_t* link, const ufr_args_t* args) {
-    link->enc_obj = ufr_buffer_new();
-    return (link->enc_obj!=NULL) ? UFR_OK : -1;
+int ufr_enc_gnuplot_init(link_t* link, const ufr_args_t* args) {
+    encoder_t* enc_obj = malloc(sizeof(encoder_t));
+    enc_obj->index = 0;
+    enc_obj->is_values = false;
+
+    for (int i=0; i<MAX; i++) {
+        enc_obj->labels[i] = 0;
+        enc_obj->values[i] = 0;
+    }
+
+    link->enc_obj = enc_obj;
+    return (enc_obj!=NULL) ? UFR_OK : -1;
 }
 
-void ufr_enc_gnuplot_close(link_t* link) {
+void ufr_enc_gnuplot_free(link_t* link) {
     if ( link->enc_obj ) {
         free(link->enc_obj);
     }
 }
 
 int ufr_enc_gnuplot_clear(link_t* link) {
-    ufr_buffer_t* buffer = link->enc_obj;
-    ufr_buffer_clear(buffer);
     return UFR_OK;
 }
 
 int ufr_enc_gnuplot_put_u32(link_t* link, const uint32_t* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* buffer = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_i32_as_str(buffer, val[wrote]);
+        
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_i32(link_t* link, const int32_t* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* buffer = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_i32_as_str(buffer, val[wrote]);
+        
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_f32(link_t* link, const float* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* enc = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_f32_as_str(buffer, val[wrote]);
+        if ( enc->index < MAX-2 ) {
+            if ( enc->is_values == false ) {
+                enc->labels[enc->index] = val[wrote];
+                enc->is_values = true;
+            } else {
+                enc->values[enc->index] = val[wrote];
+                enc->is_values = false;
+                enc->index += 1;
+            }
+
+        } else {
+printf("%d %d\n", enc->index, enc->is_values);
+            if ( enc->is_values == false ) {
+                for (int i=1; i<MAX; i++) {
+                    enc->labels[i-1] = enc->labels[i];
+                }
+                enc->labels[enc->index] = val[wrote];
+                enc->is_values = 0;
+            } else {
+                for (int i=1; i<MAX; i++) {
+                    enc->values[i-1] = enc->values[i];
+                }
+                enc->values[enc->index] = val[wrote];
+                enc->is_values = 1;
+            }
+            
+        }
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_u64(link_t* link, const uint64_t* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* enc = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_i32_as_str(buffer, val[wrote]);
+        
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_i64(link_t* link, const int64_t* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* buffer = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_i32_as_str(buffer, val[wrote]);
+        
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_f64(link_t* link, const double* val, int nitems) {
     int wrote = 0;
-    ufr_buffer_t* buffer = link->enc_obj;
+    encoder_t* enc = link->enc_obj;
     for (;wrote<nitems; wrote++) {
-        ufr_buffer_put_i32_as_str(buffer, val[wrote]);
+        
     }
     return wrote;
 }
 
 int ufr_enc_gnuplot_put_str(link_t* link, const char* val) {
-    ufr_buffer_t* buffer = link->enc_obj;
-    // ufr_buffer_put_str(buffer, val);
+    encoder_t* enc = link->enc_obj;
+    
     return UFR_OK;
 }
 
 int ufr_enc_gnuplot_cmd_send(link_t* link) {
     gtw_obj_t* obj = link->gtw_obj;
-    ufr_buffer_t* buffer = link->enc_obj;
-    // const telebot_error_e ret = telebot_send_message(obj->handle, obj->message.chat->id, buffer->ptr, "HTML", false, false, 0, "");
-    ufr_buffer_clear(buffer);
+    encoder_t* enc = link->enc_obj;
+    
+    fprintf(obj->pipe, "plot '-' with lines lw 2 title 'cos(t)'\n");
+    for (int i=0; i<enc->index; i++) {
+        printf("a %f %f\n", enc->labels[i], enc->values[i]);
+        fprintf(obj->pipe, "%f %f\n", enc->labels[i], enc->values[i]);
+    }
+    fprintf(obj->pipe, "e\n");
+    fflush(obj->pipe);
+    
     ufr_info(link, "Sent message");
     return 0;
 }
 
 int ufr_enc_gnuplot_cmd_eof(link_t* link) {
-printf("aab\n");
-return UFR_OK;
-    gtw_obj_t* obj = link->gtw_obj;
-    obj->req_offset = obj->updates[obj->req_index].update_id + 1;
-    obj->req_index += 1;
-    const telebot_error_e ret = telebot_put_updates(obj->updates, obj->req_index);
-    ufr_info(link, "End of answer");
-    return ret;
+    return UFR_OK;
 }
-
-
 
 int ufr_enc_gnuplot_enter(link_t* link, size_t maxsize) {
     return UFR_OK;
@@ -159,8 +193,8 @@ int ufr_enc_gnuplot_leave(link_t* link) {
 }
 
 ufr_enc_api_t ufr_enc_gnuplot_api = {
-    .init = ufr_enc_gnuplot_boot,
-    .free = ufr_enc_gnuplot_close,
+    .init = ufr_enc_gnuplot_init,
+    .free = ufr_enc_gnuplot_free,
 
     .put_u32 = ufr_enc_gnuplot_put_u32,
     .put_i32 = ufr_enc_gnuplot_put_i32,
@@ -204,7 +238,7 @@ size_t ufr_gtw_gnuplot_size(const link_t* link, int type) {
 
 static
 int ufr_gtw_gnuplot_boot (link_t* link, const ufr_args_t* args) {
-    FILE *gnuplot_pipe = popen("gnuplot", "w");
+    FILE* gnuplot_pipe = popen("gnuplot", "w");
 
     if (gnuplot_pipe == NULL) {
         fprintf(stderr, "Error: Could not open pipe to gnuplot.\n");
@@ -215,22 +249,20 @@ int ufr_gtw_gnuplot_boot (link_t* link, const ufr_args_t* args) {
     fprintf(gnuplot_pipe, "set title 'Real-Time Data Stream'\n");
     fprintf(gnuplot_pipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplot_pipe, "set ylabel 'Y Axis'\n");
-    fprintf(gnuplot_pipe, "set yrange [-1.5:1.5]\n");
+    fprintf(gnuplot_pipe, "set yrange [-2:2]\n");
 
     // Success
-    gtw_obj_t* gtw_obj = malloc(sizeof(obj_t));
-    gtw_obj->gnuplot_pipe = gnuplot_pipe;
+    gtw_obj_t* gtw_obj = malloc(sizeof(gtw_obj_t));
+    gtw_obj->pipe = gnuplot_pipe;
     link->gtw_obj = gtw_obj;
     return UFR_OK;
 }
 
 static
 int ufr_gtw_gnuplot_start (link_t* link, int type, const ufr_args_t* args) {
-    gtw_obj_t* obj = link->gtw_obj;
+    // gtw_obj_t* obj = link->gtw_obj;
 
-    if ( type == UFR_START_PUBLISHER ) {
-
-    } else {
+    if ( type != UFR_START_PUBLISHER ) {
         return -1;
     }
 
@@ -262,7 +294,7 @@ size_t ufr_gtw_gnuplot_read(link_t* link, char* buffer, size_t max_size) {
 static
 size_t ufr_gtw_gnuplot_write(link_t* link, const char* buffer, size_t size) {
     gtw_obj_t* obj = link->gtw_obj;
-     return fwrite(buffer, size, 1, obj->gnuplot_pipe);
+     return fwrite(buffer, size, 1, obj->pipe);
 }
 
 static
@@ -291,8 +323,10 @@ ufr_gtw_api_t ufr_gtw_gnuplot_api = {
 //  Publico
 // ============================================================================
 
-int ufr_gtw_gnuplot_new(link_t* link, int type) {
+int ufr_gtw_gnuplot_new(link_t* link, int type, const ufr_args_t* args) {
     link->gtw_api = &ufr_gtw_gnuplot_api;
+    link->enc_api = &ufr_enc_gnuplot_api;
+    ufr_enc_gnuplot_init(link, args);
     return UFR_OK;
 }
 

@@ -2,7 +2,9 @@
  * 
  * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
  *  - Felipe Bombardelli <felipebombardelli@gmail.com>
- * 
+ *  - Samantha Vanessa Golim Stocco
+ *  - Amaya 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
@@ -36,10 +38,366 @@
 
 int ufr_put_begin_package(link_t* link);
 
+
 // ============================================================================
 //  PUT
 // ============================================================================
 
+/**
+ * @author Samantha Vanessa Golim Stocco
+ * @author Amaya
+ */
+bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
+    // Pular espaços em branco
+    while (frase[*inout_cursor] == ' ') {
+        (*inout_cursor)++;
+    }
+
+    // Fim da frase 
+    if (frase[*inout_cursor] == '\0') {
+        return false;
+    }
+
+    // Inicialização 
+    out_evento->var = TIPO_NULO;
+    out_evento->tamanho[0] = 0;
+    out_evento->tamanho[1] = 0;
+    out_evento->nome[0] = '\0';
+
+    int pos = *inout_cursor;
+
+    // Caso 1: (\n)
+    if (frase[pos] == '\n') {
+        out_evento->tipo = EVENTO_SEND;
+        (*inout_cursor)++;
+        return true;
+    }
+
+    // Caso 2: (> ou >>)
+    if (frase[pos] == '>') {
+        if (frase[pos + 1] == '>') {
+            out_evento->tipo = EVENTO_RECV2;
+            (*inout_cursor) += 2;
+        } else {
+            out_evento->tipo = EVENTO_RECV1;
+            (*inout_cursor)++;
+        }
+        return true;
+    }
+
+    // Caso 3: (%)
+    if (frase[pos] == '%') {
+        out_evento->tipo = EVENTO_VAR;
+        pos++; 
+
+        // Verifica se é um Array (%a:)
+        if (frase[pos] == 'a' && frase[pos + 1] == ':') {
+            pos += 2; 
+            
+            if (frase[pos] == 'c') {
+                out_evento->var = TIPO_ARRAY_C; pos++; 
+            }
+            else if (frase[pos] == 'f') {
+                out_evento->var = TIPO_ARRAY_F32; pos++; 
+            }
+            else if (frase[pos] == 'u') {
+                out_evento->var = TIPO_ARRAY_U32; pos++; 
+            }
+            else if (frase[pos] == 'd') { 
+                out_evento->var = TIPO_ARRAY_I32; pos++; 
+            }
+            else if (frase[pos] == 'h' && frase[pos+1] == 'h' && frase[pos+2] == 'u') {
+                out_evento->var = TIPO_ARRAY_U8; pos += 3; 
+            }
+            else if (frase[pos] == 'h' && frase[pos+1] == 'u') {
+                out_evento->var = TIPO_ARRAY_U16; pos += 2; 
+            }
+            else if (frase[pos] == 'l' && frase[pos+1] == 'u') {
+                out_evento->var = TIPO_ARRAY_U64; pos += 2; 
+            }
+            else if (frase[pos] == 'h' && frase[pos+1] == 'h' && frase[pos+2] == 'd') {
+                out_evento->var = TIPO_ARRAY_I8; pos += 3; 
+            }
+            else if (frase[pos] == 'h' && frase[pos+1] == 'd') {
+                out_evento->var = TIPO_ARRAY_I16; pos += 2; 
+            }
+            else if (frase[pos] == 'l' && frase[pos+1] == 'd') {
+                out_evento->var = TIPO_ARRAY_I64; pos += 2; 
+            }
+            else if (frase[pos] == 'l' && frase[pos+1] == 'f') {
+                out_evento->var = TIPO_ARRAY_F64; pos += 2; 
+            }
+
+            // Pula o ':' 
+            if (frase[pos] == ':') {
+                pos++;
+            }
+            // Trata o tamanho do array
+            if (frase[pos] == '?') {
+                out_evento->tamanho[0] = -1;
+                pos++;
+            } else {
+                int tam = 0;
+                while (frase[pos] >= '0' && frase[pos] <= '9') {
+                    tam = tam * 10 + (frase[pos] - '0');
+                    pos++;
+                }
+                out_evento->tamanho[0] = tam;
+            }
+            *inout_cursor = pos;
+            return true;
+        }
+
+        // Variáveis normais (C99)
+        if (frase[pos] == 'd') {
+            out_evento->var = TIPO_I32; pos++; 
+        } 
+        else if (frase[pos] == 'f') {
+            out_evento->var = TIPO_F32; pos++; 
+        }
+        else if (frase[pos] == 's') {
+            out_evento->var = TIPO_STR; pos++; 
+        }
+        else if (frase[pos] == 'c') {
+            out_evento->var = TIPO_C; pos++; 
+        }
+        else if (frase[pos] == 'u') {
+            out_evento->var = TIPO_U32; pos++; 
+        }
+        else if (frase[pos] == 'h' && frase[pos+1] == 'h' && frase[pos+2] == 'u') {
+            out_evento->var = TIPO_U8; pos += 3; 
+        }
+        else if (frase[pos] == 'h' && frase[pos+1] == 'u') {
+            out_evento->var = TIPO_U16; pos += 2; 
+        }
+        else if (frase[pos] == 'l' && frase[pos+1] == 'u') {
+            out_evento->var = TIPO_U64; pos += 2; 
+        }
+        else if (frase[pos] == 'h' && frase[pos+1] == 'h' && frase[pos+2] == 'd') {
+            out_evento->var = TIPO_I8; pos += 3; 
+        }
+        else if (frase[pos] == 'h' && frase[pos+1] == 'd') {
+            out_evento->var = TIPO_I16; pos += 2; 
+        }
+        else if (frase[pos] == 'l' && frase[pos+1] == 'd') {
+            out_evento->var = TIPO_I64; pos += 2; 
+        }
+        else if (frase[pos] == 'l' && frase[pos+1] == 'f') {
+            out_evento->var = TIPO_F64; pos += 2; 
+        }
+
+        *inout_cursor = pos;
+        return true;
+    }
+
+    // Caso 4: (nome=)
+    int i = 0;
+    while (frase[pos] != '\0' && frase[pos] != ' ' && frase[pos] != '\t' && frase[pos] != '=') {
+        if (i < 31) {
+            out_evento->nome[i++] = frase[pos];
+        }
+        pos++;
+    }
+    out_evento->nome[i] = '\0';
+
+    if (frase[pos] == '=') {
+        out_evento->tipo = EVENTO_SEEK;
+        pos++; 
+        *inout_cursor = pos;
+        return true;
+    }
+
+    // Se falhar tudo
+    (*inout_cursor)++;
+    return true;
+}
+
+
+static
+int ufr_put_var(link_t* link, Evento* evento, va_list list) {
+    int count = 0;
+
+    switch (evento->var) {
+        case TIPO_U8: {
+            const uint8_t val = va_arg(list, int);
+            // is_ok = link->enc_api->put_u8(link, &val, 1);
+        }
+
+        case TIPO_U16: {
+            const uint16_t val = va_arg(list, int);
+            // count = link->enc_api->put_u16(link, &val, 1);
+        }
+
+        case TIPO_U32: {
+            const uint32_t val = va_arg(list, uint32_t);
+            count = link->enc_api->put_u32(link, &val, 1);
+        } break;
+
+        case TIPO_U64: {
+            const uint64_t val = va_arg(list, uint64_t);
+            count = link->enc_api->put_u64(link, &val, 1);
+        }
+
+        case TIPO_I8: {
+            const int8_t val = va_arg(list, int);
+            // count = link->enc_api->put_i8(link, &val, 1);
+        } break;
+
+        case TIPO_I16: {
+            const int16_t val = va_arg(list, int);
+            // count = link->enc_api->put_i16(link, &val, 1);
+        } break;
+
+        case TIPO_I32: {
+            const int32_t val = va_arg(list, int32_t);
+            count = link->enc_api->put_i32(link, &val, 1);
+        } break;
+
+        case TIPO_I64: {
+            const int64_t val = va_arg(list, int64_t);
+            count = link->enc_api->put_i64(link, &val, 1);
+        } break;
+
+        case TIPO_F32: {
+            const float val = (float) va_arg(list, double);
+            count = link->enc_api->put_f32(link, &val, 1);
+        } break;
+
+        case TIPO_F64: {
+            const double val = (double) va_arg(list, double);
+            count = link->enc_api->put_f64(link, &val, 1);
+        } break;
+
+        case TIPO_STR: {
+            const char* str = va_arg(list, const char*);
+            count = link->enc_api->put_str(link, str);
+        } break;
+
+        case TIPO_ARRAY_U8: {
+            const uint8_t* arr_ptr = va_arg(list, uint8_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_au8(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_U16: {
+            const uint16_t* arr_ptr = va_arg(list, uint16_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_au16(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_U32: {
+            const uint32_t* arr_ptr = va_arg(list, uint32_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            ufr_put_au32(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_U64: {
+            const uint64_t* arr_ptr = va_arg(list, uint64_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_au64(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_I8: {
+            const int8_t* arr_ptr = va_arg(list, int8_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_ai8(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_I16: {
+            const int16_t* arr_ptr = va_arg(list, int16_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_ai16(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_I32: {
+            const int32_t* arr_ptr = va_arg(list, int32_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            count = ufr_put_ai32(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_I64: {
+            const int64_t* arr_ptr = va_arg(list, int64_t*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            // ufr_put_ai64(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_F32: {
+            const float* arr_ptr = va_arg(list, float*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            count = ufr_put_af32(link, arr_ptr, arr_size);
+        }
+
+        case TIPO_ARRAY_F64: {
+            const double* arr_ptr = va_arg(list, double*);
+            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            count = ufr_put_af64(link, arr_ptr, arr_size);
+        }
+
+        default:
+            break;
+    }
+
+    return count;
+}
+
+
+int ufr_put_va(link_t* link, const char* format, va_list list) {
+    if ( link ) {
+        if ( link->log_level > 0 ) {
+            if ( link->enc_api == NULL ) {
+                ufr_fatal(link, 0, "Encoder is not loaded");
+            }
+            if ( link->enc_api->cmd_send == NULL ) {
+                ufr_fatal(link, 0, "Function cmd_send is NULL");
+            }
+            if ( link->enc_api->put_u32 == NULL ) {
+                ufr_fatal(link, -1, "Function put_u32 is NULL");
+            }
+            if ( link->enc_api->put_i32 == NULL ) {
+                ufr_fatal(link, -1, "Function put_i32 is NULL");
+            }
+            if ( link->enc_api->put_f32 == NULL ) {
+                ufr_fatal(link, -1, "Function put_f32 is NULL");
+            }
+            if ( link->state != UFR_STATE_PUT ) {
+                // ufr_log_error(link, -1, "Link is not in PUT state");
+            }
+        }
+    } else {
+        ufr_fatal(link, -1, "Link is NULL");
+    }
+
+    int cursor = 0;
+    int count = 0;
+    Evento evento; 
+    while (1) {
+        if ( ufr_parse_frase(format, &cursor, &evento) == false ) {
+            break;
+        }
+
+        if ( evento.tipo == EVENTO_VAR ) {
+            count += ufr_put_var(link, &evento, list);
+
+        } else if ( evento.tipo == EVENTO_SEEK ) {
+            if ( link->enc_api->cmd_seek_str != NULL ) {
+                link->enc_api->cmd_seek_str(link, evento.nome);
+            }
+
+        } else if ( evento.tipo == EVENTO_SEND ) {
+printf("enviar\n");
+            link->enc_api->cmd_send(link);
+            link->put_count = 0;
+            count += 1;
+        } else {
+            break;
+        }
+
+    }
+    return count;
+}
+
+
+/* DEPRECIADA
 int ufr_put_va(link_t* link, const char* format, va_list list) {
     if ( link ) {
         if ( link->log_level > 0 ) {
@@ -186,9 +544,11 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             name[name_i] = type;
             name_i += 1;
         }
-	}
+    }
     return count;
 }
+*/
+
 
 int ufr_put(link_t* link, const char* format, ...) {
     va_list list;
@@ -295,7 +655,8 @@ int ufr_put_pf64(link_t* link, const double* array, int nitems) {
 
 
 
-int ufr_put_ai32(link_t* link, const int32_t* array, int nitems) {
+
+int ufr_put_au32(link_t* link, const uint32_t array[], int nitems) {
     if ( link->log_level > 0 ) {
         if ( link->enc_api == NULL ) {
             return ufr_error(link, 0, "Encoder is null");
@@ -306,7 +667,37 @@ int ufr_put_ai32(link_t* link, const int32_t* array, int nitems) {
         if ( link->enc_api->cmd_leave == NULL ) {
             return ufr_error(link, 0, "Function leave of encoder is null");
         }
-        if ( link->enc_api->put_f32 == NULL ) {
+        if ( link->enc_api->put_u32 == NULL ) {
+            return ufr_error(link, 0, "Function put_u32 of encoder is null");
+        }
+    }
+
+    if ( link->enc_api->cmd_enter(link, nitems) != UFR_OK ) {
+        return -1;
+    }
+
+    const int wrote_nitems = link->enc_api->put_u32(link, array, nitems);
+    if ( wrote_nitems > 0 ) {
+        link->put_count += wrote_nitems;
+    }
+    if ( link->enc_api->cmd_leave(link) != UFR_OK ) {
+        ufr_warn(link, "Function leave returned with error");
+    }
+    return wrote_nitems;
+}
+
+int ufr_put_ai32(link_t* link, const int32_t array[], int nitems) {
+    if ( link->log_level > 0 ) {
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, 0, "Encoder is null");
+        }
+        if ( link->enc_api->cmd_enter == NULL ) {
+            return ufr_error(link, 0, "Function enter of encoder is null");
+        }
+        if ( link->enc_api->cmd_leave == NULL ) {
+            return ufr_error(link, 0, "Function leave of encoder is null");
+        }
+        if ( link->enc_api->put_i32 == NULL ) {
             return ufr_error(link, 0, "Function put_i32 of encoder is null");
         }
     }
@@ -325,7 +716,7 @@ int ufr_put_ai32(link_t* link, const int32_t* array, int nitems) {
     return wrote_nitems;
 }
 
-int ufr_put_af32(link_t* link, const float* array, int nitems) {
+int ufr_put_af32(link_t* link, const float array[], int nitems) {
     if ( link->log_level > 0 ) {
         if ( link->enc_api == NULL ) {
             return ufr_error(link, 0, "Encoder is null");
@@ -354,6 +745,54 @@ int ufr_put_af32(link_t* link, const float* array, int nitems) {
     }
     return wrote_nitems;
 }
+
+int ufr_put_af64(link_t* link, const double array[], int nitems) {
+    if ( link->log_level > 0 ) {
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, 0, "Encoder is null");
+        }
+        if ( link->enc_api->cmd_enter == NULL ) {
+            return ufr_error(link, 0, "Function enter of encoder is null");
+        }
+        if ( link->enc_api->cmd_leave == NULL ) {
+            return ufr_error(link, 0, "Function leave of encoder is null");
+        }
+        if ( link->enc_api->put_f64 == NULL ) {
+            return ufr_error(link, 0, "Function put_f64 of encoder is null");
+        }
+    }
+
+    if ( link->enc_api->cmd_enter(link, nitems) != UFR_OK ) {
+        return -1;
+    }
+
+    const int wrote_nitems = link->enc_api->put_f64(link, array, nitems);
+    if ( wrote_nitems > 0 ) {
+        link->put_count += wrote_nitems;
+    }
+    if ( link->enc_api->cmd_leave(link) != UFR_OK ) {
+        ufr_warn(link, "Function leave returned with error");
+    }
+    return wrote_nitems;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

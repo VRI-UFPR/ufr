@@ -274,6 +274,51 @@ typedef struct {
     ufr_args_t args;
 } ufr_node_t;
 
+
+// Para o parser do ufr_printf e ufr_scanf
+
+typedef enum {
+    EVENTO_RECV1,   // >
+    EVENTO_RECV2,   // >>
+    EVENTO_SEND,    // \n
+    EVENTO_SEEK,    // <NOME>=
+    EVENTO_VAR      // variavel %d %f %...
+} TipoEvento;
+
+typedef enum {
+    TIPO_NULO,     // 0
+    TIPO_C,        // 1  - %c
+    TIPO_U8,       // 2  - %hhu
+    TIPO_U16,      // 3  - %hu
+    TIPO_U32,      // 4  - %u
+    TIPO_U64,      // 5  - %lu
+    TIPO_I8,       // 6  - %hhd
+    TIPO_I16,      // 7  - %hd
+    TIPO_I32,      // 8  - %d
+    TIPO_I64,      // 9  - %ld
+    TIPO_F32,      // 10 - %f
+    TIPO_F64,      // 11 - %lf
+    TIPO_STR,      // 12 - %s
+    TIPO_ARRAY_C,    // 13 - %a:c
+    TIPO_ARRAY_U8,   // 14 - %a:hhu
+    TIPO_ARRAY_U16,  // 15 - %a:hu
+    TIPO_ARRAY_U32,  // 16 - %a:u
+    TIPO_ARRAY_U64,  // 17 - %a:lu
+    TIPO_ARRAY_I8,   // 18 - %a:hhd
+    TIPO_ARRAY_I16,  // 19 - %a:hd
+    TIPO_ARRAY_I32,  // 20 - %a:d
+    TIPO_ARRAY_I64,  // 21 - %a:ld
+    TIPO_ARRAY_F32,  // 22 - %a:f
+    TIPO_ARRAY_F64   // 23 - %a:lf
+} TipoVar;
+
+typedef struct {
+    TipoEvento tipo;
+    TipoVar    var;
+    int        tamanho[2];
+    char       nome[32];
+} Evento;
+
 // ============================================================================
 //  Sem bloco ainda
 // ============================================================================
@@ -600,9 +645,10 @@ int ufr_put_enter(link_t* link, int max_nitems);
 int ufr_put_leave(link_t* link);
 
 
-
+int ufr_put_au32(link_t* link, const uint32_t array[], int nitems);
 int ufr_put_ai32(link_t* link, const int32_t array[], int nitems);
 int ufr_put_af32(link_t* link, const float array[], int nitems);
+int ufr_put_af64(link_t* link, const double array[], int nitems);
 
 
 
@@ -620,6 +666,9 @@ int ufr_stdin_env(const char* varname);
 int ufr_stdout(const char* format, ...);
 int ufr_stdout_env(const char* varname);
 
+
+
+bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento);
 
 
 
