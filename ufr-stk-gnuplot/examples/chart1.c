@@ -5,16 +5,14 @@
 int ufr_gtw_gnuplot_new(link_t* link, int type);
 
 int main() {
-    ufr_stdout("@new mqtt @coder msgpack");
+    ufr_stdout("@new %p", ufr_gtw_gnuplot_new);
 
     // Loop principal
-    double teste[10];
-    for ( int i=0; i<1; i++ ) {
+    for ( int i=0; i<10; i++ ) {
         float t = i*0.1;
         float value = cos(t);
-        ufr_printf("%s %d %a:lf:?\n", "opaaa", 30, teste, 10);
-        usleep(100000);
-        printf("%d\n", i);
+        ufr_printf("%f %f\n", t, 0.0);
+        usleep(500000);
     }
 
     // fim

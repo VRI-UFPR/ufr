@@ -219,6 +219,10 @@ int ufr_enc_msgpack_cmd_eof(link_t* link) {
     return UFR_OK;
 }
 
+int ufr_enc_msgpack_cmd_seek_str(link_t* link, const char* name) {
+    return UFR_OK;
+}
+
 static
 ufr_enc_api_t ufr_enc_msgpack_api = {
     .init = ufr_enc_msgpack_init,
@@ -244,7 +248,7 @@ ufr_enc_api_t ufr_enc_msgpack_api = {
     .cmd_send = ufr_enc_msgpack_cmd_send,
     .cmd_eof = ufr_enc_msgpack_cmd_eof,
 
-    .cmd_seek_str = NULL
+    .cmd_seek_str = ufr_enc_msgpack_cmd_seek_str
 };
 
 // ============================================================================

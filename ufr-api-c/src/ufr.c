@@ -871,3 +871,11 @@ void ufr_exit_if_error(link_t* link) {
     }
 }
 
+
+int ufr_enc_enter(link_t* link, int max_nitems) {
+    return link->enc_api->cmd_enter(link, max_nitems);
+}
+
+int ufr_enc_leave(link_t* link) {
+    return link->enc_api->cmd_leave(link);
+}

@@ -16,9 +16,51 @@ UFR_START_CLIENT=3
 UFR_START_PUBLISHER=4
 UFR_START_SUBSCRIBER=5
 
+# Eventos do ufr_printf e ufr_scanf
+EVENTO_RECV1 = 0   # >
+EVENTO_RECV2 = 1   # >>
+EVENTO_SEND  = 2    # \n
+EVENTO_SEEK  = 3    # <NOME>=
+EVENTO_VAR   = 4
+
+TIPO_NULO = 0        # 0
+TIPO_C    = 1        # 1  - %c
+TIPO_U8   = 2        # 2  - %hhu
+TIPO_U16  = 3        # 3  - %hu
+TIPO_U32  = 4        # 4  - %u
+TIPO_U64  = 5        # 5  - %lu
+TIPO_I8   = 6        # 6  - %hhd
+TIPO_I16  = 7        # 7  - %hd
+TIPO_I32  = 8        # 8  - %d
+TIPO_I64  = 9        # 9  - %ld
+TIPO_F32  = 10       # 10 - %f
+TIPO_F64  = 11       # 11 - %lf
+TIPO_STR  = 12       # 12 - %s
+TIPO_ARRAY_C   = 13  # 13 - %a:c
+TIPO_ARRAY_U8  = 14  # 14 - %a:hhu
+TIPO_ARRAY_U16 = 15  # 15 - %a:hu
+TIPO_ARRAY_U32 = 16  # 16 - %a:u
+TIPO_ARRAY_U64 = 17  # 17 - %a:lu
+TIPO_ARRAY_I8  = 18  # 18 - %a:hhd
+TIPO_ARRAY_I16 = 19  # 19 - %a:hd
+TIPO_ARRAY_I32 = 20  # 20 - %a:d
+TIPO_ARRAY_I64 = 21  # 21 - %a:ld
+TIPO_ARRAY_F32 = 22  # 22 - %a:f
+TIPO_ARRAY_F64 = 23  # 23 - %a:lf
+
+
 # =======================================================================================
 #  Class Link
 # =======================================================================================
+
+class Evento(ctypes.Structure):
+    _fields_ = [
+        ("tipo", ctypes.c_int),
+        ("var", ctypes.c_int),
+        ("tamanho", ctypes.c_int*2),
+        ("nome", ctypes.c_ubyte * 32)
+    ]
+
 
 class Link(ctypes.Structure):
     dll = ctypes.CDLL(f"libufr.so")
@@ -76,12 +118,15 @@ class Link(ctypes.Structure):
     dll.ufr_put_file.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
     dll.ufr_put_file.restype =  ctypes.c_int32
 
-    
+
+    dll.ufr_put_file.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int32 ]
 
     # loop
     dll.ufr_loop_ok.argtypes = [ ]
     dll.ufr_loop_ok.restype =  ctypes.c_int32
 
+    dll.ufr_parse_frase.argtypes = [ ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p ]
+    dll.ufr_parse_frase.restype = ctypes.c_bool
 
 
     _fields_ = [
@@ -125,50 +170,63 @@ class Link(ctypes.Structure):
 
     def put(self, format, *args):
         index = 0
-        state = 0
-        for c in format:
-            # State 0 : default
-            if state == 0:
-                if c == '#':
-                    Link.dll.ufr_put_eof( ctypes.pointer(self) )
-                elif c == '%':
-                    state = 1
-                elif c == '\n':
-                    Link.dll.ufr_send( ctypes.pointer(self) )
+        cursor = ctypes.c_int32(0)
+        evento = Evento()
 
-            # State 0 : Found the caracter '%'. Example %d
-            elif state == 1:
-                # put integer
-                if c == 'i' or c == 'd':
+        while 1:
+            # 1. Parsea o format e retorna um evento por vez
+            res = Link.dll.ufr_parse_frase(bytes(format, 'utf-8'), ctypes.pointer(cursor), ctypes.pointer(evento) )
+            if res == False:
+                break
+
+            # 2a. Executa o evento %
+            if evento.tipo == EVENTO_VAR:
+
+                if evento.var == TIPO_I32:
                     value = ctypes.c_int32( args[index] )
                     Link.dll.ufr_put_i32(ctypes.pointer(self), value, 1)
-                    state = 0
 
-                # put float
-                elif c == 'f':
+                elif evento.var == TIPO_F32:
                     value = ctypes.c_float( args[index] )
-                    Link.dll.ufr_put_f32(ctypes.pointer(self), value)
-                    state = 0
+                    Link.dll.ufr_put_f32(ctypes.pointer(self), value, 1)
 
-                # put string
-                elif c == 's':
+                elif evento.var == TIPO_STR:
                     value = args[index]
                     Link.dll.ufr_put_str(ctypes.pointer(self), bytes(value, 'utf-8'))
-                    state = 0
 
-                # put raw
-                elif c == 'r':
-                    value = args[index]
-                    Link.dll.ufr_put_raw(ctypes.pointer(self), value, len(value))
-                    state = 0
-                else:
-                    raise Exception(f"The variable %{c} is not allowed to serialize")
+                elif evento.var == TIPO_ARRAY_I32:
+                    vetor = args[index]
+                    tamanho = len(vetor)
+                    print(vetor, tamanho)
+                    Link.dll.ufr_enc_enter(ctypes.pointer(self), tamanho)
+                    for py_value in vetor:
+                        c_value = ctypes.c_float(py_value)
+                        Link.dll.ufr_enc_value_i32(ctypes.pointer(self), c_value)
+                    Link.dll.ufr_enc_leave(ctypes.pointer(self))
 
+                elif evento.var == TIPO_ARRAY_F32:
+                    vetor = args[index]
+                    tamanho = len(vetor)
+                    print(vetor, tamanho)
+                    Link.dll.ufr_enc_enter(ctypes.pointer(self), tamanho)
+                    for py_value in vetor:
+                        c_value = ctypes.c_float(py_value)
+                        Link.dll.ufr_enc_value_f32(ctypes.pointer(self), c_value)
+                    Link.dll.ufr_enc_leave(ctypes.pointer(self))
+
+                # Passa para o proximo argumento
                 index += 1
 
-            # Error: state invalid
+            # 2b. Executa o evento \n
+            elif evento.tipo == EVENTO_SEND:
+                Link.dll.ufr_send( ctypes.pointer(self) )
+            
+            # 2c. Evento invalido
             else:
-                raise Exception(f"State invalid")
+                raise Exception(f"Invalid event")
+
+    def printf(self, format, *args):
+        self.put(format, *args)
 
 
     def get(self, format: str):
@@ -289,6 +347,16 @@ def server(text: str):
 def client(text: str):
     return Link(text, UFR_START_CLIENT)
 
+def stdout(text: str):
+    Link.dll.ufr_stdout( bytes(text, 'utf-8') )
+    # Falta mostrar mensagem de erro, caso haja
+
+def stdin(text: str):
+    Link.dll.ufr_stdin( bytes(text, 'utf-8') )
+    # Falta mostrar mensagem de erro, caso haja
+
+def printf(text: str, *args):
+    print("ainda nao implementado")
 
 def loop_ok():
     return Link.dll.ufr_loop_ok()
@@ -311,4 +379,61 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
+
+
+
+
+
+
+
+
+
+
+        for c in format:
+            # State 0 : default
+            if state == 0:
+                if c == '#':
+                    Link.dll.ufr_put_eof( ctypes.pointer(self) )
+                elif c == '%':
+                    state = 1
+                elif c == '\n':
+                    Link.dll.ufr_send( ctypes.pointer(self) )
+
+            # State 0 : Found the caracter '%'. Example %d
+            elif state == 1:
+                # put integer
+                if c == 'i' or c == 'd':
+                    value = ctypes.c_int32( args[index] )
+                    Link.dll.ufr_put_i32(ctypes.pointer(self), value, 1)
+                    state = 0
+
+                # put float
+                elif c == 'f':
+                    value = ctypes.c_float( args[index] )
+                    Link.dll.ufr_put_f32(ctypes.pointer(self), value)
+                    state = 0
+
+                # put string
+                elif c == 's':
+                    value = args[index]
+                    Link.dll.ufr_put_str(ctypes.pointer(self), bytes(value, 'utf-8'))
+                    state = 0
+
+                # put raw
+                elif c == 'r':
+                    value = args[index]
+                    Link.dll.ufr_put_raw(ctypes.pointer(self), value, len(value))
+                    state = 0
+                else:
+                    raise Exception(f"The variable %{c} is not allowed to serialize")
+
+                index += 1
+
+            # Error: state invalid
+            else:
+                raise Exception(f"State invalid")
+
+
+
+
 """

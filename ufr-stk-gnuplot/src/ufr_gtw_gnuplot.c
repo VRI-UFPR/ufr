@@ -167,11 +167,19 @@ int ufr_enc_gnuplot_put_str(link_t* link, const char* val) {
 int ufr_enc_gnuplot_cmd_send(link_t* link) {
     gtw_obj_t* obj = link->gtw_obj;
     encoder_t* enc = link->enc_obj;
-    
-    fprintf(obj->pipe, "plot '-' with lines lw 2 title 'cos(t)'\n");
-    for (int i=0; i<enc->index; i++) {
+
+    // fprintf(obj->pipe, "plot '-' with lines lw 2 title 'cos(t)'\n");
+
+    fprintf(obj->pipe, "plot '-' using 1:2:(len*cos($3)):(len*sin($3)) with vectors lw 2 lc rgb 'blue' title 'Robot Position and Heading', '-' with lines lw 2 title 'cos(t)'\n");
+    for (int i=enc->index-1; i<enc->index; i++) {
         printf("a %f %f\n", enc->labels[i], enc->values[i]);
-        fprintf(obj->pipe, "%f %f\n", enc->labels[i], enc->values[i]);
+        fprintf(obj->pipe, "%f %f %f\n", enc->labels[i], enc->values[i], 0.0);
+    }
+    fprintf(obj->pipe, "e\n");
+
+    for (int i=0; i<enc->index; i++) {
+        // printf("a %f %f\n", enc->labels[i], enc->values[i]);
+        fprintf(obj->pipe, "%f %f\n", enc->labels[i], enc->values[i]+2.0);
     }
     fprintf(obj->pipe, "e\n");
     fflush(obj->pipe);
@@ -189,6 +197,10 @@ int ufr_enc_gnuplot_enter(link_t* link, size_t maxsize) {
 }
 
 int ufr_enc_gnuplot_leave(link_t* link) {
+    return UFR_OK;
+}
+
+int ufr_enc_gnuplot_seek_str(link_t* link, const char* nome) {
     return UFR_OK;
 }
 
@@ -214,7 +226,9 @@ ufr_enc_api_t ufr_enc_gnuplot_api = {
     .cmd_next = NULL,
     .cmd_clear = ufr_enc_gnuplot_clear,
     .cmd_send = ufr_enc_gnuplot_cmd_send,
-    .cmd_eof = ufr_enc_gnuplot_cmd_eof
+    .cmd_eof = ufr_enc_gnuplot_cmd_eof,
+
+    .cmd_seek_str = ufr_enc_gnuplot_seek_str
 };
 
 // ============================================================================
@@ -246,10 +260,22 @@ int ufr_gtw_gnuplot_boot (link_t* link, const ufr_args_t* args) {
     }
 
     // Configure gnuplot settings via the pipe
+    /*
     fprintf(gnuplot_pipe, "set title 'Real-Time Data Stream'\n");
     fprintf(gnuplot_pipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplot_pipe, "set ylabel 'Y Axis'\n");
     fprintf(gnuplot_pipe, "set yrange [-2:2]\n");
+    */
+
+    // testando robo x,y,th
+    fprintf(gnuplot_pipe, "set xrange [-1:6]\n");
+    fprintf(gnuplot_pipe, "set yrange [-1:6]\n");
+    fprintf(gnuplot_pipe, "set xlabel 'X Axis'\n");
+    fprintf(gnuplot_pipe, "set ylabel 'Y Axis'\n");
+    fprintf(gnuplot_pipe, "set size ratio -1\n");
+    fprintf(gnuplot_pipe, "len = 0.5\n");
+
+    
 
     // Success
     gtw_obj_t* gtw_obj = malloc(sizeof(gtw_obj_t));

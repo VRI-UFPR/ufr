@@ -45,7 +45,7 @@ int ufr_put_begin_package(link_t* link);
 
 /**
  * @author Samantha Vanessa Golim Stocco
- * @author Amaya
+ * @author Amaya Duarte Fagundes
  */
 bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
     // Pular espaços em branco
@@ -277,37 +277,37 @@ int ufr_put_var(link_t* link, Evento* evento, va_list list) {
             const uint8_t* arr_ptr = va_arg(list, uint8_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_au8(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_U16: {
             const uint16_t* arr_ptr = va_arg(list, uint16_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_au16(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_U32: {
             const uint32_t* arr_ptr = va_arg(list, uint32_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             ufr_put_au32(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_U64: {
             const uint64_t* arr_ptr = va_arg(list, uint64_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_au64(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_I8: {
             const int8_t* arr_ptr = va_arg(list, int8_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_ai8(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_I16: {
             const int16_t* arr_ptr = va_arg(list, int16_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_ai16(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_I32: {
             const int32_t* arr_ptr = va_arg(list, int32_t*);
@@ -319,19 +319,19 @@ int ufr_put_var(link_t* link, Evento* evento, va_list list) {
             const int64_t* arr_ptr = va_arg(list, int64_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             // ufr_put_ai64(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_F32: {
             const float* arr_ptr = va_arg(list, float*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             count = ufr_put_af32(link, arr_ptr, arr_size);
-        }
+        } break;
 
         case TIPO_ARRAY_F64: {
             const double* arr_ptr = va_arg(list, double*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             count = ufr_put_af64(link, arr_ptr, arr_size);
-        }
+        } break;
 
         default:
             break;
@@ -346,6 +346,9 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
         if ( link->log_level > 0 ) {
             if ( link->enc_api == NULL ) {
                 ufr_fatal(link, 0, "Encoder is not loaded");
+            }
+            if ( link->enc_api->cmd_seek_str == NULL ) {
+                ufr_fatal(link, 0, "Function cmd_seek_str is NULL");
             }
             if ( link->enc_api->cmd_send == NULL ) {
                 ufr_fatal(link, 0, "Function cmd_send is NULL");
@@ -379,12 +382,12 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
             count += ufr_put_var(link, &evento, list);
 
         } else if ( evento.tipo == EVENTO_SEEK ) {
-            if ( link->enc_api->cmd_seek_str != NULL ) {
-                link->enc_api->cmd_seek_str(link, evento.nome);
+            const int res = link->enc_api->cmd_seek_str(link, evento.nome);
+            if ( res != UFR_OK ) {
+                ufr_warn(link, "Field %s is not valid", evento.nome);
             }
 
         } else if ( evento.tipo == EVENTO_SEND ) {
-printf("enviar\n");
             link->enc_api->cmd_send(link);
             link->put_count = 0;
             count += 1;

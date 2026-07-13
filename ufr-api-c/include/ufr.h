@@ -723,6 +723,10 @@ void ufr_exit_if_error(link_t* link);
 int ufr_set_state_ready(link_t* link);
 
 
+int ufr_enc_enter(link_t* link, int max_nitems);
+int ufr_enc_leave(link_t* link);
+
+
 // ============================================================================
 //  UFR LOG
 // ============================================================================

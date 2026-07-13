@@ -316,7 +316,7 @@ size_t ufr_gtw_mqtt_write(link_t* link, const char* buffer, size_t size) {
         return ufr_error(link, 1, "Mosquitto pointer is null");
     }
 
-    ufr_info(link, "writing %ld bytes on %s", size, shr->topic_name);
+    // ufr_info(link, "writing %ld bytes on %s", size, shr->topic_name);
     const int error = mosquitto_publish(obj->mosq, NULL, shr->topic_name, size, buffer, MQTT_QOS_0, false);
     if ( error != MOSQ_ERR_SUCCESS ) {
         // printf("Error Code: %d %s\n", error, mosquitto_strerror(error));
