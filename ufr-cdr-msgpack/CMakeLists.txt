@@ -11,7 +11,7 @@ project(cc_msgpack)
 
 add_library(ufr_cdr_msgpack SHARED ./src/ufr_enc_msgpack.c ./src/ufr_dcr_msgpack.c ./src/ufr_dcr_msgpack_array.c)
 target_link_libraries(ufr_cdr_msgpack ${MSGPACK_LIBS} ufr)
-target_compile_options(ufr_cdr_msgpack PUBLIC -O1)
+target_compile_options(ufr_cdr_msgpack PUBLIC -O3)
 install(TARGETS ufr_cdr_msgpack DESTINATION lib)
 
 # test

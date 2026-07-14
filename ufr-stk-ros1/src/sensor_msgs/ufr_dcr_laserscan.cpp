@@ -33,7 +33,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include "ufr_gtw_ros_noetic.hpp"
+#include "ufr_gtw_ros1.hpp"
 
 
 #define MAX 8
@@ -299,31 +299,49 @@ int ufr_dcr_ros_leave(link_t* link) {
 
 static
 ufr_dcr_api_t ufr_dcr_ros_driver = {
-    .boot = ufr_dcr_ros_boot,
-    .close = NULL,
+    // Init/Free
+    .init = ufr_dcr_ros_boot,
+    .free = ufr_dcr_ros_close,
+
+    // recv
     .recv_cb = ufr_dcr_ros_recv_cb,
     .recv_async_cb = ufr_dcr_ros_recv_async_cb,
-    .next = ufr_dcr_ros_next,
 
-    .get_type = NULL,
-    .get_nbytes = NULL,
-    .get_nitems = NULL,
-    .get_rawptr = NULL,
-
-    .get_raw = NULL,
-    .get_str = ufr_dcr_ros_get_str,
-
+    // 32 bits
     .get_u32 = ufr_dcr_ros_get_u32,
     .get_i32 = ufr_dcr_ros_get_i32,
     .get_f32 = ufr_dcr_ros_get_f32,
 
+    // 64 bits
     .get_u64 = NULL,
     .get_i64 = NULL,
     .get_f64 = NULL,
 
-    // .get_str = ufr_dcr_ros_get_str
-    .enter = ufr_dcr_ros_enter,
-    .leave = ufr_dcr_ros_leave,
+    // 8 bits
+    .get_raw = NULL,
+    .get_str = ufr_dcr_ros_get_str,
+    .get_bin = NULL,
+    .get_ptr = NULL,
+
+    // enter/leave
+    .cmd_enter = ufr_dcr_ros_enter,
+    .cmd_leave = ufr_dcr_ros_leave,
+    .cmd_next = ufr_dcr_ros_next,
+
+    // remove
+    .meta_get = NULL,
+    
+    // Metadata for Item
+    .meta_item_type = NULL,
+    .meta_item_mime = NULL,
+    .meta_item_nbytes = NULL,
+    .meta_item_nitems = NULL,
+
+    // Metadata for Package
+    .meta_pack_mime = NULL,
+    .meta_pack_nbytes = NULL,
+    .meta_pack_nitems = NULL,
+
 };
 
 // ============================================================================

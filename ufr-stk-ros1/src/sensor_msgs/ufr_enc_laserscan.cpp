@@ -37,7 +37,7 @@
 #include <ufr.h>
 #include <sensor_msgs/LaserScan.h>
 
-#include "ufr_gtw_ros_noetic.hpp"
+#include "ufr_gtw_ros1.hpp"
 
 struct Encoder {
     ros::Publisher publisher;
@@ -74,24 +74,24 @@ int ufr_enc_ros_boot(link_t* link, const ufr_args_t* args) {
 static
 void ufr_enc_ros_close(link_t* link) {
     if ( link->enc_obj ) {
-        delete link->enc_obj;
+        // delete link->enc_obj;
     }
 }
 
 static
-int ufr_enc_ros_put_u32(link_t* link, uint32_t val) {
+int ufr_enc_ros_put_u32(link_t* link, const uint32_t val[], int nitems) {
 	Encoder* enc_obj = (Encoder*) link->enc_obj;
 	if ( enc_obj ) {
 		switch(enc_obj->index) {
-            case 0: enc_obj->message.angle_min = val; enc_obj->index += 1;break;
-            case 1: enc_obj->message.angle_max = val; enc_obj->index += 1;break;
-            case 2: enc_obj->message.angle_increment = val; enc_obj->index += 1;break;
-            case 3: enc_obj->message.time_increment = val; enc_obj->index += 1;break;
-            case 4: enc_obj->message.scan_time = val; enc_obj->index += 1;break;
-            case 5: enc_obj->message.range_min = val; enc_obj->index += 1;break;
-            case 6: enc_obj->message.range_max = val; enc_obj->index += 1;break;
-            case 7: enc_obj->message.ranges[enc_obj->index2++] = val;break;
-            case 8: enc_obj->message.intensities[enc_obj->index2++] = val;break;
+            case 0: enc_obj->message.angle_min = val[0]; enc_obj->index += 1;break;
+            case 1: enc_obj->message.angle_max = val[0]; enc_obj->index += 1;break;
+            case 2: enc_obj->message.angle_increment = val[0]; enc_obj->index += 1;break;
+            case 3: enc_obj->message.time_increment = val[0]; enc_obj->index += 1;break;
+            case 4: enc_obj->message.scan_time = val[0]; enc_obj->index += 1;break;
+            case 5: enc_obj->message.range_min = val[0]; enc_obj->index += 1;break;
+            case 6: enc_obj->message.range_max = val[0]; enc_obj->index += 1;break;
+            // case 7: enc_obj->message.ranges[enc_obj->index2++] = val;break;
+            // case 8: enc_obj->message.intensities[enc_obj->index2++] = val;break;
             default: break;
         }
 	}
@@ -99,7 +99,7 @@ int ufr_enc_ros_put_u32(link_t* link, uint32_t val) {
 }
 
 static
-int ufr_enc_ros_put_i32(link_t* link, int32_t val) {
+int ufr_enc_ros_put_i32(link_t* link, const int32_t val[], int nitems) {
     Encoder* enc_obj = (Encoder*) link->enc_obj;
     if ( enc_obj ) {
         switch(enc_obj->index) {
@@ -111,11 +111,54 @@ int ufr_enc_ros_put_i32(link_t* link, int32_t val) {
 }
 
 static
-int ufr_enc_ros_put_f32(link_t* link, float val) {
+int ufr_enc_ros_put_f32(link_t* link, const float val[], int nitems) {
 	Encoder* enc_obj = (Encoder*) link->enc_obj;
-	if ( enc_obj ) {
-		
-	}
+	
+    // Return count
+    int i;
+
+    // array Ranges
+    if ( enc_obj->index == 7 ) {
+        if ( ( (size_t) enc_obj->index2 + nitems) > enc_obj->message.ranges.size() ) {
+            nitems = enc_obj->message.ranges.size() - enc_obj->index2;
+        }
+
+        for (i=0; i<nitems; i++) {
+            enc_obj->message.ranges[enc_obj->index2++] = val[i];
+        }
+    
+    // array intensities
+    } else if ( enc_obj->index == 8 ) {
+        if ( ( (size_t) enc_obj->index2 + nitems ) > enc_obj->message.intensities.size() ) {
+            nitems = enc_obj->message.intensities.size() - enc_obj->index2;
+        }
+        for (i=0; i<nitems; i++) {
+            enc_obj->message.intensities[enc_obj->index2++] = val[i];
+        }
+
+    // others
+    } else {
+        for (i=0; i<nitems; i++) {
+            switch(enc_obj->index) {
+                case 0: enc_obj->message.angle_min = val[i]; break;
+                case 1: enc_obj->message.angle_max = val[i]; break;
+                case 2: enc_obj->message.angle_increment = val[i]; break;
+                case 3: enc_obj->message.time_increment = val[i]; break;
+                case 4: enc_obj->message.scan_time = val[i]; break;
+                case 5: enc_obj->message.range_min = val[i]; break;
+                case 6: enc_obj->message.range_max = val[i]; break;
+                case 7: enc_obj->message.ranges[0] = val[i]; break;
+                case 8: enc_obj->message.intensities[0] = val[i]; break;
+                default: break;
+            }
+            enc_obj->index += 1;
+        }
+    }
+
+    // success
+    return i;
+
+
 	return 0;
 }
 
@@ -129,30 +172,26 @@ int ufr_enc_ros_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_enc_ros_put_arr(link_t* link, const void* arr_ptr, char type, size_t arr_size) {
+int ufr_enc_ros_cmd_send(link_t* link) {
 	Encoder* enc_obj = (Encoder*) link->enc_obj;
-	if ( type == 'i' ) {
-		
-	} else if ( type == 'f' ) {
-		
-	}
-    return 0;
-}
-
-static
-int ufr_enc_ros_put_cmd(link_t* link, char cmd) {
-	Encoder* enc_obj = (Encoder*) link->enc_obj;
-	if ( cmd == '\n' ) {
-		enc_obj->publisher.publish(enc_obj->message);
-        // enc_obj->message.data.clear();
-        enc_obj->clear();
-        ufr_log(link, "sent twist message");
-	}
+    enc_obj->publisher.publish(enc_obj->message);
+    // enc_obj->message.data.clear();
+    enc_obj->clear();
+    ufr_log(link, "sent twist message");
 	return 0;
 }
 
 static
-int ufr_ros_enter_array(struct _link* link, size_t maxsize) {
+int ufr_enc_ros_cmd_clear(link_t* link) {
+	Encoder* enc_obj = (Encoder*) link->enc_obj;
+    // enc_obj->message.data.clear();
+    enc_obj->clear();
+    ufr_log(link, "sent twist message");
+	return 0;
+}
+
+static
+int ufr_ros_cmd_enter(struct _link* link, size_t maxsize) {
     Encoder* enc_obj = (Encoder*) link->enc_obj;
     if ( enc_obj->index == 7 ) {
         enc_obj->message.ranges.resize(maxsize);
@@ -168,24 +207,20 @@ int ufr_ros_enter_array(struct _link* link, size_t maxsize) {
 }
 
 static
-int ufr_ros_leave_array(struct _link* link) {
+int ufr_ros_cmd_leave(struct _link* link) {
     Encoder* enc_obj = (Encoder*) link->enc_obj;
     enc_obj->index += 1;
     return UFR_OK;
 }
 
+int ufr_ros_cmd_seek_str(struct _link* link, const char* name) {
+    return UFR_OK;
+}
+
 static
 ufr_enc_api_t ufr_enc_ros = {
-    .boot = ufr_enc_ros_boot,
-    .close = ufr_enc_ros_close,
-    .clear = NULL,
-    .set_header = NULL,
-
-    .put_u8 = NULL,
-    .put_i8 = NULL,
-    .put_cmd = ufr_enc_ros_put_cmd,
-    .put_str = ufr_enc_ros_put_str,
-    .put_raw = NULL,
+    .init = ufr_enc_ros_boot,
+    .free = ufr_enc_ros_close,
 
     .put_u32 = ufr_enc_ros_put_u32,
     .put_i32 = ufr_enc_ros_put_i32,
@@ -195,11 +230,18 @@ ufr_enc_api_t ufr_enc_ros = {
     .put_i64 = NULL,
     .put_f64 = NULL,
 
-    .put_arr = ufr_enc_ros_put_arr,
-    .put_mat = NULL,
+    .put_str = ufr_enc_ros_put_str,
+    .put_raw = NULL,
+    .put_bin = NULL,
 
-    .enter_array = ufr_ros_enter_array,
-    .leave_array = ufr_ros_leave_array,
+    .cmd_enter = ufr_ros_cmd_enter,
+    .cmd_leave = ufr_ros_cmd_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_ros_cmd_clear,
+    .cmd_send = ufr_enc_ros_cmd_send,
+    .cmd_eof = ufr_enc_ros_cmd_send,
+
+    .cmd_seek_str = ufr_ros_cmd_seek_str
 };
 
 // ============================================================================
@@ -207,7 +249,7 @@ ufr_enc_api_t ufr_enc_ros = {
 // ============================================================================
 
 extern "C"
-int ufr_enc_ros_noetic_new_laserscan(link_t* link, const int type) {
+int ufr_enc_ros1_new_laserscan(link_t* link, const int type) {
 	link->enc_api = &ufr_enc_ros;
 	return 0;
 }

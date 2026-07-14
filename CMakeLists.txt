@@ -32,6 +32,7 @@ if (ZMQ_FOUND)
 endif()
 
 add_compile_options(-Wall)
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
 # add_compile_options(-DCMAKE_BUILD_TYPE=Release)
 
 set(HAVE_OPENCV OFF)

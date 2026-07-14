@@ -155,13 +155,13 @@ ufr_gtw_api_t ufr_ros_noetic_topic_drv = {
 
 extern "C" {
 
-int ufr_gtw_ros_noetic_new_topic(link_t* out, int type) {
+int ufr_gtw_ros1_new_topic(link_t* out, int type) {
     ufr_link_init(out, &ufr_ros_noetic_topic_drv);
     return UFR_OK;
 }
 
-int ufr_gtw_ros_noetic_new(link_t* out, int type) {
-    return ufr_gtw_ros_noetic_new_topic(out, type);
+int ufr_gtw_ros1_new(link_t* out, int type) {
+    return ufr_gtw_ros1_new_topic(out, type);
 }
 
 }
