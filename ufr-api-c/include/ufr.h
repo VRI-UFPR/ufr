@@ -764,6 +764,7 @@ void ufr_buffer_clear(ufr_buffer_t* buffer);
 void ufr_buffer_free(ufr_buffer_t* buffer);
 void ufr_buffer_put(ufr_buffer_t* buffer, const char* text, size_t size);
 void ufr_buffer_put_chr(ufr_buffer_t* buffer, char val);
+void ufr_buffer_put_char(ufr_buffer_t* buffer, char val);
 void ufr_buffer_put_u8_as_str(ufr_buffer_t* buffer, uint8_t val);
 void ufr_buffer_put_i8_as_str(ufr_buffer_t* buffer, int8_t val);
 void ufr_buffer_put_u32_as_str(ufr_buffer_t* buffer, uint32_t val);

@@ -3,7 +3,7 @@
  * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
  *  - Felipe Bombardelli <felipebombardelli@gmail.com>
  *  - Samantha Vanessa Golim Stocco
- *  - Amaya 
+ *  - Amaya Duarte Fagundes 
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

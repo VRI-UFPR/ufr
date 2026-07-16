@@ -288,16 +288,19 @@ void test_buffer_put_u8_as_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "13");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u8_as_str (buffer, 255);
     UFR_TEST_EQUAL_U64 (buffer->size, 6);
     UFR_TEST_EQUAL_STR (buffer->ptr, "13 255");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u8_as_str (buffer, 1);
     UFR_TEST_EQUAL_U64 (buffer->size, 8);
     UFR_TEST_EQUAL_STR (buffer->ptr, "13 255 1");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u8_as_str (buffer, -37);
     UFR_TEST_EQUAL_U64 (buffer->size, 12);
     UFR_TEST_EQUAL_STR (buffer->ptr, "13 255 1 219");
@@ -335,11 +338,13 @@ void test_buffer_put_i8_as_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "-128");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_i8_as_str (buffer, -100);
     UFR_TEST_EQUAL_U64 (buffer->size, 9);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-128 -100");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_i8_as_str (buffer, 12);
     UFR_TEST_EQUAL_U64 (buffer->size, 12);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-128 -100 12");
@@ -377,16 +382,19 @@ void test_buffer_put_u32_as_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "1250");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u32_as_str (buffer, 25);
     UFR_TEST_EQUAL_U64 (buffer->size, 7);
     UFR_TEST_EQUAL_STR (buffer->ptr, "1250 25");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u32_as_str (buffer, 4294967295);
     UFR_TEST_EQUAL_U64 (buffer->size, 18);
     UFR_TEST_EQUAL_STR (buffer->ptr, "1250 25 4294967295");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_u32_as_str (buffer, -1);
     UFR_TEST_EQUAL_U64 (buffer->size, 29);
     UFR_TEST_EQUAL_STR (buffer->ptr, "1250 25 4294967295 4294967295");
@@ -422,21 +430,25 @@ void test_buffer_put_i32_as_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "-2147483600");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_i32_as_str (buffer, -2147483648);
     UFR_TEST_EQUAL_U64 (buffer->size, 23);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-2147483600 -2147483648");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_chr (buffer, ' ');
     ufr_buffer_put_i32_as_str (buffer, 1350);
     UFR_TEST_EQUAL_U64 (buffer->size, 28);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-2147483600 -2147483648 1350");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_i32_as_str (buffer, 2147483648);
     UFR_TEST_EQUAL_U64 (buffer->size, 40);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-2147483600 -2147483648 1350 -2147483648");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_i32_as_str (buffer, 3000000000);
     UFR_TEST_EQUAL_U64 (buffer->size, 52);
     UFR_TEST_EQUAL_STR (buffer->ptr, "-2147483600 -2147483648 1350 -2147483648 -1294967296");
@@ -472,16 +484,19 @@ void test_buffer_put_f32_as_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "0.000012");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_f32_as_str (buffer, 0);
     UFR_TEST_EQUAL_U64 (buffer->size, 17);
     UFR_TEST_EQUAL_STR (buffer->ptr, "0.000012 0.000000");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_f32_as_str (buffer, 34.0000000000000000000000000000000000000);
     UFR_TEST_EQUAL_U64 (buffer->size, 27);
     UFR_TEST_EQUAL_STR (buffer->ptr, "0.000012 0.000000 34.000000");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_f32_as_str (buffer, -12.0123456F);
     UFR_TEST_EQUAL_U64 (buffer->size, 38);
     UFR_TEST_EQUAL_STR (buffer->ptr, "0.000012 0.000000 34.000000 -12.012345");
@@ -517,16 +532,17 @@ void test_buffer_put_str () {
     UFR_TEST_EQUAL_STR (buffer->ptr, "teste 1");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_str (buffer, "teste 2");
     UFR_TEST_EQUAL_U64 (buffer->size, 15);
     UFR_TEST_EQUAL_STR (buffer->ptr, "teste 1 teste 2");
     ufr_buffer_print (buffer);
     
+    ufr_buffer_put_char (buffer, ' ');
     ufr_buffer_put_str (buffer, "teste3 teste4 teste5 teste6 teste7 ");
     UFR_TEST_EQUAL_U64 (buffer->size, 51);
     UFR_TEST_EQUAL_STR (buffer->ptr, "teste 1 teste 2 teste3 teste4 teste5 teste6 teste7 ");
     ufr_buffer_print (buffer);
-
 
     ufr_buffer_free (buffer);
     UFR_TEST_ZERO (buffer->size);

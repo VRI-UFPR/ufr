@@ -17,3 +17,7 @@ add_test(NAME test_buffer COMMAND test_buffer)
 add_executable(test_ufr_args ./test_ufr_args.c)
 target_link_libraries(test_ufr_args ufr)
 add_test(NAME test_ufr_args COMMAND test_ufr_args)
+
+add_executable(test_ufr_parser_format ./test_ufr_parser_format.c)
+target_link_libraries(test_ufr_parser_format ufr)
+add_test(NAME test_ufr_parser_format COMMAND test_ufr_parser_format)

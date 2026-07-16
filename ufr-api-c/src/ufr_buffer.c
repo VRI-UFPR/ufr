@@ -181,6 +181,10 @@ void ufr_buffer_put_chr(ufr_buffer_t* buffer, char val) {
     buffer->ptr[buffer->size] = '\0';
 }
 
+void ufr_buffer_put_char(ufr_buffer_t* buffer, char val) {
+    ufr_buffer_put_chr(buffer, val);
+}
+
 /**
  * @brief put an unsigned int of 8bit as string
  * 
@@ -195,17 +199,12 @@ void ufr_buffer_put_u8_as_str(ufr_buffer_t* buffer, uint8_t val) {
         fprintf (stderr,"Buffer invalido!(put_u8)\n");
         return;
     }  
-    ufr_buffer_check_size(buffer, 5); 
+    ufr_buffer_check_size(buffer, 8); 
     char* base = &buffer->ptr[buffer->size];
-    size_t size;
 
     /* Se o buffer estiver vazio, o valor é adicionado sem espaço antes.
     * Caso contrário, um espaço é adicionado antes do valor.*/
-    if ( buffer->size == 0 ) {
-        size = snprintf(base, 8, "%u", val);
-    } else {
-        size = snprintf(base, 8, " %u", val);
-    }
+    const size_t size = snprintf(base, 8, "%u", val);
     buffer->size += size;  
 }
 
@@ -223,14 +222,9 @@ void ufr_buffer_put_i8_as_str(ufr_buffer_t* buffer, int8_t val) {
         fprintf (stderr, "Buffer invalido!(put_i8)\n");
         return;
     }
-    ufr_buffer_check_size(buffer, 5);
+    ufr_buffer_check_size(buffer, 8);
     char* base = &buffer->ptr[buffer->size];
-    size_t size;
-    if ( buffer->size == 0 ) {
-        size = snprintf(base, 8, "%d", val);
-    } else {
-        size = snprintf(base, 8, " %d", val);
-    }
+    const size_t size = snprintf(base, 8, "%d", val);
     buffer->size += size;
 }
 
@@ -270,12 +264,7 @@ void ufr_buffer_put_i32_as_str(ufr_buffer_t* buffer, int32_t val) {
     }
     ufr_buffer_check_size(buffer, 15);
     char* base = &buffer->ptr[buffer->size];
-    size_t size = 0;
-    if ( buffer->size == 0 ) {
-        size = snprintf(base, 15, "%d", val);
-    } else {
-        size = snprintf(base, 15, " %d", val);
-    }
+    const size_t size = snprintf(base, 15, "%d", val);
     buffer->size += size;
 }
 
@@ -296,12 +285,7 @@ void ufr_buffer_put_f32_as_str(ufr_buffer_t* buffer, float val) {
     }
     ufr_buffer_check_size(buffer, 32);
     char* base = &buffer->ptr[buffer->size];
-    size_t size;
-    if ( buffer->size == 0 ) {
-        size = snprintf(base, 32, "%f", val);
-    } else {
-        size = snprintf(base, 32, " %f", val);
-    }
+    const size_t size = snprintf(base, 32, "%f", val);
     buffer->size += size;
 }
 
@@ -321,10 +305,5 @@ void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text) {
     }
 
     const size_t size = strlen(text); // Calcula o tamanho da string 
-    // if ( buffer->size == 0 ) {
-        ufr_buffer_put(buffer, text, size); // Se eh a primeira string, Adiciona a string sem divisor
-    /*} else {
-        ufr_buffer_put(buffer, " ", 1);
-        ufr_buffer_put(buffer, text, size); // Adiciona a string com espaco antes da frase
-    }*/
+    ufr_buffer_put(buffer, text, size); // Se eh a primeira string, Adiciona a string sem divisor
 }
