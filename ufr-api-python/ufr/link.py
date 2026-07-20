@@ -17,11 +17,12 @@ UFR_START_PUBLISHER=4
 UFR_START_SUBSCRIBER=5
 
 # Eventos do ufr_printf e ufr_scanf
-EVENTO_RECV1 = 0   # >
-EVENTO_RECV2 = 1   # >>
-EVENTO_SEND  = 2    # \n
-EVENTO_SEEK  = 3    # <NOME>=
-EVENTO_VAR   = 4
+EVENTO_RECV1 = 0       # >
+EVENTO_RECV2 = 1       # >>
+EVENTO_SEND  = 2       # \n
+EVENTO_SEEK  = 3       # <NOME>=
+EVENTO_VAR_SCALAR = 4  # %d ...
+EVENTO_VAR_ARRAY  = 5  # %a:...
 
 TIPO_NULO = 0        # 0
 TIPO_C    = 1        # 1  - %c
@@ -36,17 +37,6 @@ TIPO_I64  = 9        # 9  - %ld
 TIPO_F32  = 10       # 10 - %f
 TIPO_F64  = 11       # 11 - %lf
 TIPO_STR  = 12       # 12 - %s
-TIPO_ARRAY_C   = 13  # 13 - %a:c
-TIPO_ARRAY_U8  = 14  # 14 - %a:hhu
-TIPO_ARRAY_U16 = 15  # 15 - %a:hu
-TIPO_ARRAY_U32 = 16  # 16 - %a:u
-TIPO_ARRAY_U64 = 17  # 17 - %a:lu
-TIPO_ARRAY_I8  = 18  # 18 - %a:hhd
-TIPO_ARRAY_I16 = 19  # 19 - %a:hd
-TIPO_ARRAY_I32 = 20  # 20 - %a:d
-TIPO_ARRAY_I64 = 21  # 21 - %a:ld
-TIPO_ARRAY_F32 = 22  # 22 - %a:f
-TIPO_ARRAY_F64 = 23  # 23 - %a:lf
 
 
 # =======================================================================================

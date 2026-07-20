@@ -83,18 +83,19 @@ int ufr_get_scalar(link_t* link, const Evento* evento, va_list list) {
         } break;
 
         case TIPO_F32: {
-            float* val = (float*) va_arg(list, float*);
+            float* val = va_arg(list, float*);
             count = link->dcr_api->get_f32(link, val, 1);
         } break;
 
         case TIPO_F64: {
-            double* val = (double*) va_arg(list, double*);
+            double* val = va_arg(list, double*);
             count = link->dcr_api->get_f64(link, val, 1);
         } break;
 
         case TIPO_STR: {
             const char* str = va_arg(list, const char*);
-            count = link->dcr_api->get_str(link, str, 1024);
+            link->dcr_api->get_str(link, str, 1024);
+            count += 1;
         } break;
 
         default:
@@ -227,7 +228,6 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
             }*/
 
         } else if ( evento.tipo == EVENTO_RECV1 ) {
-printf("receive\n");
             if ( ufr_recv(link) == false ) {
                 return ufr_error(link, -1, "Error to receive data");
             }

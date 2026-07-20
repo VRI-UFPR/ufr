@@ -67,7 +67,7 @@ void test_simple() {
         UFR_TEST_EQUAL_F32(c, 30.5);
     }
 
-    ufr_close(&link);
+    ufr_close(link);
 }
 
 void test_simple_2() {
@@ -90,7 +90,7 @@ void test_simple_2() {
         float a=0,b=0,c=0;
         const char* buffer = "10.5,20.125,30.5\n";
         ufr_write(link, buffer, strlen(buffer));
-        ufr_get(link, "> {a: %f, b: %f, c: %f}", &a, &b, &c);
+        ufr_get(link, "> %f %f %f", &a, &b, &c);
         UFR_TEST_EQUAL_F32(a, 10.5);
         UFR_TEST_EQUAL_F32(b, 20.125);
         UFR_TEST_EQUAL_F32(c, 30.5);
