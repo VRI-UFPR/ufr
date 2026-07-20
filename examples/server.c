@@ -41,18 +41,18 @@ int main() {
     // abre um publicador
     // link_t server = ufr_server_st("@new mqtt @log 4 @host bombardelli.dedyn.io @coder msgpack"); 
 
-    link_t server = ufr_server_st("@new socket @log 4 @coder msgpack"); 
+    link_t* server = ufr_server_st("@new socket @log 4 @coder msgpack"); 
 
     // loop principal
     for(int i=0; i<4; i++) {
         char command[1024];
 
-        ufr_get(&server, "#> %s\n", command);
-        ufr_put(&server, "%s\n\n", "OK");
+        ufr_get(server, "#> %s\n", command);
+        ufr_put(server, "%s\n\n", "OK");
         printf("    recv: %s - OK\n", command);
     }
 
     // fim
-    ufr_close(&server);
+    ufr_close(server);
     return 0;
 }

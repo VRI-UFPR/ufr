@@ -21,9 +21,9 @@ set_target_properties(example_server PROPERTIES OUTPUT_NAME "server")
 install(TARGETS example_server DESTINATION examples)
 
 
-add_executable(apic_teste1 teste1.c)
-target_link_libraries(apic_teste1  ufr)
-set_target_properties(apic_teste1 PROPERTIES OUTPUT_NAME "teste1")
-install(TARGETS apic_teste1 DESTINATION examples)
+# add_executable(apic_teste1 teste1.c)
+# target_link_libraries(apic_teste1  ufr)
+# set_target_properties(apic_teste1 PROPERTIES OUTPUT_NAME "teste1")
+# install(TARGETS apic_teste1 DESTINATION examples)
 
 ### 

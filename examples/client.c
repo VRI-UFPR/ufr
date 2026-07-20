@@ -40,7 +40,7 @@
 
 int main() {
     // abre um publicador
-    link_t client = ufr_client("@new socket @coder msgpack @log 4"); 
+    link_t* client = ufr_client("@new socket @coder msgpack @log 4"); 
 
     // loop principal
     for(int i=0; i<3; i++) {

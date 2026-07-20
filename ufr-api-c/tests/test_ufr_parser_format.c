@@ -45,17 +45,17 @@ void test1() {
 
     // Evento "%d"
     UFR_TEST_TRUE( ufr_parse_frase("%d %f     %s\n", &cursor, &evento) );
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR ); 
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR ); 
     UFR_TEST_EQUAL_I32( evento.var, TIPO_I32 );   
 
     // Evento "%f"
     UFR_TEST_TRUE( ufr_parse_frase("%d %f     %s\n", &cursor, &evento) );
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR );
     UFR_TEST_EQUAL_I32( evento.var, TIPO_F32 );
 
     // Evento "%s"
     UFR_TEST_TRUE( ufr_parse_frase("%d %f     %s\n", &cursor, &evento) );
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR );
     UFR_TEST_EQUAL_I32( evento.var, TIPO_STR );
 
     // Evento "\n"
@@ -79,7 +79,7 @@ void test2() {
     UFR_TEST_EQUAL_I32( evento.var, TIPO_NULO );
 
     UFR_TEST_TRUE( ufr_parse_frase("> nome= %s  idade= %d", &cursor, &evento) );
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR );
     UFR_TEST_EQUAL_I32( evento.var, TIPO_STR );
 
     UFR_TEST_TRUE( ufr_parse_frase("> nome= %s  idade= %d", &cursor, &evento) );
@@ -87,7 +87,7 @@ void test2() {
     UFR_TEST_EQUAL_I32( evento.var, TIPO_NULO );
 
     UFR_TEST_TRUE( ufr_parse_frase("> nome= %s  idade= %d", &cursor, &evento) );
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR );
     UFR_TEST_EQUAL_I32( evento.var, TIPO_I32 );
 }
 
@@ -100,8 +100,8 @@ void test3() {
     UFR_TEST_EQUAL_I32( evento.var, TIPO_NULO );
 
     ufr_parse_frase("vetor= %a:f:10", &cursor, &evento);
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
-    UFR_TEST_EQUAL_I32( evento.var, TIPO_ARRAY_F32 );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_ARRAY );
+    UFR_TEST_EQUAL_I32( evento.var, TIPO_F32 );
     UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
 }
 
@@ -110,8 +110,8 @@ int test4() {
     int cursor = 0;
 
     ufr_parse_frase("%a:ld:?", &cursor, &evento);
-    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR );
-    UFR_TEST_EQUAL_I32( evento.var, TIPO_ARRAY_I64 );
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_ARRAY );
+    UFR_TEST_EQUAL_I32( evento.var, TIPO_I64 );
     UFR_TEST_EQUAL_I32 ( evento.tamanho[0], -1 );
 }
 
