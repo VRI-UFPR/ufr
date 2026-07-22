@@ -170,7 +170,7 @@ class Link(ctypes.Structure):
                 break
 
             # 2a. Executa o evento %
-            if evento.tipo == EVENTO_VAR:
+            if evento.tipo == EVENTO_VAR_SCALAR:
 
                 if evento.var == TIPO_I32:
                     value = ctypes.c_int32( args[index] )
@@ -184,24 +184,27 @@ class Link(ctypes.Structure):
                     value = args[index]
                     Link.dll.ufr_put_str(ctypes.pointer(self), bytes(value, 'utf-8'))
 
-                elif evento.var == TIPO_ARRAY_I32:
+                # Passa para o proximo argumento
+                index += 1
+
+            elif evento.tipo == EVENTO_VAR_ARRAY:
+
+                if evento.var == TIPO_I32:
                     vetor = args[index]
                     tamanho = len(vetor)
-                    print(vetor, tamanho)
                     Link.dll.ufr_enc_enter(ctypes.pointer(self), tamanho)
                     for py_value in vetor:
-                        c_value = ctypes.c_float(py_value)
-                        Link.dll.ufr_enc_value_i32(ctypes.pointer(self), c_value)
+                        c_value = ctypes.c_int32( int(py_value) )
+                        Link.dll.ufr_put_i32(ctypes.pointer(self), c_value)
                     Link.dll.ufr_enc_leave(ctypes.pointer(self))
 
-                elif evento.var == TIPO_ARRAY_F32:
+                elif evento.var == TIPO_F32:
                     vetor = args[index]
                     tamanho = len(vetor)
-                    print(vetor, tamanho)
                     Link.dll.ufr_enc_enter(ctypes.pointer(self), tamanho)
                     for py_value in vetor:
                         c_value = ctypes.c_float(py_value)
-                        Link.dll.ufr_enc_value_f32(ctypes.pointer(self), c_value)
+                        Link.dll.ufr_put_f32(ctypes.pointer(self), c_value)
                     Link.dll.ufr_enc_leave(ctypes.pointer(self))
 
                 # Passa para o proximo argumento
@@ -219,58 +222,73 @@ class Link(ctypes.Structure):
         self.put(format, *args)
 
 
-    def get(self, format: str):
+
+    def get(self, format, *args):
+        index = 0
+        cursor = ctypes.c_int32(0)
+        evento = Evento()
         resp = []
-        state = 0
-        for c in format:
-            # State 0 : default
-            if state == 0:
-                if c == '^' or c == '>':
-                    Link.dll.ufr_recv(ctypes.pointer(self))
-                elif c == '\n':
-                    Link.dll.ufr_get_eof(ctypes.pointer(self))
-                elif c == '%':
-                    state = 1
-               
-            # State 1 : Found the caracter '%'. Example %d
-            elif state == 1:
-                if c == 'i' or c == 'd':
+
+        while 1:
+            # 1. Parsea o format e retorna um evento por vez
+            res = Link.dll.ufr_parse_frase(bytes(format, 'utf-8'), ctypes.pointer(cursor), ctypes.pointer(evento) )
+            if res == False:
+                break
+
+            # 2a. Executa o evento %
+            if evento.tipo == EVENTO_VAR_SCALAR:
+
+                if evento.var == TIPO_I32:
                     var = Link.dll.ufr_get_i32(ctypes.pointer(self), ctypes.c_int32(0))
                     resp.append(var)
-                    state = 0
-                elif c == 'f':
+
+                elif evento.var == TIPO_F32:
                     var = Link.dll.ufr_get_f32(ctypes.pointer(self), ctypes.c_float(0))
                     resp.append(var)
-                    state = 0
-                elif c == 's':
+
+                elif evento.var == TIPO_STR:
                     size = Link.dll.ufr_meta_item_nbytes(ctypes.pointer(self)) + 1   # +1 : para o \0
                     buffer = ctypes.create_string_buffer(b"", size)
                     Link.dll.ufr_get_str( ctypes.pointer(self), ctypes.pointer(buffer), size)
                     text = bytes(buffer).decode('utf-8').rstrip('\0')
                     resp.append(text)
-                    state = 0
-                elif c == 'p':
-                    ptr = Link.dll.ufr_get_rawptr(ctypes.pointer(self))
-                    resp.append(ptr)
-                    state = 0
-                elif c == 'r':
-                    size = Link.dll.ufr_meta_item_nbytes(ctypes.pointer(self))
-                    buffer = (ctypes.c_ubyte * size)()
-                    Link.dll.ufr_get_raw( ctypes.pointer(self), ctypes.pointer(buffer), size)
-                    resp.append(buffer)
-                    state = 0
-                else:
-                    raise Exception(f"The variable %{c} is not allowed to unpack")    
+
+            elif evento.tipo == EVENTO_VAR_ARRAY:
+
+                if evento.var == TIPO_I32:
+                    vetor = []
+                    nitems = Link.dll.ufr_meta_item_nitems(ctypes.pointer(self))
+                    for i in range(nitems):
+                        var = Link.dll.ufr_get_i32(ctypes.pointer(self), ctypes.c_int32(0))
+                        print(var)
+                        vetor.append(var)
+                    resp.append(vetor)
+
+
+                elif evento.var == TIPO_F32:
+                    vetor = []
+                    nitems = Link.dll.ufr_meta_item_nitems(ctypes.pointer(self))
+                    for i in range(nitems):
+                        var = Link.dll.ufr_get_f32(ctypes.pointer(self), ctypes.c_float(0))
+                        vetor.append(var)
+                    resp.append(vetor)
+
+            # 2b. Executa o evento \n
+            elif evento.tipo == EVENTO_RECV1:
+                Link.dll.ufr_recv( ctypes.pointer(self) )
             
-            # Error: state invalid
+            # 2c. Evento invalido
             else:
-                raise Exception(f"Wrong state for get")
+                raise Exception(f"Invalid event")
 
         # case just one, return scalar value
         if len(resp) == 1:
             return resp[0]
         else:
             return resp
+
+
+
 
     def get_cv_image(self):
         import numpy as np

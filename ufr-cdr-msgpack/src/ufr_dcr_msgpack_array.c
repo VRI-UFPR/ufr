@@ -303,6 +303,7 @@ int ufr_dcr_msgpack_array_get_i32(link_t* link, int32_t* val, int max_nitems) {
         const msgpack_object item = decoder->l0_array.ptr[ decoder->l0_idx ];
         const int type = item.type;
         if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
+printf("aa %lu\n", item.via.u64);
             *val = (int) item.via.u64;
         } else if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
             *val = (int) item.via.i64;

@@ -53,6 +53,23 @@ int main() {
     }
 
     // fim
+
+    ufr_bind(server, "#GET", command);
+
     ufr_close(server);
     return 0;
 }
+
+/*
+
+UFILE* client = ufr_client();
+
+ufr_put("#GET %s", "/");
+ufr_put("host=%s connection=%s\n\n", "www.example.com", "close");
+
+"GET / HTTP/1.1\r\n"
+"Host: www.example.com\r\n"
+"Connection: close\r\n"
+"\r\n";
+
+*/

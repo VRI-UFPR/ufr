@@ -111,7 +111,6 @@ int ufr_enc_gnuplot_put_f32(link_t* link, const float* val, int nitems) {
             }
 
         } else {
-printf("%d %d\n", enc->index, enc->is_values);
             if ( enc->is_values == false ) {
                 for (int i=1; i<MAX; i++) {
                     enc->labels[i-1] = enc->labels[i];
