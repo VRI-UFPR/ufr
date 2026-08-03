@@ -402,7 +402,7 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
         if ( evento.tipo == EVENTO_VAR_SCALAR ) {
             count += ufr_put_scalar(link, &evento, list);
 
-        } else if ( evento.tipo == EVENTO_SEEK ) {
+        } else if ( evento.tipo == EVENTO_VAR_ARRAY ) {
             count += ufr_put_array(link, &evento, list);
 
         } else if ( evento.tipo == EVENTO_SEEK ) {
@@ -420,6 +420,7 @@ int ufr_put_va(link_t* link, const char* format, va_list list) {
         }
 
     }
+
     return count;
 }
 
