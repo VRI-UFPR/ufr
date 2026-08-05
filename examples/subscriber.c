@@ -43,12 +43,12 @@ int main() {
     ufr_stdin("@new mqtt  @coder msgpack");
 
     // Main loop
-    int matriz[480];
+    float matriz[480];
     char nome[32];
     for (int i=0; i<3; i++) {
         float a,b,nbytes;
-        ufr_scanf("> %f %f %a:f:2", &a, &b, matriz);
-        printf("%f %f %f %f \n", a, b, matriz[0], matriz[1]);
+        ufr_scanf("> %f %f %a:f:10", &a, &b, matriz);
+        printf("%f %f %f %f %f\n", a, b, matriz[0], matriz[1], matriz[2]);
     }
 
     // end

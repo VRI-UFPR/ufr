@@ -179,6 +179,10 @@ int ufr_enc_text_cmd_clear(link_t* link) {
     return UFR_OK;
 }
 
+int ufr_enc_text_cmd_seek_str(link_t* link, const char* name) {
+    return UFR_OK;
+}
+
 ufr_enc_api_t ufr_enc_text_api = {
     .init = ufr_enc_text_init,
     .free = ufr_enc_text_free,
@@ -206,7 +210,7 @@ ufr_enc_api_t ufr_enc_text_api = {
     .cmd_send = ufr_enc_text_cmd_send,
     .cmd_eof = NULL,
 
-    .cmd_seek_str = NULL
+    .cmd_seek_str = ufr_enc_text_cmd_seek_str
 };
 
 // ============================================================================

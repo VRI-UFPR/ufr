@@ -72,10 +72,10 @@ int main() {
     ufr_stdout("@new mqtt @coder msgpack @log 5");
 
     // loop principal
-    float vetor[10] = {1.0, 2.0, 3.0, 4.6, 5.6, 6.2, 7.8, 8.1, 9.0, 10.0};
+    int vetor_i32[10] = {4,2,3,4,5,6,7,8,9};
+    float vetor_f32[10] = {1.20, 2.0, 3.0, 4.6, 5.6, 6.2, 7.8, 8.1, 9.0, 10.0};
     while( ufr_loop_ok() ) {
-
-        ufr_printf("%f %f %a:f:10\n", 0.5, 0.2, vetor);
+        ufr_printf("%f %f %a:f:10\n", 0.5, 0.2, vetor_f32);
         sleep(1);
     }
 
