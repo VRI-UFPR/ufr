@@ -48,16 +48,36 @@ void test_simple() {
     // test 1
     {
         char buffer[128];
-        UFR_TEST_EQUAL_I32( ufr_put(link, "%d %d %d\n", 10, 20, 30), 3 );
+        UFR_TEST_EQUAL_I32( ufr_put(link, "%d %d %d\n", 10, 20, 30), 4 );
         UFR_TEST_TRUE( ufr_recv(link) );
         const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
+        UFR_TEST_EQUAL_I32( nbytes, 7 );
         buffer[nbytes] = '\0';
-        UFR_TEST_EQUAL_STR(buffer, "10 20 30\n");
+        UFR_TEST_EQUAL_STR(buffer, "102030\n");
     }
 
     ufr_close(link);
 }
+
+
+void test_simple2() {
+    link_t* link = ufr_publisher("@new %p @coder %p", 
+        ufr_gtw_posix_new_pipe, ufr_enc_text_new);
+
+    // test 1
+    {
+        char buffer[128];
+        UFR_TEST_EQUAL_I32( ufr_put(link, "%d %f %s\n", 10, 3.141592653589793238462643383279, "OPAA!!!!"), 4 );
+        UFR_TEST_TRUE( ufr_recv(link) );
+        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
+        UFR_TEST_EQUAL_I32( nbytes, 19 );
+        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_STR(buffer, "103.141593OPAA!!!!\n");
+    }
+
+    ufr_close(link);
+}
+
 
 // ============================================================================
 //  Main
@@ -65,6 +85,7 @@ void test_simple() {
 
 int main() {
     test_simple();
+    test_simple2();
     ufr_test_print_result();
     return 0;
 }

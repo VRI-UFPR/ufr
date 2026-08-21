@@ -44,12 +44,12 @@ int ufr_get_scalar(link_t* link, const Evento* evento, va_list list) {
     switch (evento->var) {
         case TIPO_U8: {
             uint8_t* val = va_arg(list, uint8_t*);
-            // is_ok = link->dcr_api->get_u8(link, &val, 1);
+            count = link->dcr_api->get_u8(link, val, 1);
         }
 
         case TIPO_U16: {
             uint16_t* val = va_arg(list, uint16_t*);
-            // count = link->dcr_api->get_u16(link, &val, 1);
+            count = link->dcr_api->get_u16(link, val, 1);
         }
 
         case TIPO_U32: {
@@ -64,12 +64,12 @@ int ufr_get_scalar(link_t* link, const Evento* evento, va_list list) {
 
         case TIPO_I8: {
             int8_t* val = va_arg(list, int8_t*);
-            // count = link->dcr_api->get_i8(link, val, 1);
+            count = link->dcr_api->get_i8(link, val, 1);
         } break;
 
         case TIPO_I16: {
             int16_t* val = va_arg(list, int16_t*);
-            // count = link->dcr_api->get_i16(link, val, 1);
+            count = link->dcr_api->get_i16(link, val, 1);
         } break;
 
         case TIPO_I32: {
@@ -93,7 +93,7 @@ int ufr_get_scalar(link_t* link, const Evento* evento, va_list list) {
         } break;
 
         case TIPO_STR: {
-            const char* str = va_arg(list, const char*);
+            char* str = va_arg(list, char*);
             link->dcr_api->get_str(link, str, 1024);
             count += 1;
         } break;

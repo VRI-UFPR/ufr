@@ -153,15 +153,25 @@ typedef struct {
     int (*recv_cb)(struct _link* link, char* msg_data, size_t msg_size);
     int (*recv_async_cb)(struct _link* link, char* msg_data, size_t msg_size);
 
-    // Get
+    // Get 8 bits
+    int (*get_u8)(struct _link* link, uint8_t* out, int max_nitems);
+    int (*get_i8)(struct _link* link, int8_t* out, int max_nitems);
+
+    // Get 16 bits
+    int (*get_u16)(struct _link* link, uint16_t* out, int max_nitems);
+    int (*get_i16)(struct _link* link, int16_t* out, int max_nitems);
+
+    // Get 32 bits
     int (*get_u32)(struct _link* link, uint32_t* out, int max_nitems);
     int (*get_i32)(struct _link* link, int32_t* out, int max_nitems);
     int (*get_f32)(struct _link* link, float* out, int max_nitems);
 
+    // Get 64 bits
     int (*get_u64)(struct _link* link, uint64_t* out, int max_nitems);
     int (*get_i64)(struct _link* link, int64_t* out, int max_nitems);
     int (*get_f64)(struct _link* link, double* out, int max_nitems);
 
+    // Get Array
     int (*get_raw)(struct _link* link, uint8_t* out, int max_nbytes);
     int (*get_str)(struct _link* link, char* out, int max_nbytes);
     int (*get_bin)(struct _link* link, char** out_mime, char** out_data, int* out_nbytes);
@@ -194,23 +204,30 @@ typedef struct {
     int  (*init)(struct _link* link, const ufr_args_t* args);
     void (*free)(struct _link* link);
 
-    // 32 bits
+    // 8 bits (Many Items)
+    int (*put_u8)(struct _link* link, const uint8_t* val, int nitems);
+    int (*put_i8)(struct _link* link, const int8_t* val, int nitems);
+
+    // 16 bits (Many Items)
+    int (*put_u16)(struct _link* link, const uint16_t* val, int nitems);
+    int (*put_i16)(struct _link* link, const int16_t* val, int nitems);
+
+    // 32 bits (Many Items)
     int (*put_u32)(struct _link* link, const uint32_t* val, int nitems);
     int (*put_i32)(struct _link* link, const int32_t* val, int nitems);
     int (*put_f32)(struct _link* link, const float* val, int nitems);
 
-    // 64 bits
+    // 64 bits (Many Items)
     int (*put_u64)(struct _link* link, const uint64_t* val, int nitems);
     int (*put_i64)(struct _link* link, const int64_t* val, int nitems);
     int (*put_f64)(struct _link* link, const double* val, int nitems);
 
-    // Single - 8 bits
-    // int (*put_cmd)(struct _link* link, char cmd);
-    int (*put_str)(struct _link* link, const char* val);
-    int (*put_raw)(struct _link* link, const uint8_t* val, int nbytes);
+    // Single - 8 bits -- retorna UFR_OK
+    int (*put_str)(struct _link* link, const char* val);                    // renomeiar para put_one_str()
+    int (*put_raw)(struct _link* link, const uint8_t* val, int nbytes);     // talvez remover
     int (*put_bin)(struct _link* link, const char* mime, const char* data, int nbytes);
 
-    // Commands
+    // Commands (retorna UFR_OK ou erro)
     int (*cmd_enter)(struct _link* link, size_t max_nitems);
     int (*cmd_leave)(struct _link* link);
     int (*cmd_next)(struct _link* link);

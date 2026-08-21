@@ -141,6 +141,7 @@ int ufr_dcr_text_cmd_next(link_t* link) {
     return lex_next_token(decoder, token, TOKEN_SIZE);
 }
 
+/*
 static
 char ufr_dcr_text_get_type(link_t* link) {
     const ll_decoder_t* decoder = link->dcr_obj;
@@ -159,6 +160,7 @@ int ufr_dcr_text_get_nbytes(link_t* link) {
     return 0;
 }
 
+
 static
 int ufr_dcr_text_get_nitems(link_t* link) {
     const ll_decoder_t* decoder = link->dcr_obj;
@@ -167,6 +169,7 @@ int ufr_dcr_text_get_nitems(link_t* link) {
     }
     return 0;
 }
+*/
 
 static
 int ufr_dcr_text_recv_cb(link_t* link, char* msg_data, size_t msg_size) {

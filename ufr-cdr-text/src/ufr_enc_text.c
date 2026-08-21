@@ -150,15 +150,7 @@ int ufr_enc_text_put_str(link_t* link, const char* val) {
     // const size_t size = strlen(val);
 
     ufr_buffer_put_str(buffer, val);    
-    return UFR_OK;
-}
-
-int ufr_enc_text_cmd_send(link_t* link) {
-    ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
-    ufr_buffer_put_chr(buffer, '\n');
-    ufr_write(link, buffer->ptr, buffer->size);
-    ufr_buffer_clear(buffer);
-    return UFR_OK;
+    return 1;
 }
 
 int ufr_enc_text_cmd_enter(link_t* link, size_t maxsize) {
@@ -173,10 +165,26 @@ int ufr_enc_text_cmd_leave(link_t* link) {
     return UFR_OK;
 }
 
+int ufr_enc_text_cmd_next(link_t* link) {
+    return UFR_OK;
+}
+
 int ufr_enc_text_cmd_clear(link_t* link) {
     ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
     ufr_buffer_clear(buffer);
     return UFR_OK;
+}
+
+int ufr_enc_text_cmd_send(link_t* link) {
+    ufr_buffer_t* buffer = (ufr_buffer_t*) link->enc_obj;
+    ufr_buffer_put_chr(buffer, '\n');
+    ufr_write(link, buffer->ptr, buffer->size);
+    ufr_buffer_clear(buffer);
+    return UFR_OK;
+}
+
+int ufr_enc_text_cmd_eof(link_t* link) {
+    return ufr_enc_text_cmd_send(link);
 }
 
 int ufr_enc_text_cmd_seek_str(link_t* link, const char* name) {
@@ -205,11 +213,10 @@ ufr_enc_api_t ufr_enc_text_api = {
     // Commands
     .cmd_enter = ufr_enc_text_cmd_enter,
     .cmd_leave = ufr_enc_text_cmd_leave,
-    .cmd_next = NULL,
+    .cmd_next = ufr_enc_text_cmd_next,
     .cmd_clear = ufr_enc_text_cmd_clear,
     .cmd_send = ufr_enc_text_cmd_send,
-    .cmd_eof = NULL,
-
+    .cmd_eof = ufr_enc_text_cmd_eof,
     .cmd_seek_str = ufr_enc_text_cmd_seek_str
 };
 

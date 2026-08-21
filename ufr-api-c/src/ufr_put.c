@@ -50,12 +50,12 @@ int ufr_put_scalar(link_t* link, const Evento* evento, va_list list) {
     switch (evento->var) {
         case TIPO_U8: {
             const uint8_t val = va_arg(list, int);
-            // is_ok = link->enc_api->put_u8(link, &val, 1);
+            count = link->enc_api->put_u8(link, &val, 1);
         }
 
         case TIPO_U16: {
             const uint16_t val = va_arg(list, int);
-            // count = link->enc_api->put_u16(link, &val, 1);
+            count = link->enc_api->put_u16(link, &val, 1);
         }
 
         case TIPO_U32: {
@@ -70,12 +70,12 @@ int ufr_put_scalar(link_t* link, const Evento* evento, va_list list) {
 
         case TIPO_I8: {
             const int8_t val = va_arg(list, int);
-            // count = link->enc_api->put_i8(link, &val, 1);
+            count = link->enc_api->put_i8(link, &val, 1);
         } break;
 
         case TIPO_I16: {
             const int16_t val = va_arg(list, int);
-            // count = link->enc_api->put_i16(link, &val, 1);
+            count = link->enc_api->put_i16(link, &val, 1);
         } break;
 
         case TIPO_I32: {
