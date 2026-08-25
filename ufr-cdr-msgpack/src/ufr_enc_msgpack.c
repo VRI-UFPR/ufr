@@ -66,12 +66,59 @@ void ufr_enc_msgpack_free(link_t* link) {
     }
 }
 
+// ==== Put 8 bits ====
+
 static
-int ufr_enc_msgpack_cmd_clear(link_t* link) {
+int ufr_enc_msgpack_put_u8(link_t* link, const uint8_t* val, int nitems) {
+    int wrote = 0;
     ll_encoder_t* enc_obj = link->enc_obj;
-    msgpack_sbuffer_clear(&enc_obj->sbuf);
-    return UFR_OK;
+    if ( enc_obj ) {
+        for (; wrote<nitems; wrote++) {
+            msgpack_pack_uint32(&enc_obj->pk, val[wrote]);
+        }
+    }
+    return wrote;
 }
+
+static
+int ufr_enc_msgpack_put_i8(link_t* link, const int8_t* val, int nitems) {
+    int wrote = 0;
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
+        for (; wrote<nitems; wrote++) {
+            msgpack_pack_int32(&enc_obj->pk, val[wrote]);
+        }
+    }
+    return wrote;
+}
+
+// ==== Put 16 bits ====
+
+static
+int ufr_enc_msgpack_put_u16(link_t* link, const uint16_t* val, int nitems) {
+    int wrote = 0;
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
+        for (; wrote<nitems; wrote++) {
+            msgpack_pack_uint32(&enc_obj->pk, val[wrote]);
+        }
+    }
+    return wrote;
+}
+
+static
+int ufr_enc_msgpack_put_i16(link_t* link, const int16_t* val, int nitems) {
+    int wrote = 0;
+    ll_encoder_t* enc_obj = link->enc_obj;
+    if ( enc_obj ) {
+        for (; wrote<nitems; wrote++) {
+            msgpack_pack_int32(&enc_obj->pk, val[wrote]);
+        }
+    }
+    return wrote;
+}
+
+// ==== Put 32 bits ====
 
 static
 int ufr_enc_msgpack_put_u32(link_t* link, const uint32_t* val, int nitems) {
@@ -109,6 +156,8 @@ int ufr_enc_msgpack_put_f32(link_t* link, const float* val, int nitems) {
     return wrote;
 }
 
+// ==== Put 64 bits ====
+
 static
 int ufr_enc_msgpack_put_u64(link_t* link, const uint64_t* val, int nitems) {
     int wrote = 0;
@@ -145,9 +194,10 @@ int ufr_enc_msgpack_put_f64(link_t* link, const double* val, int nitems) {
     return wrote;
 }
 
+// ==== Put One ====
 
 static
-int ufr_enc_msgpack_put_str(link_t* link, const char* val) {
+int ufr_enc_msgpack_put_one_str(link_t* link, const char* val) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const size_t size = strlen(val);
@@ -158,17 +208,7 @@ int ufr_enc_msgpack_put_str(link_t* link, const char* val) {
 }
 
 static
-int ufr_enc_msgpack_cmd_send(link_t* link) {
-    ll_encoder_t* enc_obj = link->enc_obj;
-    const size_t size = enc_obj->sbuf.size;
-    const char* data = enc_obj->sbuf.data;
-    ufr_write(link, data, size);
-    msgpack_sbuffer_clear(&enc_obj->sbuf);
-    return UFR_OK;
-}
-
-static
-int ufr_enc_msgpack_put_raw(link_t* link, const uint8_t* buffer, int size) {
+int ufr_enc_msgpack_put_one_raw(link_t* link, const uint8_t* buffer, int size) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -180,7 +220,7 @@ int ufr_enc_msgpack_put_raw(link_t* link, const uint8_t* buffer, int size) {
 }
 
 static
-int ufr_enc_msgpack_put_bin(link_t* link, const char* mime, const char* buffer, int nbytes) {
+int ufr_enc_msgpack_put_one_bin(link_t* link, const char* mime, const char* buffer, int nbytes) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj == NULL ) {
         return -1;
@@ -198,18 +238,44 @@ int ufr_enc_msgpack_put_bin(link_t* link, const char* mime, const char* buffer, 
     return nbytes;
 }
 
+// ==== Commands ====
 
+static
+int ufr_enc_msgpack_cmd_send(link_t* link) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    const size_t size = enc_obj->sbuf.size;
+    const char* data = enc_obj->sbuf.data;
+    ufr_write(link, data, size);
+    msgpack_sbuffer_clear(&enc_obj->sbuf);
+    return UFR_OK;
+}
+
+static
 int ufr_enc_msgpack_cmd_enter(link_t* link, size_t maxsize) {
     ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     msgpack_pack_array(&enc_obj->pk, maxsize);
     return UFR_OK;
 }
 
-
+static
 int ufr_enc_msgpack_cmd_leave(link_t* link) {
     return UFR_OK;
 }
 
+static
+int ufr_enc_msgpack_cmd_next(link_t* link) {
+    // ll_encoder_t* enc_obj = link->enc_obj;
+    return UFR_OK;
+}
+
+static
+int ufr_enc_msgpack_cmd_clear(link_t* link) {
+    ll_encoder_t* enc_obj = link->enc_obj;
+    msgpack_sbuffer_clear(&enc_obj->sbuf);
+    return UFR_OK;
+}
+
+static
 int ufr_enc_msgpack_cmd_eof(link_t* link) {
     ll_encoder_t* enc_obj = link->enc_obj;
     const size_t size = enc_obj->sbuf.size;
@@ -219,35 +285,48 @@ int ufr_enc_msgpack_cmd_eof(link_t* link) {
     return UFR_OK;
 }
 
+static
 int ufr_enc_msgpack_cmd_seek_str(link_t* link, const char* name) {
     return UFR_OK;
 }
+
+// ==== API ====
 
 static
 ufr_enc_api_t ufr_enc_msgpack_api = {
     .init = ufr_enc_msgpack_init,
     .free = ufr_enc_msgpack_free,
 
+    // 8 bits
+    .put_u8 = ufr_enc_msgpack_put_u8,
+    .put_i8 = ufr_enc_msgpack_put_i8,
+
+    // 16 bits
+    .put_u16 = ufr_enc_msgpack_put_u16,
+    .put_i16 = ufr_enc_msgpack_put_i16,
+
+    // 32 bits
     .put_u32 = ufr_enc_msgpack_put_u32,
     .put_i32 = ufr_enc_msgpack_put_i32,
     .put_f32 = ufr_enc_msgpack_put_f32,
 
+    // 64 bits
     .put_u64 = ufr_enc_msgpack_put_u64,
     .put_i64 = ufr_enc_msgpack_put_i64,
     .put_f64 = ufr_enc_msgpack_put_f64,
 
-    // .put_cmd = ufr_enc_msgpack_put_cmd,
-    .put_str = ufr_enc_msgpack_put_str,
-    .put_raw = ufr_enc_msgpack_put_raw,
-    .put_bin = ufr_enc_msgpack_put_bin,
+    // One Variable
+    .put_str = ufr_enc_msgpack_put_one_str,
+    .put_raw = ufr_enc_msgpack_put_one_raw,
+    .put_bin = ufr_enc_msgpack_put_one_bin,
 
+    // Commands
     .cmd_enter = ufr_enc_msgpack_cmd_enter,
     .cmd_leave = ufr_enc_msgpack_cmd_leave,
-    .cmd_next = NULL,
+    .cmd_next = ufr_enc_msgpack_cmd_next,
     .cmd_clear = ufr_enc_msgpack_cmd_clear,
     .cmd_send = ufr_enc_msgpack_cmd_send,
     .cmd_eof = ufr_enc_msgpack_cmd_eof,
-
     .cmd_seek_str = ufr_enc_msgpack_cmd_seek_str
 };
 

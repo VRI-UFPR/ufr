@@ -322,7 +322,10 @@ typedef enum {
 typedef struct {
     TipoEvento tipo;
     TipoVar    var;
-    int        tamanho[2];
+    int        tamanho[4];
+    int        max_tamanho[4];
+    uint8_t    qtde_tam;
+    uint8_t    qtde_max;
     char       nome[32];
 } Evento;
 
@@ -589,14 +592,28 @@ uint32_t ufr_get_u32(link_t* link, uint32_t defval);
 int32_t  ufr_get_i32(link_t* link, int32_t defval);
 float    ufr_get_f32(link_t* link, float defval);
 
-// GET Vector - 64 bites
-// int ufr_get_pf32(link_t* link, float buffer[], int max_nitems);
-int ufr_get_af32(link_t* link, float buffer[], int max_items);
-
 // GET Scalar - 64 bites
 uint64_t ufr_get_u64(link_t* link, uint64_t defval);
 int64_t  ufr_get_i64(link_t* link, int64_t defval);
 double   ufr_get_f64(link_t* link, double defval);
+
+// GET Array - 8 bits
+int ufr_get_arr_u8(link_t* link, uint8_t buffer[], int max_items);
+int ufr_get_arr_i8(link_t* link, int8_t buffer[], int max_items);
+
+// GET Array - 16 bits
+int ufr_get_arr_u16(link_t* link, uint16_t buffer[], int max_items);
+int ufr_get_arr_i16(link_t* link, int16_t buffer[], int max_items);
+
+// GET Array - 32 bits
+int ufr_get_arr_u32(link_t* link, uint32_t buffer[], int max_items);
+int ufr_get_arr_i32(link_t* link, int32_t buffer[], int max_items);
+int ufr_get_arr_f32(link_t* link, float buffer[], int max_items);
+
+// GET Array - 64 bits
+int ufr_get_arr_u64(link_t* link, uint64_t buffer[], int max_items);
+int ufr_get_arr_i64(link_t* link, int64_t buffer[], int max_items);
+int ufr_get_arr_f64(link_t* link, double buffer[], int max_items);
 
 // Enter and Leave
 int ufr_get_enter(link_t* link);
@@ -652,11 +669,19 @@ int ufr_put_enter(link_t* link, int max_nitems);
 int ufr_put_leave(link_t* link);
 
 
-int ufr_put_au32(link_t* link, const uint32_t array[], int nitems);
-int ufr_put_ai32(link_t* link, const int32_t array[], int nitems);
-int ufr_put_af32(link_t* link, const float array[], int nitems);
-int ufr_put_af64(link_t* link, const double array[], int nitems);
+int ufr_put_arr_u8(link_t* link, const uint8_t array[], int nitems);
+int ufr_put_arr_i8(link_t* link, const int8_t array[], int nitems);
 
+int ufr_put_arr_u16(link_t* link, const uint16_t array[], int nitems);
+int ufr_put_arr_i16(link_t* link, const int16_t array[], int nitems);
+
+int ufr_put_arr_u32(link_t* link, const uint32_t array[], int nitems);
+int ufr_put_arr_i32(link_t* link, const int32_t array[], int nitems);
+int ufr_put_arr_f32(link_t* link, const float array[], int nitems);
+
+int ufr_put_arr_u64(link_t* link, const uint64_t array[], int nitems);
+int ufr_put_arr_i64(link_t* link, const int64_t array[], int nitems);
+int ufr_put_arr_f64(link_t* link, const double array[], int nitems);
 
 
 
@@ -672,7 +697,6 @@ int ufr_stdin_env(const char* varname);
 
 int ufr_stdout(const char* format, ...);
 int ufr_stdout_env(const char* varname);
-
 
 
 bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento);

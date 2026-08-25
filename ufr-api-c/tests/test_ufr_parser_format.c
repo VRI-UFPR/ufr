@@ -105,7 +105,24 @@ void test3() {
     UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
 }
 
-int test4() {
+void test4() {
+    Evento evento;
+    int cursor = 0;
+
+    ufr_parse_frase("vetor= %a:f:10<100", &cursor, &evento);
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_SEEK );
+    UFR_TEST_EQUAL_I32( evento.var, TIPO_NULO );
+
+    ufr_parse_frase("vetor= %a:f:10<100", &cursor, &evento);
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_ARRAY );
+    UFR_TEST_EQUAL_I32( evento.var, TIPO_F32 );
+    UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
+    UFR_TEST_EQUAL_I32 ( evento.qtde_tam, 1 );
+    UFR_TEST_EQUAL_I32 ( evento.qtde_max, 1 );
+}
+
+
+int test5() {
     Evento evento;
     int cursor = 0;
 
@@ -120,5 +137,6 @@ int main() {
     test2();
     test3();
     test4();
+    test5();
     return 0;
 }

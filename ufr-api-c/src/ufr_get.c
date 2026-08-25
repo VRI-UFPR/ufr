@@ -110,63 +110,71 @@ int ufr_get_array(link_t* link, const Evento* evento, va_list list) {
 
     switch (evento->var) {
         case TIPO_U8: {
-            const uint8_t* arr_ptr = va_arg(list, uint8_t*);
+            uint8_t* arr_ptr = va_arg(list, uint8_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_au8(link, arr_ptr, arr_size);
+            ufr_get_arr_u8(link, arr_ptr, arr_size);
         }
 
         case TIPO_U16: {
-            const uint16_t* arr_ptr = va_arg(list, uint16_t*);
+            uint16_t* arr_ptr = va_arg(list, uint16_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_au16(link, arr_ptr, arr_size);
+            ufr_get_arr_u16(link, arr_ptr, arr_size);
         }
 
         case TIPO_U32: {
-            const uint32_t* arr_ptr = va_arg(list, uint32_t*);
+            uint32_t* arr_ptr = va_arg(list, uint32_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            ufr_get_au32(link, arr_ptr, arr_size);
+            ufr_get_arr_u32(link, arr_ptr, arr_size);
         } break;
 
         case TIPO_U64: {
-            const uint64_t* arr_ptr = va_arg(list, uint64_t*);
+            uint64_t* arr_ptr = va_arg(list, uint64_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_au64(link, arr_ptr, arr_size);
+            ufr_get_arr_u64(link, arr_ptr, arr_size);
         }
 
         case TIPO_I8: {
-            const int8_t* arr_ptr = va_arg(list, int8_t*);
+            int8_t* arr_ptr = va_arg(list, int8_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_ai8(link, arr_ptr, arr_size);
+            ufr_get_arr_i8(link, arr_ptr, arr_size);
         } break;
 
         case TIPO_I16: {
-            const int16_t* arr_ptr = va_arg(list, int16_t*);
+            int16_t* arr_ptr = va_arg(list, int16_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_ai16(link, arr_ptr, arr_size);
+            ufr_get_arr_i16(link, arr_ptr, arr_size);
         } break;
 
         case TIPO_I32: {
-            const int32_t* arr_ptr = va_arg(list, int32_t*);
+            int32_t* arr_ptr = va_arg(list, int32_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            count = ufr_get_ai32(link, arr_ptr, arr_size);
+            const int res = ufr_get_arr_i32(link, arr_ptr, arr_size);
+            if ( res > 0 ) {
+                count = 1;
+            }
         } break;
 
         case TIPO_I64: {
-            const int64_t* arr_ptr = va_arg(list, int64_t*);
+            int64_t* arr_ptr = va_arg(list, int64_t*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            // ufr_get_ai64(link, arr_ptr, arr_size);
+            ufr_get_arr_i64(link, arr_ptr, arr_size);
         } break;
 
         case TIPO_F32: {
-            const float* arr_ptr = va_arg(list, float*);
-            const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            count = ufr_get_af32(link, arr_ptr, arr_size);
+            float* arr_ptr = va_arg(list, float*);
+            // const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            const int count_array = ufr_get_arr_f32(link, arr_ptr, 1000);
+            if (evento->tamanho[0] == -1) {
+                int32_t* out_tam = va_arg(list, int32_t);
+                *out_tam = count_array;
+            }
+            count += 1;
         } break;
 
         case TIPO_F64: {
-            const double* arr_ptr = va_arg(list, double*);
+            double* arr_ptr = va_arg(list, double*);
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            count = ufr_get_af64(link, arr_ptr, arr_size);
+            count = ufr_get_arr_f64(link, arr_ptr, arr_size);
         } break;
 
         case TIPO_STR: {
@@ -231,6 +239,7 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
             if ( ufr_recv(link) == false ) {
                 return ufr_error(link, -1, "Error to receive data");
             }
+            count += 1;
 
         } else {
             break;
@@ -240,144 +249,6 @@ int ufr_get_va(link_t* link, const char* format, va_list list) {
     return count;
 }
 
-/*
-int ufr_get_va(link_t* link, const char* format, va_list list) {
-    if ( link ) {
-        if ( link->log_level > 0 ) {
-            if ( link->dcr_api == NULL ) {
-                ufr_fatal(link, 0, "Decoder is not loaded");
-            }
-            if ( link->dcr_api->get_u32 == NULL ) {
-                ufr_fatal(link, 0, "Function get_u32 is NULL");
-            }
-            if ( link->dcr_api->get_i32 == NULL ) {
-                ufr_fatal(link, -1, "Function get_i32 is NULL");
-            }
-            if ( link->dcr_api->get_f32 == NULL ) {
-                ufr_fatal(link, -1, "Function get_f32 is NULL");
-            }
-            if ( link->dcr_api->get_str == NULL ) {
-                ufr_fatal(link, -1, "Function get_str is NULL");
-            }
-        }
-    } else {
-        ufr_fatal(link, -1, "Link is NULL");
-    }
-
-    int retval = 0;
-    while( format != NULL ) {	
-        const char type = *format;
-        format += 1;
-
-        if ( type == '\0' ) {
-            break;
-
-        } else if ( type == '#' ) {
-            if ( ufr_accept(link) == false ) {
-                return ufr_error(link, -1, "Error to accept the connection");
-            }
-
-        } else if ( type == '^' || type == '\r' || type == '>' ) {
-            if ( ufr_recv(link) == false ) {
-                return ufr_error(link, -1, "Error to receive data");
-            }
-
-        } else if ( type == '\n' ) {
-            ufr_get_eof(link);
-
-        } else if ( type == '%' ) {
-            const char type = *format;
-            format += 1;
-
-            if ( type == '\0' ) {
-                break;
-
-            } else if ( type == '-' ) {
-                link->dcr_api->cmd_next(link);
-
-            } else if ( type == 'a' ) {
-                const char arr_type = *format;
-                format += 1;
-                if ( arr_type == '\0' ) {
-                    break;
-                }
-             
-            } else {
-                switch (type) {
-                    case 's': {
-                        char* buffer = va_arg(list, char*);
-                        buffer[0] = '\0';
-                        if ( link->dcr_api->get_str(link, buffer, 1024) >= 0 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'u': {
-                        uint32_t *val = va_arg(list, uint32_t*);
-                        if ( link->dcr_api->get_u32(link, val, 1) == 1 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'i':
-                    case 'd': {
-                        int32_t *val = va_arg(list, int32_t*);
-                        if ( link->dcr_api->get_i32(link, val, 1) == 1 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'l': {
-                        int64_t *val = va_arg(list, int64_t*);
-                        if ( link->dcr_api->get_i64(link, val, 1) == 1 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'f': {
-                        float* val = va_arg(list, float*);
-                        if ( link->dcr_api->get_f32(link, val, 1) == 1 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'g': {
-                        double* val = va_arg(list, double*);
-                        if ( link->dcr_api->get_f64(link, val, 1) == 1 ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'p': {
-                        void** val = va_arg(list, void**);
-                        *val = link->dcr_api->get_ptr(link);
-                        if ( *val != NULL ) {
-                            retval += 1;
-                        }
-                    } break;
-
-                    case 'z': {
-                        char* buffer = va_arg(list, char*);
-                        buffer[0] = '\0';
-                        buffer[1] = '\0';
-                        if ( link->dcr_api->get_str(link, &buffer[1], 255) >= 0 ) {
-                            retval += 1;
-                            buffer[0] = (uint8_t) strlen(&buffer[1]);
-                        }
-                    } break;
-
-                    case '-': {
-                        link->dcr_api->cmd_next(link);
-                    } break;
-                }
-            }
-        }
-	}
-
-    // Success
-    return retval;
-}
-*/
 
 int ufr_get(link_t* link, const char* format, ...) {
     va_list list;
@@ -523,7 +394,60 @@ int ufr_get_leave(link_t* link) {
     return link->dcr_api->cmd_leave(link);
 }
 
-int ufr_get_au32(link_t* link, uint32_t buffer[], int max_items) {
+
+int ufr_get_arr_u8(link_t* link, uint8_t buffer[], int max_items) {
+    const int res1 = link->dcr_api->cmd_enter(link);
+    if ( res1 != UFR_OK ) {
+        return ufr_error(link, -1, "Error on Enter function");
+    }
+    const int items_read = link->dcr_api->get_u8(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        return ufr_error(link, -1, "Error on get_u8 function");
+    }
+    link->dcr_api->cmd_leave(link);
+    return items_read;
+}
+
+int ufr_get_arr_i8(link_t* link, int8_t buffer[], int max_items) {
+    const int res1 = link->dcr_api->cmd_enter(link);
+    if ( res1 != UFR_OK ) {
+        return ufr_error(link, -1, "Error on Enter function");
+    }
+    const int items_read = link->dcr_api->get_i8(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        return ufr_error(link, -1, "Error on get_i8 function");
+    }
+    link->dcr_api->cmd_leave(link);
+    return items_read;
+}
+
+int ufr_get_arr_u16(link_t* link, uint16_t buffer[], int max_items) {
+    const int res1 = link->dcr_api->cmd_enter(link);
+    if ( res1 != UFR_OK ) {
+        return ufr_error(link, -1, "Error on Enter function");
+    }
+    const int items_read = link->dcr_api->get_u16(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        return ufr_error(link, -1, "Error on get_u16 function");
+    }
+    link->dcr_api->cmd_leave(link);
+    return items_read;
+}
+
+int ufr_get_arr_i16(link_t* link, int16_t buffer[], int max_items) {
+    const int res1 = link->dcr_api->cmd_enter(link);
+    if ( res1 != UFR_OK ) {
+        return ufr_error(link, -1, "Error on Enter function");
+    }
+    const int items_read = link->dcr_api->get_i16(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        return ufr_error(link, -1, "Error on get_i16 function");
+    }
+    link->dcr_api->cmd_leave(link);
+    return items_read;
+}
+
+int ufr_get_arr_u32(link_t* link, uint32_t buffer[], int max_items) {
     const int res1 = link->dcr_api->cmd_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
@@ -536,7 +460,7 @@ int ufr_get_au32(link_t* link, uint32_t buffer[], int max_items) {
     return items_read;
 }
 
-int ufr_get_ai32(link_t* link, int32_t buffer[], int max_items) {
+int ufr_get_arr_i32(link_t* link, int32_t buffer[], int max_items) {
     const int res1 = link->dcr_api->cmd_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
@@ -549,7 +473,20 @@ int ufr_get_ai32(link_t* link, int32_t buffer[], int max_items) {
     return items_read;
 }
 
-int ufr_get_ai64(link_t* link, int64_t buffer[], int max_items) {
+int ufr_get_arr_u64(link_t* link, uint64_t buffer[], int max_items) {
+    const int res1 = link->dcr_api->cmd_enter(link);
+    if ( res1 != UFR_OK ) {
+        return ufr_error(link, -1, "Error on Enter function");
+    }
+    const int items_read = link->dcr_api->get_u64(link, buffer, max_items);
+    if ( items_read < 0 ) {
+        return ufr_error(link, -1, "Error on get_u64 function");
+    }
+    link->dcr_api->cmd_leave(link);
+    return items_read;
+}
+
+int ufr_get_arr_i64(link_t* link, int64_t buffer[], int max_items) {
     const int res1 = link->dcr_api->cmd_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
@@ -563,7 +500,7 @@ int ufr_get_ai64(link_t* link, int64_t buffer[], int max_items) {
 }
 
 
-int ufr_get_af32(link_t* link, float buffer[], int max_items) {
+int ufr_get_arr_f32(link_t* link, float buffer[], int max_items) {
     if (link->dcr_api->cmd_leave == NULL ) {
         return ufr_error(link, 1, "Function leave in Decoder is NULL");
     }
@@ -580,7 +517,7 @@ int ufr_get_af32(link_t* link, float buffer[], int max_items) {
     return items_read;
 }
 
-int ufr_get_af64(link_t* link, double buffer[], int max_items) {
+int ufr_get_arr_f64(link_t* link, double buffer[], int max_items) {
     if (link->dcr_api->cmd_leave == NULL ) {
         return ufr_error(link, 1, "Function leave in Decoder is NULL");
     }
