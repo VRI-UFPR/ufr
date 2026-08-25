@@ -161,11 +161,14 @@ int ufr_get_array(link_t* link, const Evento* evento, va_list list) {
         } break;
 
         case TIPO_F32: {
+            int32_t* out_tam = NULL;
             float* arr_ptr = va_arg(list, float*);
-            // const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
-            const int count_array = ufr_get_arr_f32(link, arr_ptr, 1000);
             if (evento->tamanho[0] == -1) {
-                int32_t* out_tam = va_arg(list, int32_t);
+                out_tam = va_arg(list, int32_t*);
+            }
+            const int32_t max_size = (evento->max_tamanho[0] == -1) ? va_arg(list, int32_t) : evento->max_tamanho[0];
+            const int count_array = ufr_get_arr_f32(link, arr_ptr, max_size);
+            if (evento->tamanho[0] == -1) {
                 *out_tam = count_array;
             }
             count += 1;

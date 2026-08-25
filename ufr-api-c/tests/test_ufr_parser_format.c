@@ -116,9 +116,10 @@ void test4() {
     ufr_parse_frase("vetor= %a:f:10<100", &cursor, &evento);
     UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_ARRAY );
     UFR_TEST_EQUAL_I32( evento.var, TIPO_F32 );
-    UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
     UFR_TEST_EQUAL_I32 ( evento.qtde_tam, 1 );
+    UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
     UFR_TEST_EQUAL_I32 ( evento.qtde_max, 1 );
+    UFR_TEST_EQUAL_I32 ( evento.max_tamanho[0], 100 );
 }
 
 

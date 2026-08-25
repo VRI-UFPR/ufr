@@ -330,7 +330,7 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
                 out_evento->qtde_max = 1;
 
                 if (frase[pos] == '?') {
-                    out_evento->tamanho[0] = -1;
+                    out_evento->max_tamanho[0] = -1;
                     pos++;
                 } else {
                     int tam = 0;
@@ -338,7 +338,7 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
                         tam = tam * 10 + (frase[pos] - '0');
                         pos++;
                     }
-                    out_evento->tamanho[1] = tam;
+                    out_evento->max_tamanho[0] = tam;
                 }
             }
 
