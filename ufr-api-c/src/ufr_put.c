@@ -579,9 +579,9 @@ int ufr_put_pf64(link_t* link, const double* array, int nitems) {
     return wrote_nitems;
 }
 
-
-
-
+// ============================================================================
+//  Arrays
+// ============================================================================
 
 int ufr_put_arr_u8(link_t* link, const uint8_t array[], int nitems) {
     if ( link->log_level > 0 ) {

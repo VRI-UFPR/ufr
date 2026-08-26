@@ -322,11 +322,11 @@ typedef enum {
 typedef struct {
     TipoEvento tipo;
     TipoVar    var;
-    int        tamanho[4];
-    int        max_tamanho[4];
+    int        tamanho[2];
+    int        max_tamanho[2];
+    char       nome[32];
     uint8_t    qtde_tam;
     uint8_t    qtde_max;
-    char       nome[32];
 } Evento;
 
 // ============================================================================
