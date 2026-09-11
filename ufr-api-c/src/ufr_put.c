@@ -194,6 +194,22 @@ int ufr_put_array(link_t* link, const Evento* evento, va_list list) {
     return count;
 }
 
+static 
+int ufr_parse_int(const char frase[], int* inout_cursor) {
+    int pos = *inout_cursor;
+    if (frase[pos] == '?') {
+        *inout_cursor = pos + 1;
+        return -1;
+    } else {
+        int numero = 0;
+        while (frase[pos] >= '0' && frase[pos] <= '9') {
+            numero = numero * 10 + (frase[pos] - '0');
+            pos++;
+        }
+        *inout_cursor = pos;
+        return numero;
+    }
+}
 
 // ============================================================================
 //  PUT
@@ -249,10 +265,15 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
     if (frase[pos] == '%') {
         pos++; 
 
-        // Verifica se é um Array (%a:)
-        if (frase[pos] == 'a' && frase[pos + 1] == ':') {
+        // Verifica se é um Array (%a)
+        if (frase[pos] == 'a' ) {
             out_evento->tipo = EVENTO_VAR_ARRAY;
-            pos += 2; 
+            pos += 1;
+
+            // Pula ':' apos o %a
+            if ( frase[pos] == ':' ) {
+                pos += 1; 
+            }
             
             if (frase[pos] == 'c') {
                 out_evento->var = TIPO_C; pos++; 
@@ -288,61 +309,32 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
                 out_evento->var = TIPO_F64; pos += 2; 
             }
 
-            // Pula o ':' 
+            // Parsea a qtde de bytes. Exemplo: %a:1000
             if (frase[pos] == ':') {
-                pos++;
-            }
-
-            // Trata o tamanho do array
-            if (frase[pos] == '?') {
-                out_evento->tamanho[0] = -1;
-                out_evento->qtde_tam = 1;
-                pos++;
-            } else {
-                int tam = 0;
-                while (frase[pos] >= '0' && frase[pos] <= '9') {
-                    tam = tam * 10 + (frase[pos] - '0');
-                    pos++;
-                }
-                out_evento->tamanho[0] = tam;
+                // Trata o tamanho do array
+                pos += 1;
+                const int num1 = ufr_parse_int(frase, &pos);
+                out_evento->tamanho[0] = num1;
                 out_evento->qtde_tam = 1;
 
                 // Trata o tamanho da matriz
                 if (frase[pos] == 'x') {
+                    pos += 1;
+                    const int num2 = ufr_parse_int(frase, &pos);
+                    out_evento->tamanho[1] = num2;
                     out_evento->qtde_tam = 2;
-                    if (frase[pos] == '?') {
-                        out_evento->tamanho[1] = -1;
-                        pos++;
-                    } else {
-                        int tam = 0;
-                        while (frase[pos] >= '0' && frase[pos] <= '9') {
-                            tam = tam * 10 + (frase[pos] - '0');
-                            pos++;
-                        }
-                        out_evento->tamanho[1] = tam;
-                    }
                 }
             }
 
-            // Pula o '<' 
+            // Parsea o limite maximo '<'. Exemplo %a:f:?<2000
             if (frase[pos] == '<') {
                 pos++;
+                const int num = ufr_parse_int(frase, &pos);
+                out_evento->max_tamanho[0] = num;
                 out_evento->qtde_max = 1;
-
-                if (frase[pos] == '?') {
-                    out_evento->max_tamanho[0] = -1;
-                    pos++;
-                } else {
-                    int tam = 0;
-                    while (frase[pos] >= '0' && frase[pos] <= '9') {
-                        tam = tam * 10 + (frase[pos] - '0');
-                        pos++;
-                    }
-                    out_evento->max_tamanho[0] = tam;
-                }
             }
 
-
+            // Fim %a
             *inout_cursor = pos;
             return true;
         }
@@ -357,6 +349,13 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
         }
         else if (frase[pos] == 's') {
             out_evento->var = TIPO_STR; pos++; 
+
+            // Pula o ':' 
+            if (frase[pos] == ':') {
+                pos++;
+            }
+
+
         }
         else if (frase[pos] == 'c') {
             out_evento->var = TIPO_C; pos++; 
@@ -386,6 +385,7 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
             out_evento->var = TIPO_F64; pos += 2; 
         }
 
+        // Fim
         *inout_cursor = pos;
         return true;
     }

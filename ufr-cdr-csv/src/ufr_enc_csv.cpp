@@ -151,6 +151,34 @@ int ufr_enc_csv_put_f32(link_t* link, const float* val, int nitems) {
     return wrote;
 }
 
+static
+int ufr_enc_csv_put_f64(link_t* link, const double* val, int nitems) {
+    int wrote = 0;
+    char buffer[32];
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    const char sep = enc_obj->sep;
+
+    if ( nitems > 0 ) {
+        if ( enc_obj->line.size() == 0 ) {
+            snprintf(buffer, sizeof(buffer), "%lf", val[0]);
+            enc_obj->line += buffer;
+        } else {
+            snprintf(buffer, sizeof(buffer), "%c%lf", sep, val[0]);
+            enc_obj->line += buffer;
+        }
+        wrote += 1;
+
+        for (; wrote<nitems; wrote++) {
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
+            enc_obj->line += buffer;
+            wrote += 1;
+        }
+    }
+
+    return wrote;
+}
+
+
 /*
 static
 int ufr_enc_csv_put_cmd(link_t* link, char cmd) {
@@ -217,6 +245,10 @@ int ufr_enc_csv_cmd_clear(link_t* link) {
     return UFR_OK;
 }
 
+int ufr_enc_csv_cmd_seek_str(link_t* link, const char* name) {
+    return UFR_OK;
+}
+
 ufr_enc_api_t ufr_enc_std_csv_api = {
     .init = ufr_enc_csv_init,
     .free = ufr_enc_csv_free,
@@ -245,7 +277,7 @@ ufr_enc_api_t ufr_enc_std_csv_api = {
     .cmd_send = ufr_enc_csv_cmd_send,
     .cmd_eof = NULL,
 
-    .cmd_seek_str = NULL
+    .cmd_seek_str = ufr_enc_csv_cmd_seek_str
 };
 
 // ============================================================================
