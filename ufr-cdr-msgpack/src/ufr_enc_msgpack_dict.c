@@ -71,6 +71,7 @@
 
 typedef struct {
     int8_t type;
+    int8_t name_nbytes;
     char name[67];
     int32_t nitems;
 
@@ -100,6 +101,7 @@ typedef struct {
 } ll_encoder_t;
 
 static int ufr_enc_dict_cmd_clear(link_t* link);
+static int ufr_enc_dict_cmd_next(link_t* link);
 
 // ============================================================================
 //  MsgPack Driver
@@ -115,10 +117,34 @@ void packer_free(ll_encoder_t* enc_obj) {
 }
 
 void packer_encode(link_t* link) {
+    printf("opa\n");
     ll_encoder_t* enc_obj = link->enc_obj;
     const int nitems = enc_obj->index;
+    msgpack_pack_map(&enc_obj->pk, nitems);
     for (int i=0; i<nitems; i++) {
+        // Encoder the name of field
+        const char* name = enc_obj->data[i].name;
+        const int8_t name_nbytes = enc_obj->data[i].name_nbytes;
+        msgpack_pack_str(&enc_obj->pk, name_nbytes);
+        msgpack_pack_str_body(&enc_obj->pk, name, name_nbytes);
 
+        // Encoder the value of field
+        const uint8_t type = enc_obj->data[i].type;
+        if ( type == SCALAR_I32 ) {
+            msgpack_pack_int(&enc_obj->pk, enc_obj->data[i].i32);
+        } else if ( type == SCALAR_I64 ) {
+            msgpack_pack_int(&enc_obj->pk, enc_obj->data[i].i64);
+        } else if ( type == SCALAR_F32 ) {
+            msgpack_pack_float(&enc_obj->pk, enc_obj->data[i].f32);
+        } else if ( type == SCALAR_F64 ) {
+            msgpack_pack_double(&enc_obj->pk, enc_obj->data[i].f64);
+        } else if ( type == SCALAR_STR ) {
+            const int string_nbytes = strlen(enc_obj->data[i].str);
+            msgpack_pack_str(&enc_obj->pk, string_nbytes);
+            msgpack_pack_str_body(&enc_obj->pk, enc_obj->data[i].str, string_nbytes);
+        }
+
+        printf("%d\n", enc_obj->data[i].type);
     }
 }
 
@@ -136,9 +162,11 @@ int ufr_enc_dict_init(link_t* link, const ufr_args_t* args) {
     if ( enc_obj == NULL ) {
         return ufr_error(link, ENOMEM, strerror(ENOMEM));
     }
+
+    // 
+    link->enc_obj = enc_obj;
     packer_init(enc_obj);
     ufr_enc_dict_cmd_clear(link);
-    link->enc_obj = enc_obj;
     return UFR_OK;
 }
 
@@ -215,7 +243,7 @@ int ufr_enc_dict_put_u16(link_t* link, const uint16_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -237,7 +265,7 @@ int ufr_enc_dict_put_i16(link_t* link, const int16_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -250,7 +278,7 @@ int ufr_enc_dict_put_u32(link_t* link, const uint32_t* val, int nitems) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const int index = enc_obj->index;
-        if (index >= MAX_ITEMS ){return -1;}
+        if ( index >= MAX_ITEMS ){return -1;}
 
         if ( nitems == 1 ) {
             enc_obj->data[index].type = SCALAR_U32;
@@ -261,7 +289,7 @@ int ufr_enc_dict_put_u32(link_t* link, const uint32_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -272,7 +300,7 @@ int ufr_enc_dict_put_i32(link_t* link, const int32_t* val, int nitems) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const int index = enc_obj->index;
-        if (index >= MAX_ITEMS ){return -1;}
+        if ( index >= MAX_ITEMS ){return -1;}
 
         if ( nitems == 1 ) {
             enc_obj->data[index].type = SCALAR_I32;
@@ -283,7 +311,7 @@ int ufr_enc_dict_put_i32(link_t* link, const int32_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -294,7 +322,7 @@ int ufr_enc_dict_put_f32(link_t* link, const float* val, int nitems) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const int index = enc_obj->index;
-        if (index >= MAX_ITEMS ){return -1;}
+        if ( index >= MAX_ITEMS ){return -1;}
 
         if ( nitems == 1 ) {
             enc_obj->data[index].type = SCALAR_F32;
@@ -305,7 +333,7 @@ int ufr_enc_dict_put_f32(link_t* link, const float* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -318,7 +346,7 @@ int ufr_enc_dict_put_u64(link_t* link, const uint64_t* val, int nitems) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const int index = enc_obj->index;
-        if (index >= MAX_ITEMS ){return -1;}
+        if ( index >= MAX_ITEMS ){return -1;}
 
         if ( nitems == 1 ) {
             enc_obj->data[index].type = SCALAR_U64;
@@ -329,7 +357,7 @@ int ufr_enc_dict_put_u64(link_t* link, const uint64_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -351,7 +379,7 @@ int ufr_enc_dict_put_i64(link_t* link, const int64_t* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -362,7 +390,7 @@ int ufr_enc_dict_put_f64(link_t* link, const double* val, int nitems) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
         const int index = enc_obj->index;
-        if (index >= MAX_ITEMS ){return -1;}
+        if ( index >= MAX_ITEMS ){return -1;}
 
         if ( nitems == 1 ) {
             enc_obj->data[index].type = SCALAR_F64;
@@ -373,7 +401,7 @@ int ufr_enc_dict_put_f64(link_t* link, const double* val, int nitems) {
             enc_obj->data[index].nitems = nitems;
             enc_obj->data[index].ptr = (void*) val;
         }
-        enc_obj->index = index + 1;
+        ufr_enc_dict_cmd_next(link);
     }
     return wrote;
 }
@@ -388,10 +416,11 @@ int ufr_enc_dict_put_one_str(link_t* link, const char* val) {
         // msgpack_pack_str(&enc_obj->pk, size);
         // msgpack_pack_str_body(&enc_obj->pk, val, size);
         const int index = enc_obj->index;
-        enc_obj->data[index].type = ARRAY_F64;
+        enc_obj->data[index].type = SCALAR_STR;
         enc_obj->data[index].nitems = 1;
         enc_obj->data[index].str = val;
-        enc_obj->index = index + 1;
+
+        ufr_enc_dict_cmd_next(link);
     }
     return 0;
 }
@@ -441,9 +470,15 @@ int ufr_enc_dict_cmd_send(link_t* link) {
 
     // Envia os dados
     const size_t size = enc_obj->sbuf.size;
-    const char* data = enc_obj->sbuf.data;
-    ufr_write(link, data, size);
-    msgpack_sbuffer_clear(&enc_obj->sbuf);
+    const uint8_t* data = enc_obj->sbuf.data;
+
+    for (int i=0; i<size; i++){
+        printf("%x ", data[i]);
+    }
+    printf("\n");
+
+    ufr_write(link, (char*) data, size);
+    ufr_enc_dict_cmd_clear(link);
     return UFR_OK;
 }
 
@@ -451,21 +486,25 @@ static
 int ufr_enc_dict_cmd_enter(link_t* link, size_t maxsize) {
     // ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     // msgpack_pack_array(&enc_obj->pk, maxsize);
-    return UFR_OK;
+    return -1;
 }
 
 static
 int ufr_enc_dict_cmd_leave(link_t* link) {
-    return UFR_OK;
+    return -1;
 }
 
 static
 int ufr_enc_dict_cmd_next(link_t* link) {
     ll_encoder_t* enc_obj = link->enc_obj;
-    if ( enc_obj->index >= MAX_ITEMS ) {
+    if ( enc_obj->index >= MAX_ITEMS-1 ) {
         return -1;
     }
-    enc_obj->index += 1;
+
+    const int index = enc_obj->index + 1;
+    const int nbytes = sprintf(enc_obj->data[index].name, "v%d", index);
+    enc_obj->data[index].name_nbytes = nbytes;
+    enc_obj->index = index; 
     return UFR_OK;
 }
 
@@ -483,7 +522,7 @@ int ufr_enc_dict_cmd_eof(link_t* link) {
     const size_t size = enc_obj->sbuf.size;
     const char* data = enc_obj->sbuf.data;
     ufr_write(link, data, size);
-    packer_clear(enc_obj);
+    ufr_enc_dict_cmd_clear(link);
     return UFR_OK;
 }
 
@@ -492,6 +531,7 @@ int ufr_enc_dict_cmd_seek_str(link_t* link, const char* name) {
     ll_encoder_t* enc_obj = link->enc_obj;
     const int index = enc_obj->index;
     strncpy(enc_obj->data[index].name, name, 64);
+    enc_obj->data[enc_obj->index].name_nbytes = strlen(enc_obj->data[index].name);
     return UFR_OK;
 }
 
@@ -539,7 +579,7 @@ ufr_enc_api_t ufr_enc_dict_api = {
 //  Public
 // ============================================================================
 
-int ufr_enc_dict_new(link_t* link) {
+int ufr_enc_msgpack_new(link_t* link) {
     link->enc_api = &ufr_enc_dict_api;
     return UFR_OK;
 }

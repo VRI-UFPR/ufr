@@ -162,12 +162,26 @@ void show_encoder_bytes() {
 //  Main
 // ============================================================================
 
+
+
+void teste() {
+    link_t* link = ufr_publisher("@new mqtt @topic teste @coder %p", ufr_enc_msgpack_new);
+    for (int i=20; i>0; i--) {
+        ufr_put(link, "x=%f y=%f\n", i*2.0, 10.5+i);
+        sleep(1);
+    }
+}
+
+
+
 int main() {
-    test_encode_3d();
-    test_encode_s();
-    test_encode_dfs();
+    teste();
+
+    // test_encode_3d();
+    // test_encode_s();
+    // test_encode_dfs();
     // test_encoder_array();
     // show_encoder_bytes();
-    ufr_test_print_result();
+    // ufr_test_print_result();
     return 0;
 }

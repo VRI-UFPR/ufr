@@ -334,7 +334,7 @@ ufr_enc_api_t ufr_enc_msgpack_api = {
 //  Public
 // ============================================================================
 
-int ufr_enc_msgpack_new(link_t* link) {
+int ufr_enc_msgpack_new_raw(link_t* link) {
     link->enc_api = &ufr_enc_msgpack_api;
     return UFR_OK;
 }
