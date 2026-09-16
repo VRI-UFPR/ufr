@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT com MsgPack e Gráfico</title>
+    <!-- Incluindo Chart.js para o gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Incluindo MQTT.js para conexão WebSocket -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Incluindo MsgPack-Lite para decodificar o payload binário -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        #status {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .connected { color: green; }
+        .disconnected { color: red; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Monitor MQTT (MsgPack -> Gráfico)</h2>
+        <div id="status">Status: <span id="status-text" class="disconnected">Desconectado</span></div>
+        
+        <!-- Elemento do Gráfico -->
+        <canvas id="realtimeChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+        // 1. Configurações do MQTT
+        // Nota: A maioria dos brokers públicos usa portas WebSocket (ex: 8083 ou 8884 para WSS)
+        const brokerUrl = 'ws://klaso.cc:8080'; 
+        const topic = 'teste'; // Substitua pelo seu tópico
+
+        // Elementos da interface
+        const statusText = document.getElementById('status-text');
+
+        // 2. Configuração do Gráfico (Chart.js)
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Rótulos de tempo
+                datasets: [{
+                    label: 'Valor de x',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Tempo' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Valor (x)' }
+                    }
+                }
+            }
+        });
+
+        // Função para atualizar o gráfico com novos dados
+        function addData(timestamp, value) {
+            // Mantém no máximo 20 pontos no gráfico para não sobrecarregar
+            if (chart.data.labels.length > 20) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+
+            chart.data.labels.push(timestamp);
+            chart.data.datasets[0].data.push(value);
+            chart.update();
+        }
+
+        // 3. Conectando ao Broker MQTT via WebSocket
+        console.log('Conectando ao broker MQTT...');
+        const client = mqtt.connect(brokerUrl);
+
+        client.on('connect', () => {
+            console.log('Conectado com sucesso!');
+            statusText.textContent = 'Conectado';
+            statusText.className = 'connected';
+            
+            // Inscreve-se no tópico
+            client.subscribe(topic, (err) => {
+                if (!err) {
+                    console.log(`Inscrito no tópico: ${topic}`);
+                } else {
+                    console.error('Falha na inscrição:', err);
+                }
+            });
+        });
+
+        client.on('error', (err) => {
+            console.error('Erro MQTT:', err);
+            statusText.textContent = 'Erro de Conexão';
+            statusText.className = 'disconnected';
+        });
+
+        client.on('offline', () => {
+            statusText.textContent = 'Offline';
+            statusText.className = 'disconnected';
+        });
+
+        // 4. Recebendo e decodificando a mensagem
+        client.on('message', (incomingTopic, payload) => {
+            try {
+                // O payload chega como um Uint8Array ou Buffer (dados binários)
+                // Usamos msgpack.decode para converter o binário em um objeto JavaScript
+                const decodedData = msgpack.decode(payload);
+
+                console.log('Mensagem decodificada:', decodedData);
+
+                // Verifica se o objeto possui a propriedade 'x' e se é um número
+                if (decodedData && typeof decodedData.x === 'number') {
+                    const xValue = decodedData.x;
+                    const now = new Date().toLocaleTimeString();
+                    
+                    // Adiciona ao gráfico
+                    addData(now, xValue);
+                } else {
+                    console.warn('A mensagem recebida não contém a propriedade "x" ou não é um número.');
+                }
+
+            } catch (error) {
+                console.error('Erro ao decodificar o pacote MsgPack:', error);
+            }
+        });
+    </script>
+</body>
+</html>

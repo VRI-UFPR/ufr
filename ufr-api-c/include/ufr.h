@@ -259,11 +259,6 @@ typedef struct _link {
         int32_t dcr_obj_idx;
     };
 
-    // Decoder Stack
-    const ufr_dcr_api_t* dcr_api_s0;
-    void* dcr1_obj_s0;
-
-
     uint8_t type_started;
     uint8_t log_level;
     uint8_t status;

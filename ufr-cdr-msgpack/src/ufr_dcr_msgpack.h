@@ -42,6 +42,7 @@ typedef struct {
 
     // enter
     msgpack_object_array l0_array;
+    msgpack_object_map l0_map;
     size_t l0_idx;
 
     // meta

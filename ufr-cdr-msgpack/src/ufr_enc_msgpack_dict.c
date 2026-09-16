@@ -117,7 +117,6 @@ void packer_free(ll_encoder_t* enc_obj) {
 }
 
 void packer_encode(link_t* link) {
-    printf("opa\n");
     ll_encoder_t* enc_obj = link->enc_obj;
     const int nitems = enc_obj->index;
     msgpack_pack_map(&enc_obj->pk, nitems);
@@ -144,7 +143,7 @@ void packer_encode(link_t* link) {
             msgpack_pack_str_body(&enc_obj->pk, enc_obj->data[i].str, string_nbytes);
         }
 
-        printf("%d\n", enc_obj->data[i].type);
+        // printf("%d\n", enc_obj->data[i].type);
     }
 }
 
@@ -472,10 +471,12 @@ int ufr_enc_dict_cmd_send(link_t* link) {
     const size_t size = enc_obj->sbuf.size;
     const uint8_t* data = enc_obj->sbuf.data;
 
+    /*
     for (int i=0; i<size; i++){
         printf("%x ", data[i]);
     }
     printf("\n");
+    */
 
     ufr_write(link, (char*) data, size);
     ufr_enc_dict_cmd_clear(link);

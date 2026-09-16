@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicador MQTT - Odometria MsgPack</title>
+    <!-- Incluindo MQTT.js para conexão WebSocket -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- Incluindo MsgPack-Lite para codificar o objeto em binário -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 { color: #333; }
+        #status { font-weight: bold; margin-bottom: 15px; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        .log-box {
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            height: 150px;
+            overflow-y: auto;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Simulador de Odometria (Robô 2 Rodas -> MsgPack)</h2>
+        <div id="status">Status: <span id="status-text" class="disconnected">Desconectado</span></div>
+        
+        <p>Este script simula o movimento do robô incrementando as rodas esquerda e direita, codifica em MsgPack e publica via MQTT.</p>
+        
+        <button id="toggleBtn" disabled>Iniciar Publicação</button>
+
+        <h3>Log de Envios:</h3>
+        <div id="log" class="log-box"></div>
+    </div>
+
+    <script>
+        // 1. Configurações do MQTT
+        const brokerUrl = 'ws://klaso.cc:8080'; // Broker público de teste
+        const topic = 'teste'; // Tópico MQTT
+
+        const statusText = document.getElementById('status-text');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const logBox = document.getElementById('log');
+
+        let client = null;
+        let publishingInterval = null;
+        let isPublishing = false;
+
+        // Variáveis de odometria simulada (inteiros)
+        let odometry = {
+            left: 0,
+            right: 0
+        };
+
+        function logMessage(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logBox.innerHTML += `[${timestamp}] ${message}<br>`;
+            logBox.scrollTop = logBox.scrollHeight; // Rolar para o final
+        }
+
+        // 2. Conectando ao Broker MQTT via WebSocket
+        logMessage('Conectando ao broker MQTT...');
+        client = mqtt.connect(brokerUrl);
+
+        client.on('connect', () => {
+            logMessage('Conectado com sucesso ao broker!');
+            statusText.textContent = 'Conectado';
+            statusText.className = 'connected';
+            toggleBtn.disabled = false;
+        });
+
+        client.on('error', (err) => {
+            logMessage('Erro MQTT: ' + err);
+            statusText.textContent = 'Erro de Conexão';
+            statusText.className = 'disconnected';
+        });
+
+        client.on('offline', () => {
+            statusText.textContent = 'Offline';
+            statusText.className = 'disconnected';
+            toggleBtn.disabled = true;
+            stopPublishing();
+        });
+
+        // 3. Botão para iniciar/parar o envio automático
+        toggleBtn.addEventListener('click', () => {
+            if (!isPublishing) {
+                startPublishing();
+            } else {
+                stopPublishing();
+            }
+        });
+
+        function startPublishing() {
+            isPublishing = true;
+            toggleBtn.textContent = 'Parar Publicação';
+            toggleBtn.style.backgroundColor = '#dc3545';
+            logMessage('Iniciando envio de pacotes...');
+
+            // Publica a cada 1 segundo (1000 ms)
+            publishingInterval = setInterval(() => {
+                // Simula o movimento incrementando as odometrias de forma levemente diferente
+                odometry.left += Math.floor(Math.random() * 5) + 1;   // Inteiro aleatório entre 1 e 5
+                odometry.right += Math.floor(Math.random() * 5) + 1;  // Inteiro aleatório entre 1 e 5
+
+                // Garante que são valores inteiros (caso necessário)
+                const payloadObj = {
+                    left: parseInt(odometry.left, 10),
+                    right: parseInt(odometry.right, 10)
+                };
+
+                try {
+                    // Codifica o objeto JavaScript para binário MsgPack (retorna um Uint8Array)
+                    const packedBuffer = msgpack.encode(payloadObj);
+
+                    // Publica o pacote binário via MQTT
+                    client.publish(topic, packedBuffer, { qos: 0 }, (err) => {
+                        if (err) {
+                            logMessage('Erro ao publicar: ' + err);
+                        } else {
+                            logMessage(`Enviado MsgPack -> Esquerda: ${payloadObj.left} | Direita: ${payloadObj.right} (${packedBuffer.length} bytes)`);
+                        }
+                    });
+
+                } catch (error) {
+                    logMessage('Erro ao codificar MsgPack: ' + error);
+                }
+            }, 1000);
+        }
+
+        function stopPublishing() {
+            isPublishing = false;
+            toggleBtn.textContent = 'Iniciar Publicação';
+            toggleBtn.style.backgroundColor = '#007BFF';
+            clearInterval(publishingInterval);
+            logMessage('Publicação interrompida.');
+        }
+    </script>
+</body>
+</html>
