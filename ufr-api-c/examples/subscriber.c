@@ -38,11 +38,16 @@
 // ============================================================================
 
 int main() {
-    link_t* sub = ufr_subscriber("@new mqtt @host intercampi");
+    link_t* sub = ufr_subscriber("@new mqtt @host klaso.cc @topic teste");
 
     // aaa
     char buffer[512];
-    ufr_get(sub, "> %s", &buffer);
+    int a,b;
+
+    for (int i=0; i<5; i++){
+        ufr_get(sub, "> %d %d", &a, &b);
+        printf("%d %d\n", a, b);
+    }
 
     // end
     ufr_close(sub);

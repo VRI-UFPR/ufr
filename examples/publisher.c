@@ -69,13 +69,12 @@ int main() {
     // ufr_stdout("@new ros2 @coder ros2:twist @topic cmd_vel @log 5");
     // ufr_stdout("@new mqtt @coder msgpack @topic teste @host 177.153.62.174");
     // ufr_stdout("@new posix:stdout @coder text @log 5 @host 177.153.62.174 @topic teste");
-    ufr_stdout("@new mqtt @host klaso.cc @topic test/msgpack/demo @coder msgpack @log 5");
+    ufr_stdout("@new mqtt @host klaso.cc @topic teste2 @coder msgpack @log 5");
 
     // loop principal
-    int vetor_i32[10] = {4,2,3,4,5,6,7,8,9};
-    float vetor_f32[10] = {1.20, 2.0, 3.0, 4.6, 5.6, 6.2, 7.8, 8.1, 9.0, 10.0};
+    int i=0;
     while( ufr_loop_ok() ) {
-        ufr_printf("%f %f %a:f:10\n", 0.5, 0.2, vetor_f32);
+        ufr_printf("x=%d y=%d theta=%d\n", 1, i++, 0);
         sleep(1);
     }
 

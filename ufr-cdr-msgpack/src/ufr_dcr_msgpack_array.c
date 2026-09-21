@@ -364,7 +364,8 @@ int ufr_dcr_msgpack_array_cmd_enter(link_t* link) {
 }
 
 int ufr_dcr_msgpack_array_cmd_leave(link_t* link) {
-    link->dcr_api = link->dcr_api_s0;
+    ll_decoder_t* decoder = link->dcr_obj;
+    link->dcr_api = decoder->dcr_api;
     return UFR_OK;
 }
 

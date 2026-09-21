@@ -194,6 +194,8 @@ typedef struct {
     int (*cmd_enter)(struct _link* link);
     int (*cmd_leave)(struct _link* link);
     int (*cmd_next)(struct _link* link);
+
+    int (*cmd_prepare)(struct _link* link);   // prepara o decoder para receber uma nova mensagem
 } ufr_dcr_api_t;
 
 // ============================================================================
@@ -271,10 +273,9 @@ typedef struct _link {
         };
     };
 
-    uint32_t hash;
-
+    uint32_t hash;                       // guarda um hash gerado pelos parametros
     uint16_t put_count;
-    char errstr[168+2];
+    char errstr[16];
 } link_t;
 
 // Renomeia link_t para UFILE

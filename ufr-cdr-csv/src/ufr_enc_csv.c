@@ -1,0 +1,283 @@
+/* BSD 2-Clause License
+ * 
+ * Copyright (c) 2023, Felipe Bombardelli
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// ============================================================================
+//  Header
+// ============================================================================
+
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ufr.h>
+
+typedef struct  {
+    const char* header;
+    char sep;
+    ufr_buffer_t buffer;
+} encoder_obj_t;
+
+// ============================================================================
+//  CSV
+// ============================================================================
+
+static
+int ufr_enc_csv_init(link_t* link, const ufr_args_t* args) {
+    // allocate the encoder
+    encoder_obj_t* enc_obj = new encoder_obj_t();
+    if ( enc_obj == NULL ) {
+        return ufr_error(link, ENOMEM, strerror(ENOMEM));
+    }
+
+    // fill the encoder data
+    char buffer[UFR_ARGS_TOKEN];
+    const char* sep = ufr_args_gets(args, buffer, "@sep", ",");
+    enc_obj->sep = sep[0];
+    link->enc_obj = enc_obj;
+    return UFR_OK;
+}
+
+static
+void ufr_enc_csv_free(link_t* link) {
+    if ( link->enc_obj != NULL ) {
+        free(link->enc_obj);
+        link->enc_obj = NULL;
+    }
+}
+
+// --- 32 Bits ---
+
+static
+int ufr_enc_csv_put_u32(link_t* link, const uint32_t* val, int nitems) {
+    int wrote = 0;
+    char buffer[32];
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    const char sep = enc_obj->sep;
+
+    if ( nitems > 0 ) {
+        if ( enc_obj->line.size() == 0 ) {
+            snprintf(buffer, sizeof(buffer), "%u", val[0]);
+            enc_obj->line += buffer;
+        } else {
+            snprintf(buffer, sizeof(buffer), "%c%u", sep, val[0]);
+            enc_obj->line += buffer;
+        }
+        wrote += 1;
+
+        for (; wrote<nitems; wrote++) {
+            snprintf(buffer, sizeof(buffer), "%c%u", sep, val[wrote]);
+            enc_obj->line += buffer;
+            wrote += 1;
+        }
+    }
+
+    return wrote;
+}
+
+static
+int ufr_enc_csv_put_i32(link_t* link, const int32_t* val, int nitems) {
+    int wrote = 0;
+    char buffer[32];
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+
+    if ( nitems > 0 ) {
+        if ( enc_obj->line.size() == 0 ) {
+            snprintf(buffer, sizeof(buffer), "%d", val[0]);
+            enc_obj->line += buffer;
+        } else {
+            snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[0]);
+            enc_obj->line += buffer;
+        }
+        wrote += 1;
+
+        for (; wrote<nitems; wrote++) {
+            snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[wrote]);
+            enc_obj->line += buffer;
+            wrote += 1;
+        }
+    }
+
+    return wrote;
+}
+
+static
+int ufr_enc_csv_put_f32(link_t* link, const float* val, int nitems) {
+    int wrote = 0;
+    char buffer[32];
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    const char sep = enc_obj->sep;
+
+    if ( nitems > 0 ) {
+        if ( enc_obj->line.size() == 0 ) {
+            snprintf(buffer, sizeof(buffer), "%f", val[0]);
+            enc_obj->line += buffer;
+        } else {
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[0]);
+            enc_obj->line += buffer;
+        }
+        wrote += 1;
+
+        for (; wrote<nitems; wrote++) {
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
+            enc_obj->line += buffer;
+            wrote += 1;
+        }
+    }
+
+    return wrote;
+}
+
+// --- 64 Bits ---
+
+static
+int ufr_enc_csv_put_f64(link_t* link, const double* val, int nitems) {
+    int wrote = 0;
+    char buffer[32];
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    const char sep = enc_obj->sep;
+
+    if ( nitems > 0 ) {
+        if ( enc_obj->line.size() == 0 ) {
+            snprintf(buffer, sizeof(buffer), "%lf", val[0]);
+            enc_obj->line += buffer;
+        } else {
+            snprintf(buffer, sizeof(buffer), "%c%lf", sep, val[0]);
+            enc_obj->line += buffer;
+        }
+        wrote += 1;
+
+        for (; wrote<nitems; wrote++) {
+            snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
+            enc_obj->line += buffer;
+            wrote += 1;
+        }
+    }
+
+    return wrote;
+}
+
+static
+int ufr_enc_csv_put_str(link_t* link, const char* val) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+
+    if ( enc_obj->line.size() == 0 ) {
+        enc_obj->line += val;
+    } else {
+        enc_obj->line += enc_obj->sep;
+        enc_obj->line += val;
+    }
+
+    return 0;
+}
+
+// --- Commands ---
+
+static
+int ufr_enc_csv_cmd_enter(link_t* link, size_t maxsize) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    if ( enc_obj->line.size() > 0 ) {
+        enc_obj->line += enc_obj->sep;
+    }
+    enc_obj->line += "#[#";
+    return UFR_OK;
+}
+
+static
+int ufr_enc_csv_cmd_leave(link_t* link) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    if ( enc_obj->line.size() > 0 ) {
+        enc_obj->line += enc_obj->sep;
+    }
+    enc_obj->line += "#]#";
+    return UFR_OK;
+}
+
+static
+int ufr_enc_csv_cmd_send(link_t* link) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    enc_obj->line += '\n';
+    ufr_write(link, enc_obj->line.c_str(), enc_obj->line.size());
+    enc_obj->line.clear();
+    return UFR_OK;
+}
+
+static
+int ufr_enc_csv_cmd_clear(link_t* link) {
+    encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+    enc_obj->line.clear();
+    return UFR_OK;
+}
+
+static
+int ufr_enc_csv_cmd_seek_str(link_t* link, const char* name) {
+    return UFR_OK;
+}
+
+// --- API ---
+
+ufr_enc_api_t ufr_enc_std_csv_api = {
+    .init = ufr_enc_csv_init,
+    .free = ufr_enc_csv_free,
+
+    // 32 bits
+    .put_u32 = ufr_enc_csv_put_u32,
+    .put_i32 = ufr_enc_csv_put_i32,
+    .put_f32 = ufr_enc_csv_put_f32,
+
+    // 64 bits
+    .put_u64 = ufr_enc_csv_put_u64,
+    .put_i64 = ufr_enc_csv_put_i64,
+    .put_f64 = ufr_enc_csv_put_f64,
+
+    // Single - 8 bits
+    // .put_cmd = ufr_enc_csv_put_cmd,
+    .put_str = ufr_enc_csv_put_str,
+    .put_raw = NULL,
+    .put_bin = NULL,
+
+    // Commands
+    .cmd_enter = ufr_enc_csv_cmd_enter,
+    .cmd_leave = ufr_enc_csv_cmd_leave,
+    .cmd_next = NULL,
+    .cmd_clear = ufr_enc_csv_cmd_clear,
+    .cmd_send = ufr_enc_csv_cmd_send,
+    .cmd_eof = NULL,
+
+    .cmd_seek_str = ufr_enc_csv_cmd_seek_str
+};
+
+// ============================================================================
+//  Public Funtions
+// ============================================================================
+
+extern "C"
+int ufr_enc_csv_new(link_t* link) {
+    link->enc_api = &ufr_enc_std_csv_api;
+    return UFR_OK;
+}
+

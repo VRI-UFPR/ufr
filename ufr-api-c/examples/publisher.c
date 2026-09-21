@@ -40,12 +40,12 @@
 
 int main() {
     // abre um publicador
-    link_t* pub = ufr_publisher("@new zmq @coder influx @port 3000 @log 0"); 
+    link_t* pub = ufr_publisher("@new mqtt @coder msgpacj @host klaso.cc @topic teste2 @log 0"); 
 
     // loop principal
     for(int i=0; i<40; i++) {
         char buffer[1024];
-        ufr_put(pub, "%d %d %d\n", 10,20,30);
+        ufr_put(pub, "x=%d y=%d theta=%d\n", 1,i,0);
         sleep(1);
     }
 

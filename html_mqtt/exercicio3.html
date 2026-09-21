@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador MQTT de Trajetória do Robô</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MQTT WebSocket Client Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <!-- MsgPack Decoder Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-full flex flex-col md:flex-row overflow-hidden">
+
+    <aside class="w-full md:w-96 bg-slate-800 border-r border-slate-700 p-6 flex flex-col gap-6 overflow-y-auto z-10 shadow-xl">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-robot text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight">Robot Telemetry</h1>
+                <p class="text-xs text-slate-400">MQTT + MsgPack Visualizer</p>
+            </div>
+        </div>
+
+        <!-- Connection Configuration Card -->
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 flex flex-col gap-4">
+            <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-network-wired text-indigo-400"></i> Broker MQTT
+            </h2>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Endereço Broker (WebSocket)</label>
+                    <input type="text" id="brokerHost" value="broker.hivemq.com" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Porta WebSocket</label>
+                        <input type="number" id="brokerPort" value="8000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Client ID</label>
+                        <input type="text" id="clientId" value="web_robot_client" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tópico MQTT</label>
+                    <input type="text" id="topicName" value="robot/pose_msgpack" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button id="connectBtn" onclick="toggleConnection()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plug"></i> Conectar
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-2 text-xs">
+                <span id="statusIndicator" class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <span id="statusText" class="text-slate-400">Desconectado</span>
+            </div>
+        </div>
+
+        <!-- Canvas Controls & Stats -->
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 flex flex-col gap-4">
+            <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-indigo-400"></i> Estatísticas & Mapa
+            </h2>
+            
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/50">
+                    <div class="text-[10px] text-slate-400 uppercase">Pos X</div>
+                    <div id="statX" class="text-sm font-bold text-indigo-400">0.00 m</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/50">
+                    <div class="text-[10px] text-slate-400 uppercase">Pos Y</div>
+                    <div id="statY" class="text-sm font-bold text-indigo-400">0.00 m</div>
+                </div>
+                <div class="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/50">
+                    <div class="text-[10px] text-slate-400 uppercase">Orientação (θ)</div>
+                    <div id="statTheta" class="text-sm font-bold text-emerald-400">0.0°</div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Zoom do Mapa:</span>
+                    <span id="zoomValue">50 px/m</span>
+                </div>
+                <input type="range" id="zoomRange" min="10" max="150" value="50" class="w-full accent-indigo-500 cursor-pointer">
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="clearTrajectory()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-eraser"></i> Limpar Rastro
+                </button>
+                <button onclick="resetView()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-crosshairs"></i> Centralizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Simulation Option (for testing without external broker publishers) -->
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60 flex flex-col gap-3 mt-auto">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-flask text-amber-400"></i> Modo Simulação Local
+            </h2>
+            <p class="text-xs text-slate-400">Caso não tenha um broker real transmitindo MsgPack, ative a simulação:</p>
+            <button id="simBtn" onclick="toggleSimulation()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-medium py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play text-emerald-400"></i> Ligar Simulador
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 relative flex flex-col h-full bg-slate-950 overflow-hidden">
+        <!-- Canvas Header Overlay -->
+        <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-center pointer-events-none">
+            <div class="bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-lg pointer-events-auto flex items-center gap-3">
+                <span><i class="fa-solid fa-info-circle text-indigo-400"></i> Arraste para mover o mapa | Use o scroll para zoom</span>
+            </div>
+            <div id="packetCounter" class="bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-lg pointer-events-auto font-mono">
+                Pacotes: <span id="msgCount" class="text-indigo-400 font-bold">0</span>
+            </div>
+        </div>
+
+        <!-- HTML5 Canvas Container -->
+        <div id="canvasContainer" class="w-full h-full cursor-grab active:cursor-grabbing">
+            <canvas id="simCanvas" class="w-full h-full block"></canvas>
+        </div>
+    </main>
+
+    <script>
+        let client = null;
+        let isConnected = false;
+        let simulationInterval = null;
+        let isSimulating = false;
+        let packetCount = 0;
+
+        // Robot State
+        let robotState = {
+            x: 0.0,      // metros
+            y: 0.0,      // metros
+            theta: 0.0   // radianos
+        };
+
+        let trajectory = []; // Array de pontos {x, y}
+
+        // Viewport / Transform Configuration
+        let scale = 50; // pixels por metro inicial
+        let offsetX = 0; // deslocamento em pixels a partir do centro
+        let offsetY = 0; // deslocamento em pixels a partir do centro
+        let isDragging = false;
+        let startX = 0, startY = 0;
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Inicialização do Canvas
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Configuração de Eventos de Mouse/Touch para Pan e Zoom
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - offsetX;
+            startY = e.clientY - offsetY;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomIntensity = 1.1;
+            if (e.deltaY < 0) {
+                scale = Math.min(300, scale * zoomIntensity);
+            } else {
+                scale = Math.max(5, scale / zoomIntensity);
+            }
+            document.getElementById('zoomRange').value = scale;
+            document.getElementById('zoomValue').innerText = Math.round(scale) + ' px/m';
+        }, { passive: false });
+
+        document.getElementById('zoomRange').addEventListener('input', (e) => {
+            scale = parseFloat(e.target.value);
+            document.getElementById('zoomValue').innerText = Math.round(scale) + ' px/m';
+        });
+
+        function resetView() {
+            offsetX = 0;
+            offsetY = 0;
+            scale = 50;
+            document.getElementById('zoomRange').value = scale;
+            document.getElementById('zoomValue').innerText = '50 px/m';
+        }
+
+        function clearTrajectory() {
+            trajectory = [];
+        }
+
+        // Lógica de Conexão MQTT
+        function toggleConnection() {
+            if (isConnected) {
+                disconnectMQTT();
+            } else {
+                connectMQTT();
+            }
+        }
+
+        function connectMQTT() {
+            const host = document.getElementById('brokerHost').value.trim();
+            const port = parseInt(document.getElementById('brokerPort').value.trim());
+            const clientId = document.getElementById('clientId').value.trim();
+
+            updateStatus('connecting', 'Conectando...');
+
+            try {
+                client = new Paho.MQTT.Client(host, port, clientId);
+
+                client.onConnectionLost = onConnectionLost;
+                client.onMessageArrived = onMessageArrived;
+
+                client.connect({
+                    timeout: 5,
+                    useSSL: host.includes('hivemq') || host.includes('emqx') || host.includes('websocket'), // Tenta SSL se necessário ou porta segura
+                    onSuccess: onConnect,
+                    onFailure: onFailure
+                });
+            } catch (err) {
+                console.error(err);
+                updateStatus('disconnected', 'Erro na Conexão');
+            }
+        }
+
+        function onConnect() {
+            isConnected = true;
+            updateStatus('connected', 'Conectado');
+            document.getElementById('connectBtn').innerHTML = '<i class="fa-solid fa-plug-circle-xmark"></i> Desconectar';
+            document.getElementById('connectBtn').className = "flex-1 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-lg shadow-rose-600/20 flex items-center justify-center gap-2";
+
+            const topic = document.getElementById('topicName').value.trim();
+            client.subscribe(topic);
+            console.log("Inscrito no tópico: " + topic);
+        }
+
+        function onFailure(responseObject) {
+            isConnected = false;
+            updateStatus('disconnected', 'Falha: ' + responseObject.errorMessage);
+        }
+
+        function onConnectionLost(responseObject) {
+            isConnected = false;
+            updateStatus('disconnected', 'Conexão perdida');
+            document.getElementById('connectBtn').innerHTML = '<i class="fa-solid fa-plug"></i> Conectar';
+            document.getElementById('connectBtn').className = "flex-1 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2";
+            if (responseObject.errorCode !== 0) {
+                console.log("Conexão perdida: " + responseObject.errorMessage);
+            }
+        }
+
+        function disconnectMQTT() {
+            if (client && client.isConnected()) {
+                client.disconnect();
+            }
+            isConnected = false;
+            updateStatus('disconnected', 'Desconectado');
+            document.getElementById('connectBtn').innerHTML = '<i class="fa-solid fa-plug"></i> Conectar';
+            document.getElementById('connectBtn').className = "flex-1 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2";
+        }
+
+        function updateStatus(state, text) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            statusText.innerText = text;
+            
+            indicator.className = "w-2.5 h-2.5 rounded-full";
+            if (state === 'connected') {
+                indicator.classList.add('bg-emerald-500', 'shadow-lg', 'shadow-emerald-500/50');
+            } else if (state === 'connecting') {
+                indicator.classList.add('bg-amber-500', 'animate-pulse');
+            } else {
+                indicator.classList.add('bg-rose-500');
+            }
+        }
+
+        // Tratamento da Mensagem Recebida via MQTT (MsgPack)
+        function onMessageArrived(message) {
+            try {
+                // A payload do Paho MQTT vem como String ou ArrayBuffer dependendo da versão/config.
+                // Mensagens binárias MsgPack vêm como payloadBytes (Uint8Array)
+                /*let byteArray;
+                if (message.payloadBytes) {
+                    byteArray = message.payloadBytes;
+                } else {
+                    // Fallback se vier como string binária
+                    const raw = message.payloadString;
+                    byteArray = new Uint8Array(raw.length);
+                    for (let i = 0; i < raw.length; i++) {
+                        byteArray[i] = raw.charCodeAt(i);
+                    }
+                }*/
+
+                // Decodifica usando MessagePack
+                const decodedData = msgpack.decode(message.payloadBytes);
+                console.log('Mensagem decodificada:', decodedData);
+                processRobotData(decodedData);
+
+            } catch (err) {
+                console.error("Erro ao decodificar MsgPack:", err);
+            }
+        }
+
+        function processRobotData(data) {
+            // Suporta formatos comuns de dicionário: {x:..., y:..., theta:...} ou chaves alternativas
+            if (data && typeof data === 'object') {
+                const rx = data.x !== undefined ? parseFloat(data.x) : (data.X !== undefined ? parseFloat(data.X) : robotState.x);
+                const ry = data.y !== undefined ? parseFloat(data.y) : (data.Y !== undefined ? parseFloat(data.Y) : robotState.y);
+                const rtheta = data.theta !== undefined ? parseFloat(data.theta) : (data.heading !== undefined ? parseFloat(data.heading) : robotState.theta);
+
+                robotState.x = rx;
+                robotState.y = ry;
+                robotState.theta = rtheta;
+
+                // Adiciona ao rastro se houver mudança significativa ou sempre
+                const lastPoint = trajectory[trajectory.length - 1];
+                if (!lastPoint || Math.hypot(lastPoint.x - rx, lastPoint.y - ry) > 0.02) {
+                    trajectory.push({ x: rx, y: ry });
+                    if (trajectory.length > 2000) trajectory.shift(); // Limita histórico
+                }
+
+                packetCount++;
+                document.getElementById('msgCount').innerText = packetCount;
+                updateStatsUI();
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('statX').innerText = robotState.x.toFixed(2) + ' m';
+            document.getElementById('statY').innerText = robotState.y.toFixed(2) + ' m';
+            document.getElementById('statTheta').innerText = (robotState.theta * (180 / Math.PI)).toFixed(1) + '°';
+        }
+
+        // Simulador Local para testes rápidos sem broker externo
+        function toggleSimulation() {
+            const btn = document.getElementById('simBtn');
+            if (isSimulating) {
+                clearInterval(simulationInterval);
+                isSimulating = false;
+                btn.innerHTML = '<i class="fa-solid fa-play text-emerald-400"></i> Ligar Simulador';
+                btn.classList.remove('border-emerald-500');
+            } else {
+                isSimulating = true;
+                btn.innerHTML = '<i class="fa-solid fa-stop text-rose-400"></i> Desligar Simulador';
+                btn.classList.add('border-emerald-500');
+
+                let t = 0;
+                simulationInterval = setInterval(() => {
+                    t += 0.05;
+                    // Movimento em oito (Lemniscata de Bernoulli)
+                    const simX = 2 * Math.sin(t);
+                    const simY = 2 * Math.sin(t) * Math.cos(t);
+                    // Derivada aprox para orientação theta
+                    const nextX = 2 * Math.sin(t + 0.05);
+                    const nextY = 2 * Math.sin(t + 0.05) * Math.cos(t + 0.05);
+                    const simTheta = Math.atan2(nextY - simY, nextX - simX);
+
+                    // Cria mock payload MsgPack e processa
+                    const mockObj = { x: simX, y: simY, theta: simTheta };
+                    const encoded = MessagePack.encode(mockObj);
+                    
+                    // Simula chegada de mensagem MQTT
+                    onMessageArrived({ payloadBytes: encoded });
+                }, 50);
+            }
+        }
+
+        // Renderização do Gráfico Canvas (Origem 0,0 no Centro)
+        function drawGridAndMap() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = (canvas.width / 2) + offsetX;
+            const centerY = (canvas.height / 2) + offsetY;
+
+            // Desenha Grid do Mapa
+            ctx.save();
+            ctx.lineWidth = 1;
+
+            const gridStepMeters = scale < 20 ? 5 : (scale > 100 ? 0.5 : 1);
+            const gridStepPixels = gridStepMeters * scale;
+
+            // Calcula limites visíveis para desenhar o grid dinamicamente
+            const startGridX = -centerX % gridStepPixels;
+            const startGridY = -centerY % gridStepPixels;
+
+            ctx.strokeStyle = '#1e293b'; // Cor sutil para linhas de grid secundárias
+            for (let x = startGridX; x < canvas.width; x += gridStepPixels) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = startGridY; y < canvas.height; y += gridStepPixels) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Eixos X e Y principais (Origem 0,0)
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#334155';
+            
+            // Eixo X
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+
+            // Eixo Y
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+
+            // Rótulos de Origem e Eixos
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.fillText('(0, 0)', centerX + 8, centerY - 8);
+
+            // Marcas métricas nos eixos
+            for (let m = -20; m <= 20; m += 1) {
+                if (m === 0) continue;
+                const px = centerX + (m * scale);
+                const py = centerY - (m * scale);
+
+                if (px >= 0 && px <= canvas.width) {
+                    ctx.fillRect(px, centerY - 3, 1, 6);
+                    ctx.fillText(m + 'm', px - 10, centerY + 18);
+                }
+                if (py >= 0 && py <= canvas.height) {
+                    ctx.fillRect(centerX - 3, py, 6, 1);
+                    ctx.fillText(m + 'm', centerX + 10, py + 4);
+                }
+            }
+            ctx.restore();
+
+            // Desenha Trajetória (Rastro)
+            if (trajectory.length > 1) {
+                ctx.save();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(99, 102, 241, 0.7)'; // Indigo translúcido
+                ctx.beginPath();
+                for (let i = 0; i < trajectory.length; i++) {
+                    // Inverte o Y do plano cartesiano matemático para o canvas (onde Y cresce para baixo)
+                    const screenX = centerX + (trajectory[i].x * scale);
+                    const screenY = centerY - (trajectory[i].y * scale);
+                    if (i === 0) ctx.moveTo(screenX, screenY);
+                    else ctx.lineTo(screenX, screenY);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Desenha o Robô (Círculo com linha de orientação)
+            const robotScreenX = centerX + (robotState.x * scale);
+            const robotScreenY = centerY - (robotState.y * scale);
+            const robotRadius = Math.max(12, Math.min(30, scale * 0.4)); // Escala proporcional com zoom limitando mínimos
+
+            ctx.save();
+            ctx.translate(robotScreenX, robotScreenY);
+
+            // Sombra e Corpo do Robô
+            ctx.shadowColor = 'rgba(99, 102, 241, 0.4)';
+            ctx.shadowBlur = 15;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, robotRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#4f46e5'; // Indigo vibrante
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Linha de Orientação (Theta) - No canvas Y invertido, invertemos o ângulo theta (-theta)
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#38bdf8'; // Azul claro para destaque da frente
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(robotRadius * 1.5 * Math.cos(-robotState.theta), robotRadius * 1.5 * Math.sin(-robotState.theta));
+            ctx.stroke();
+
+            // Ponto central do robô
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Loop de Animação contínua do Canvas
+        function animLoop() {
+            drawGridAndMap();
+            requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+    </script>
+</body>
+</html>

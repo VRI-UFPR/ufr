@@ -45,8 +45,13 @@ typedef struct {
     msgpack_object_map l0_map;
     size_t l0_idx;
 
+
+    // Pilha
+    const ufr_dcr_api_t* dcr_api;
+    
     // meta
     bool is_pack_scalar;
 } ll_decoder_t;
 
 extern ufr_dcr_api_t ufr_dcr_msgpack_array_api;
+extern ufr_dcr_api_t ufr_dcr_msgpack_map_api;

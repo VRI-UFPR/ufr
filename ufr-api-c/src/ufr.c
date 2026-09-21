@@ -175,9 +175,15 @@ bool ufr_recv(link_t* link) {
             ufr_fatal(link, 1, "gtw_api is null");
         } else if ( link->gtw_api->recv == NULL ) {
             ufr_fatal(link, 1, "gtw_api->recv is null");
+        } else if ( link->dcr_api->cmd_prepare == NULL ) {
+            ufr_fatal(link, 1, "dcr_api->cmd_prepare is null");
         }
     }
     
+    // Prepare decoder for new message
+    link->dcr_api->cmd_prepare(link);
+
+    // Wait until receive a message
     const int retval = link->gtw_api->recv(link);
     if ( retval < 0 ) {
         return false;
@@ -198,9 +204,15 @@ bool ufr_recv_async(link_t* link) {
             ufr_fatal(link, 1, "gtw_api is null");
         } else if ( link->gtw_api->recv_async == NULL ) {
             ufr_fatal(link, 1, "gtw_api->recv_async is null");
+        } else if ( link->dcr_api->cmd_prepare == NULL ) {
+            ufr_fatal(link, 1, "dcr_api->cmd_prepare is null");
         }
     }
 
+    // Prepare decoder for new message
+    link->dcr_api->cmd_prepare(link);
+
+    // Wait until receive a message
     return link->gtw_api->recv_async(link) == UFR_OK;
 }
 

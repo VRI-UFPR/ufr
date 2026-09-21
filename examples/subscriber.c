@@ -38,19 +38,15 @@
 // ============================================================================
 
 int main() {
-    // link_t* sub = ufr_subscriber("@new ros2 @topic /cmd_vel @coder ros2:twist");
-    // ufr_stdin("@new ros2 @topic /cmd_vel @coder ros2:twist");
-    ufr_stdin("@new mqtt  @coder msgpack");
+    link_t* sub = ufr_subscriber("@new mqtt @coder msgpack @host klaso.cc @topic teste");
 
-    // Main loop
-    float matriz[480];
-    char nome[32];
-    for (int i=0; i<3; i++) {
-        float a,b,nbytes;
-        ufr_scanf("> %f %f %a:f:10", &a, &b, matriz);
-        printf("%f %f %f %f %f\n", a, b, matriz[0], matriz[1], matriz[2]);
+    for (int i=0; i<5; i++) {
+        int a,b;
+        ufr_get(sub, "> %d %d", &a, &b);
+        printf("%d %d\n", a, b);
     }
 
     // end
+    ufr_close(sub);
     return 0;
 }

@@ -39,6 +39,10 @@
 
 #include "ufr_dcr_msgpack.h"
 
+static int ufr_dcr_msgpack_cmd_enter(link_t* link);
+static int ufr_dcr_msgpack_next(link_t* link);
+
+
 // ============================================================================
 //  MsgPack Root
 // ============================================================================
@@ -64,30 +68,11 @@ void ufr_dcr_msgpack_free(link_t* link) {
     }
 }
 
-static
-int ufr_dcr_msgpack_next(link_t* link) {
-    // parse the next object in the message
-    ll_decoder_t* decoder = link->dcr_obj;
-    size_t current = decoder->cursor;
 
-    msgpack_unpack_return ret = msgpack_unpack_next(&decoder->result, (const char *) decoder->pack_data, decoder->pack_nbytes, &current);
-
-    // error
-    if ( ret != MSGPACK_UNPACK_SUCCESS ) {
-        // ufr_info(&link, "Error in the unpacking the message %ld\n", decoder->pack_nbytes);
-        decoder->object.type = MSGPACK_OBJECT_NIL;
-        decoder->object.via.u64 = 0;
-        return -1;
-    }
-
-    // update decoder object
-    decoder->cursor = current;
-    decoder->object = decoder->result.data;
-    return UFR_OK;
-}
 
 static
 int ufr_dcr_msgpack_recv_cb(link_t* link, char* pack_data, size_t pack_nbytes) {
+printf("recebido\n");
     ll_decoder_t* decoder = link->dcr_obj;
     decoder->pack_data = (uint8_t*) pack_data;
     decoder->pack_nbytes = pack_nbytes;
@@ -97,8 +82,12 @@ int ufr_dcr_msgpack_recv_cb(link_t* link, char* pack_data, size_t pack_nbytes) {
     const int code = ufr_dcr_msgpack_next(link);
     if ( code == UFR_OK ) {
         if ( decoder->cursor >= decoder->pack_nbytes ) {
+printf("escalar\n");
             decoder->is_pack_scalar = true;
             decoder->pack_nitems = 1;
+            if ( decoder->object.type == MSGPACK_OBJECT_ARRAY || decoder->object.type == MSGPACK_OBJECT_MAP ) {
+                ufr_dcr_msgpack_cmd_enter(link);
+            }
         }
     }
     return code;
@@ -708,22 +697,65 @@ int ufr_dcr_msgpack_meta_pack_nitems(link_t* link) {
     return decoder->pack_nitems;
 }
 
-
+static
 int ufr_dcr_msgpack_cmd_enter(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    if ( decoder->object.type != MSGPACK_OBJECT_ARRAY ) {
+
+printf("aqui1\n");
+
+    // Case object is Array
+    if ( decoder->object.type == MSGPACK_OBJECT_ARRAY ) {
+        decoder->l0_array = decoder->object.via.array;
+        decoder->l0_idx = 0;
+        decoder->dcr_api = link->dcr_api;
+        link->dcr_api = &ufr_dcr_msgpack_array_api;
+        return UFR_OK;
+    } 
+    
+    // Case object is MAP
+    if ( decoder->object.type == MSGPACK_OBJECT_MAP ) {
+printf("aqui2\n");
+        decoder->l0_map = decoder->object.via.map;
+        decoder->l0_idx = 0;
+        decoder->dcr_api = link->dcr_api;
+        link->dcr_api = &ufr_dcr_msgpack_map_api;
+        return UFR_OK;
+    }
+
+    // Error
+    return -1;
+}
+
+static
+int ufr_dcr_msgpack_cmd_leave(link_t* link) {
+    return -1;
+}
+
+static
+int ufr_dcr_msgpack_next(link_t* link) {
+    // parse the next object in the message
+    ll_decoder_t* decoder = link->dcr_obj;
+    size_t current = decoder->cursor;
+
+    msgpack_unpack_return ret = msgpack_unpack_next(&decoder->result, (const char *) decoder->pack_data, decoder->pack_nbytes, &current);
+
+    // error
+    if ( ret != MSGPACK_UNPACK_SUCCESS ) {
+        // ufr_info(&link, "Error in the unpacking the message %ld\n", decoder->pack_nbytes);
+        decoder->object.type = MSGPACK_OBJECT_NIL;
+        decoder->object.via.u64 = 0;
         return -1;
     }
 
-    decoder->l0_array = decoder->object.via.array;
-    decoder->l0_idx = 0;
-    link->dcr_api_s0 = link->dcr_api;
-    link->dcr_api = &ufr_dcr_msgpack_array_api;
+    // update decoder object
+    decoder->cursor = current;
+    decoder->object = decoder->result.data;
     return UFR_OK;
 }
 
-int ufr_dcr_msgpack_cmd_leave(link_t* link) {
-    return -1;
+static
+int ufr_dcr_msgpack_cmd_prepare(link_t* link) {
+    return UFR_OK;
 }
 
 static
@@ -760,11 +792,6 @@ ufr_dcr_api_t ufr_dcr_msgpack_api = {
     .get_bin = ufr_dcr_msgpack_get_one_bin,
     .get_ptr = ufr_dcr_msgpack_get_ptr,
 
-    // enter/leave
-    .cmd_enter = ufr_dcr_msgpack_cmd_enter,
-    .cmd_leave = ufr_dcr_msgpack_cmd_leave,
-    .cmd_next = ufr_dcr_msgpack_next,
-
     // remove
     .meta_get = NULL,
     
@@ -778,6 +805,12 @@ ufr_dcr_api_t ufr_dcr_msgpack_api = {
     .meta_pack_mime = ufr_dcr_msgpack_meta_pack_mime,
     .meta_pack_nbytes = ufr_dcr_msgpack_meta_pack_nbytes,
     .meta_pack_nitems = ufr_dcr_msgpack_meta_pack_nitems,
+
+    // enter/leave
+    .cmd_enter = ufr_dcr_msgpack_cmd_enter,
+    .cmd_leave = ufr_dcr_msgpack_cmd_leave,
+    .cmd_next = ufr_dcr_msgpack_next,
+    .cmd_prepare = ufr_dcr_msgpack_cmd_prepare,
 };
 
 // ============================================================================
