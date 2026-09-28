@@ -309,7 +309,7 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
                 out_evento->var = TIPO_F64; pos += 2; 
             }
 
-            // Parsea a qtde de bytes. Exemplo: %a:1000
+            // Parsea a qtde de bytes. Exemplo: %a:d:1000
             if (frase[pos] == ':') {
                 // Trata o tamanho do array
                 pos += 1;
