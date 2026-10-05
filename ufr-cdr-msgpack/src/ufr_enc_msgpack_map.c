@@ -72,7 +72,11 @@
 typedef struct {
     int8_t type;
     int8_t name_nbytes;
-    char name[67];
+    int8_t mime_nbytes;
+    int8_t reserved;
+
+    char name[64];
+    char mime[64];
     int32_t nitems;
 
     union {
@@ -141,6 +145,16 @@ void packer_encode(link_t* link) {
             const int string_nbytes = strlen(enc_obj->data[i].str);
             msgpack_pack_str(&enc_obj->pk, string_nbytes);
             msgpack_pack_str_body(&enc_obj->pk, enc_obj->data[i].str, string_nbytes);
+        } else if ( type == SCALAR_BIN ) {
+            const char* mime = enc_obj->data[i].mime;
+            const int len_mime = strlen(mime);
+            const int len_divisor = 1;
+            const int nbytes = enc_obj->data[i].nitems;
+            const uint8_t* buffer = enc_obj->data[i].ptr;
+            msgpack_pack_bin(&enc_obj->pk, len_mime+len_divisor+nbytes);
+            msgpack_pack_bin_body(&enc_obj->pk, mime, len_mime);
+            msgpack_pack_bin_body(&enc_obj->pk, "\0", len_divisor);
+            msgpack_pack_bin_body(&enc_obj->pk, buffer, nbytes);
         }
 
         // printf("%d\n", enc_obj->data[i].type);
@@ -411,14 +425,11 @@ static
 int ufr_enc_dict_put_one_str(link_t* link, const char* val) {
     ll_encoder_t* enc_obj = link->enc_obj;
     if ( enc_obj ) {
-        // const size_t size = strlen(val);
-        // msgpack_pack_str(&enc_obj->pk, size);
-        // msgpack_pack_str_body(&enc_obj->pk, val, size);
+        // adiciona na lista
         const int index = enc_obj->index;
         enc_obj->data[index].type = SCALAR_STR;
         enc_obj->data[index].nitems = 1;
         enc_obj->data[index].str = val;
-
         ufr_enc_dict_cmd_next(link);
     }
     return 0;
@@ -443,16 +454,13 @@ int ufr_enc_dict_put_one_bin(link_t* link, const char* mime, const char* buffer,
         return -1;
     }
 
-    // build the binary package (mime:\0data)
-    // const int len_mime = strlen(mime);
-    // const int len_divisor = 1;
-
-    /*
-    msgpack_pack_bin(&enc_obj->pk, len_mime+len_divisor+nbytes);
-    msgpack_pack_bin_body(&enc_obj->pk, mime, len_mime);
-    msgpack_pack_bin_body(&enc_obj->pk, "\0", len_divisor);
-    msgpack_pack_bin_body(&enc_obj->pk, buffer, nbytes);
-    */
+    // Adiciona o binario na lista
+    const int index = enc_obj->index;
+    enc_obj->data[index].type = SCALAR_BIN;
+    enc_obj->data[index].nitems = nbytes;
+    strcpy(enc_obj->data[index].mime, mime);
+    enc_obj->data[index].ptr = buffer;
+    ufr_enc_dict_cmd_next(link);
 
     // ok
     return nbytes;
@@ -469,7 +477,7 @@ int ufr_enc_dict_cmd_send(link_t* link) {
 
     // Envia os dados
     const size_t size = enc_obj->sbuf.size;
-    const uint8_t* data = enc_obj->sbuf.data;
+    const char* data = enc_obj->sbuf.data;
 
     /*
     for (int i=0; i<size; i++){
@@ -514,6 +522,11 @@ int ufr_enc_dict_cmd_clear(link_t* link) {
     ll_encoder_t* enc_obj = link->enc_obj;
     enc_obj->index = 0;
     packer_clear(enc_obj);
+
+    // set o nome do primeiro item como v0
+    const int nbytes = sprintf(enc_obj->data[0].name, "v%d", 0);
+    enc_obj->data[0].name_nbytes = nbytes;
+
     return UFR_OK;
 }
 
