@@ -93,8 +93,8 @@
                 // Usamos msgpack.decode para converter o binário em um objeto JavaScript
                 const decodedData = msgpack.decode(payload);
 
-                raw = decodedData["v0"]
-                console.log('Mensagem decodificada:');
+                raw = Object.values(decodedData)[0]
+                console.log('Mensagem decodificada', raw[0]);
 
                 for (i=0; i<64; i++) {
                     // console.log(raw[i]);

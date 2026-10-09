@@ -200,15 +200,29 @@ int ufr_parse_int(const char frase[], int* inout_cursor) {
     if (frase[pos] == '?') {
         *inout_cursor = pos + 1;
         return -1;
-    } else {
-        int numero = 0;
-        while (frase[pos] >= '0' && frase[pos] <= '9') {
-            numero = numero * 10 + (frase[pos] - '0');
-            pos++;
-        }
-        *inout_cursor = pos;
-        return numero;
     }
+
+    int numero = 0;
+    while (frase[pos] >= '0' && frase[pos] <= '9') {
+        numero = numero * 10 + (frase[pos] - '0');
+        pos++;
+    }
+    *inout_cursor = pos;
+    return numero;
+}
+
+static 
+int ufr_parse_str(char out_buffer[], const char frase[], int* inout_cursor) {
+    int pos = *inout_cursor;
+    int i = 0;
+    while (frase[pos] != '\0' && frase[pos] != ' ' && frase[pos] != '\t' && frase[pos] != '=') {
+        if (i < 31) {
+            out_buffer[i++] = frase[pos];
+        }
+        pos++;
+    }
+    out_buffer[i] = '\0';
+    *inout_cursor = pos;
 }
 
 // ============================================================================
@@ -353,7 +367,12 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
             // Pula o ':' 
             if (frase[pos] == ':') {
                 pos++;
+                const int num1 = ufr_parse_int(frase, &pos);
+                out_evento->tamanho[0] = num1;
+                out_evento->qtde_tam = 1;
             }
+
+            if (frase[pos] == '#') {
 
 
         }
