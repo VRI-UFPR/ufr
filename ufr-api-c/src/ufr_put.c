@@ -212,7 +212,7 @@ int ufr_parse_int(const char frase[], int* inout_cursor) {
 }
 
 static 
-int ufr_parse_str(char out_buffer[], const char frase[], int* inout_cursor) {
+void ufr_parse_str(char out_buffer[], const char frase[], int* inout_cursor) {
     int pos = *inout_cursor;
     int i = 0;
     while (frase[pos] != '\0' && frase[pos] != ' ' && frase[pos] != '\t' && frase[pos] != '=') {
@@ -372,9 +372,11 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
                 out_evento->qtde_tam = 1;
             }
 
+            // Pega o mime da string
             if (frase[pos] == '#') {
-
-
+                pos += 1;
+                ufr_parse_str(out_evento->nome, frase, &pos);
+            }
         }
         else if (frase[pos] == 'c') {
             out_evento->var = TIPO_C; pos++; 
@@ -410,15 +412,7 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
     }
 
     // Caso 4: (nome=)
-    int i = 0;
-    while (frase[pos] != '\0' && frase[pos] != ' ' && frase[pos] != '\t' && frase[pos] != '=') {
-        if (i < 31) {
-            out_evento->nome[i++] = frase[pos];
-        }
-        pos++;
-    }
-    out_evento->nome[i] = '\0';
-
+    ufr_parse_str(out_evento->nome, frase, &pos);
     if (frase[pos] == '=') {
         out_evento->tipo = EVENTO_SEEK;
         pos++; 
