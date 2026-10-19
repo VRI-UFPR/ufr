@@ -65,6 +65,8 @@ int ufr_enc_csv_init(link_t* link, const ufr_args_t* args) {
 static
 void ufr_enc_csv_free(link_t* link) {
     if ( link->enc_obj != NULL ) {
+        encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
+        ufr_buffer_free(enc_obj->buffer);
         free(link->enc_obj);
         link->enc_obj = NULL;
     }

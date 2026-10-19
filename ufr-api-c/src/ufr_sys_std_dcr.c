@@ -166,11 +166,21 @@ int ufr_dcr_sys_get_str(link_t* link, char* ret_val, int maxbytes) {
 
 static
 int ufr_dcr_sys_cmd_enter(link_t* link) {
-    return UFR_OK;
+    return ufr_error(link, -1, "Invalid Function");
 }
 
 static
 int ufr_dcr_sys_cmd_leave(link_t* link) {
+    return ufr_error(link, -1, "Invalid Function");
+}
+
+static
+int ufr_dcr_sys_cmd_next(link_t* link) {
+    return UFR_OK;
+}
+
+static
+int ufr_dcr_sys_cmd_prepare(link_t* link) {
     return UFR_OK;
 }
 
@@ -213,7 +223,8 @@ ufr_dcr_api_t dcr_sys_api = {
     // Commands
     .cmd_enter = ufr_dcr_sys_cmd_enter,
     .cmd_leave = ufr_dcr_sys_cmd_leave,
-    .cmd_next = NULL,
+    .cmd_next = ufr_dcr_sys_cmd_next,
+    .cmd_prepare = ufr_dcr_sys_cmd_prepare
 };
 
 // ============================================================================

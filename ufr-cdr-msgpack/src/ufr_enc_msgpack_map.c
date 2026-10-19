@@ -155,6 +155,40 @@ void packer_encode(link_t* link) {
             msgpack_pack_bin_body(&enc_obj->pk, mime, len_mime);
             msgpack_pack_bin_body(&enc_obj->pk, "\0", len_divisor);
             msgpack_pack_bin_body(&enc_obj->pk, buffer, nbytes);
+        
+        } else if ( type == ARRAY_I32 ) {
+
+            const int32_t nbytes = enc_obj->data[i].nitems;
+            msgpack_pack_array(&enc_obj->pk, nbytes);
+            const int32_t* data = (const int32_t*) enc_obj->data[i].ptr;
+            for (int32_t i=0; i<nbytes; i++) {
+                msgpack_pack_int(&enc_obj->pk, data[i]);
+            }
+            
+        } else if ( type == ARRAY_I64 ) {
+            const int32_t nbytes = enc_obj->data[i].nitems;
+            msgpack_pack_array(&enc_obj->pk, nbytes);
+            const int64_t* data = (const int64_t*) enc_obj->data[i].ptr;
+            for (int32_t i=0; i<nbytes; i++) {
+                msgpack_pack_int64(&enc_obj->pk, data[i]);
+            }
+
+        } else if ( type == ARRAY_F32 ) {
+            const int32_t nbytes = enc_obj->data[i].nitems;
+            msgpack_pack_array(&enc_obj->pk, nbytes);
+            const float* data = (const float*) enc_obj->data[i].ptr;
+            for (int32_t i=0; i<nbytes; i++) {
+                msgpack_pack_float(&enc_obj->pk, data[i]);
+            }
+
+        } else if ( type == ARRAY_F64 ) {
+            const int32_t nbytes = enc_obj->data[i].nitems;
+            msgpack_pack_array(&enc_obj->pk, nbytes);
+            const double* data = (const float*) enc_obj->data[i].ptr;
+            for (int32_t i=0; i<nbytes; i++) {
+                msgpack_pack_double(&enc_obj->pk, data[i]);
+            }
+
         }
 
         // printf("%d\n", enc_obj->data[i].type);
@@ -495,12 +529,12 @@ static
 int ufr_enc_dict_cmd_enter(link_t* link, size_t maxsize) {
     // ll_encoder_t* enc_obj = (ll_encoder_t*) link->enc_obj;
     // msgpack_pack_array(&enc_obj->pk, maxsize);
-    return -1;
+    return UFR_OK;
 }
 
 static
 int ufr_enc_dict_cmd_leave(link_t* link) {
-    return -1;
+    return UFR_OK;
 }
 
 static

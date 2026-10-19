@@ -275,7 +275,7 @@ typedef struct _link {
 
     uint32_t hash;                       // guarda um hash gerado pelos parametros
     uint16_t put_count;
-    char errstr[16];
+    char errstr[184];
 } link_t;
 
 // Renomeia link_t para UFILE
@@ -313,6 +313,7 @@ typedef enum {
     TIPO_F32,      // 10 - %f
     TIPO_F64,      // 11 - %lf
     TIPO_STR,      // 12 - %s
+    TIPO_BIN,      // 13 - %b
 } TipoVar;
 
 typedef struct {
@@ -369,7 +370,7 @@ void ufr_link_init(link_t* link, ufr_gtw_api_t* gtw_api);
 
 int ufr_new(link_t* link, int type, const char* format, ...);
 
-/**
+/**enc_obj
  * @brief Create a new publisher
  * 
  * @param text parameters for the publisher. Example "@new zmq:topic @coder msgpack"

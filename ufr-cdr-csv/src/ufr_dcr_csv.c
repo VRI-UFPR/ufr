@@ -219,8 +219,13 @@ int ufr_dcr_csv_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
 
 static
 int ufr_dcr_csv_get_str(link_t* link, char* out_val, int maxlen) {
-	ll_decoder_t* decoder = link->dcr_obj;
+    ll_decoder_t* decoder = link->dcr_obj;
     return lex_next_token(decoder, out_val);
+}
+
+static
+int ufr_dcr_csv_cmd_prepare(link_t* link) {
+    return UFR_OK;
 }
 
 static
@@ -266,6 +271,7 @@ ufr_dcr_api_t ufr_dcr_std_csv_api = {
     .cmd_enter = NULL,
     .cmd_leave = NULL,
     .cmd_next = ufr_dcr_csv_cmd_next,
+    .cmd_prepare = ufr_dcr_csv_cmd_prepare
 };
 
 // ============================================================================

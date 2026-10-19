@@ -38,8 +38,8 @@
 //  Tests 
 // ============================================================================
 
+static
 void test1() {
-    bool res;
     int cursor = 0;
     Evento evento;
 
@@ -66,6 +66,7 @@ void test1() {
     UFR_TEST_FALSE( ufr_parse_frase("%d %f     %s\n", &cursor, &evento) );
 }
 
+static
 void test2() {
     Evento evento;
     int cursor = 0;
@@ -91,6 +92,7 @@ void test2() {
     UFR_TEST_EQUAL_I32( evento.var, TIPO_I32 );
 }
 
+static
 void test3() {
     Evento evento;
     int cursor = 0;
@@ -105,6 +107,7 @@ void test3() {
     UFR_TEST_EQUAL_I32 ( evento.tamanho[0], 10 );
 }
 
+static
 void test4() {
     Evento evento;
     // teste 1
@@ -150,9 +153,8 @@ void test4() {
     }
 }
 
-
-
-int test5() {
+static
+void test5() {
     Evento evento;
     int cursor = 0;
 
@@ -162,11 +164,25 @@ int test5() {
     UFR_TEST_EQUAL_I32 ( evento.tamanho[0], -1 );
 }
 
+static
+void test6() {
+    Evento evento;
+    int cursor = 0;
+
+    ufr_parse_frase("%s:?@image/jpeg", &cursor, &evento);
+    UFR_TEST_EQUAL_I32( evento.tipo, EVENTO_VAR_SCALAR );
+    UFR_TEST_EQUAL_I32( evento.var, TIPO_STR );
+    UFR_TEST_EQUAL_I32 ( evento.tamanho[0], -1 );
+    UFR_TEST_EQUAL_STR ( evento.nome, "image/jpeg" );
+}
+
+
 int main() {
     test1();
     test2();
     test3();
     test4();
     test5();
+    test6();
     return 0;
 }

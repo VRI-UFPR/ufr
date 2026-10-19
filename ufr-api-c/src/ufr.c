@@ -173,6 +173,8 @@ bool ufr_recv(link_t* link) {
     if ( link->log_level > 0 ) {
         if ( link->gtw_api == NULL ) {
             ufr_fatal(link, 1, "gtw_api is null");
+        } else if ( link->dcr_api == NULL ) {
+            ufr_fatal(link, 1, "dcr_api is null");
         } else if ( link->gtw_api->recv == NULL ) {
             ufr_fatal(link, 1, "gtw_api->recv is null");
         } else if ( link->dcr_api->cmd_prepare == NULL ) {

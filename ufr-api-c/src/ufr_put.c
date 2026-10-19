@@ -111,6 +111,13 @@ int ufr_put_scalar(link_t* link, const Evento* evento, va_list list) {
             count = link->enc_api->put_str(link, str);
         } break;
 
+        case TIPO_BIN: {
+            const char* buffer = va_arg(list, const char*);
+            const int32_t nbytes = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
+            const char* mime = evento->nome;
+            count = link->enc_api->put_bin(link, mime, buffer, nbytes);
+        }
+
         default:
             break;
     }
@@ -373,11 +380,31 @@ bool ufr_parse_frase(const char* frase, int* inout_cursor, Evento* out_evento) {
             }
 
             // Pega o mime da string
-            if (frase[pos] == '#') {
+            out_evento->nome[0] = '\0';
+            if (frase[pos] == '@') {
                 pos += 1;
                 ufr_parse_str(out_evento->nome, frase, &pos);
             }
         }
+        else if (frase[pos] == 'b') {
+            out_evento->var = TIPO_BIN; pos++; 
+
+            // Pula o ':' 
+            if (frase[pos] == ':') {
+                pos++;
+                const int num1 = ufr_parse_int(frase, &pos);
+                out_evento->tamanho[0] = num1;
+                out_evento->qtde_tam = 1;
+            }
+
+            // Pega o mime da string
+            out_evento->nome[0] = '\0';
+            if (frase[pos] == '@') {
+                pos += 1;
+                ufr_parse_str(out_evento->nome, frase, &pos);
+            }
+        }
+
         else if (frase[pos] == 'c') {
             out_evento->var = TIPO_C; pos++; 
         }
@@ -768,7 +795,7 @@ int ufr_put_arr_i32(link_t* link, const int32_t array[], int nitems) {
     }
 
     if ( link->enc_api->cmd_enter(link, nitems) != UFR_OK ) {
-        return -1;
+        return ufr_error(link, -1, "error on enc_api->cmd_enter");
     }
 
     const int wrote_nitems = link->enc_api->put_i32(link, array, nitems);
