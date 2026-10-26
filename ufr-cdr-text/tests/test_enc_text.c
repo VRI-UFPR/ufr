@@ -42,36 +42,25 @@ int ufr_enc_text_new(link_t* link);
 // ============================================================================
 
 void test_simple() {
-    link_t* link = ufr_publisher("@new %p @coder %p", 
-        ufr_gtw_posix_new_pipe, ufr_enc_text_new);
+    char buffer[1024];
+    link_t* link = ufr_publisher("@new %p @coder %p @buffer %p", 
+        ufr_gtw_memory_new, ufr_enc_text_new, buffer);
 
     // test 1
     {
-        char buffer[128];
         UFR_TEST_EQUAL_I32( ufr_put(link, "%d %d %d\n", 10, 20, 30), 4 );
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 7 );
-        buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "102030\n");
     }
 
-    ufr_close(link);
-}
-
-
-void test_simple2() {
-    link_t* link = ufr_publisher("@new %p @coder %p", 
-        ufr_gtw_posix_new_pipe, ufr_enc_text_new);
-
-    // test 1
+    // test 2
     {
-        char buffer[128];
+        UFR_TEST_EQUAL_I32( ufr_put(link, "%s %s %s\n", "opa", "mundo", "!!!"), 4 );
+        UFR_TEST_EQUAL_STR(buffer, "opamundo!!!\n");
+    }
+
+    // test 3
+    {
         UFR_TEST_EQUAL_I32( ufr_put(link, "%d %f %s\n", 10, 3.141592653589793238462643383279, "OPAA!!!!"), 4 );
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 19 );
-        buffer[nbytes] = '\0';
         UFR_TEST_EQUAL_STR(buffer, "103.141593OPAA!!!!\n");
     }
 
@@ -85,7 +74,6 @@ void test_simple2() {
 
 int main() {
     test_simple();
-    test_simple2();
     ufr_test_print_result();
     return 0;
 }

@@ -21,6 +21,7 @@ add_library(ufr SHARED
     ./src/ufr_args.c
     ./src/ufr_recv_linux.c
     ./src/ufr_meta.c
+    ./src/ufr_gtw_memory.c
     )
 
 target_compile_options(ufr PUBLIC -O3 -Wall -Wfloat-conversion)

@@ -801,6 +801,9 @@ void ufr_buffer_put_f32_as_str(ufr_buffer_t* buffer, float val);
 void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text);
 void ufr_buffer_check_size(ufr_buffer_t* buffer, size_t size);
 
+
+int ufr_gtw_memory_new(link_t* link, int type);
+
 // ============================================================================
 //  UFR META
 // ============================================================================

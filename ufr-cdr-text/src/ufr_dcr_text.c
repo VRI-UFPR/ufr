@@ -282,6 +282,11 @@ int ufr_dcr_text_get_str(link_t* link, char* out_val, int maxlen) {
 }
 
 static
+int ufr_dcr_text_cmd_prepare(link_t* link) {
+    return UFR_OK;
+}
+
+static
 ufr_dcr_api_t ufr_dcr_std_text_api = {
     // Init and Free
     .init = ufr_dcr_text_init,
@@ -323,7 +328,8 @@ ufr_dcr_api_t ufr_dcr_std_text_api = {
     // Commands
     .cmd_enter = NULL,
     .cmd_leave = NULL,
-    .cmd_next = ufr_dcr_text_cmd_next
+    .cmd_next = ufr_dcr_text_cmd_next,
+    .cmd_prepare = ufr_dcr_text_cmd_prepare
 };
 
 // ============================================================================
