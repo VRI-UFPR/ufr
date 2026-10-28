@@ -135,8 +135,8 @@ endif(BUILD_UFR_STK_VIDEO)
 # add_subdirectory(./ufr-gtw-chart)
 # add_subdirectory(./cv_mat)
 
-
-add_subdirectory(./ufr-stk-gnuplot)
+add_subdirectory(./ufr-cdr-json)
+# add_subdirectory(./ufr-stk-gnuplot)
 
 
 # Install locally in the directory ./install

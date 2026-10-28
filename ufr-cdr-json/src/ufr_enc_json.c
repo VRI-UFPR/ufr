@@ -92,14 +92,15 @@ typedef struct {
         double f64;
         const void* ptr;
         const char* str;
+
+        const int32_t* pi32;
+
     };
 } ll_item_t;
 
 
 typedef struct {
-    msgpack_sbuffer sbuf;
-    msgpack_packer pk;
-
+    ufr_buffer_t buffer;
     int32_t index;
     ll_item_t data[MAX_ITEMS];
 } ll_encoder_t;
@@ -112,91 +113,102 @@ static int ufr_enc_dict_cmd_next(link_t* link);
 // ============================================================================
 
 void packer_init(ll_encoder_t* enc_obj) {
-    msgpack_sbuffer_init(&enc_obj->sbuf);
-    msgpack_packer_init(&enc_obj->pk, &enc_obj->sbuf, msgpack_sbuffer_write);
+    ufr_buffer_init(&enc_obj->buffer);
 }
 
 void packer_free(ll_encoder_t* enc_obj) {
-
+    ufr_buffer_free(&enc_obj->buffer);
 }
 
 void packer_encode(link_t* link) {
+    bool is_first = true;
     ll_encoder_t* enc_obj = link->enc_obj;
     const int nitems = enc_obj->index;
-    msgpack_pack_map(&enc_obj->pk, nitems);
+
+    // Inicio
+    ufr_buffer_put_chr(&enc_obj->buffer, '{');
+    
+    // Meio
     for (int i=0; i<nitems; i++) {
         // Encoder the name of field
         const char* name = enc_obj->data[i].name;
         const int8_t name_nbytes = enc_obj->data[i].name_nbytes;
-        msgpack_pack_str(&enc_obj->pk, name_nbytes);
-        msgpack_pack_str_body(&enc_obj->pk, name, name_nbytes);
+
+        if ( is_first == false ) {
+            ufr_buffer_put_str(&enc_obj->buffer, ", "); 
+        }
+
+        ufr_buffer_put_chr(&enc_obj->buffer, '\'');
+        ufr_buffer_put_str(&enc_obj->buffer, name);
+        ufr_buffer_put_str(&enc_obj->buffer, "': ");
 
         // Encoder the value of field
         const uint8_t type = enc_obj->data[i].type;
         if ( type == SCALAR_I32 ) {
-            msgpack_pack_int(&enc_obj->pk, enc_obj->data[i].i32);
+            ufr_buffer_put_i32_as_str(&enc_obj->buffer, enc_obj->data[i].i32);
+
         } else if ( type == SCALAR_I64 ) {
-            msgpack_pack_int(&enc_obj->pk, enc_obj->data[i].i64);
+            // ufr_buffer_put_i64_as_str(&enc_obj->buffer, enc_obj->data[i].i64);
+
         } else if ( type == SCALAR_F32 ) {
-            msgpack_pack_float(&enc_obj->pk, enc_obj->data[i].f32);
+            ufr_buffer_put_f32_as_str(&enc_obj->buffer, enc_obj->data[i].f32);
+
         } else if ( type == SCALAR_F64 ) {
-            msgpack_pack_double(&enc_obj->pk, enc_obj->data[i].f64);
+            // ufr_buffer_put_f64_as_str(&enc_obj->buffer, enc_obj->data[i].f64);
+
         } else if ( type == SCALAR_STR ) {
-            const int string_nbytes = strlen(enc_obj->data[i].str);
-            msgpack_pack_str(&enc_obj->pk, string_nbytes);
-            msgpack_pack_str_body(&enc_obj->pk, enc_obj->data[i].str, string_nbytes);
+            ufr_buffer_put_chr(&enc_obj->buffer, '\'');
+            ufr_buffer_put_str(&enc_obj->buffer, enc_obj->data[i].str);
+            ufr_buffer_put_chr(&enc_obj->buffer, '\'');
+
         } else if ( type == SCALAR_BIN ) {
-            const char* mime = enc_obj->data[i].mime;
-            const int len_mime = strlen(mime);
-            const int len_divisor = 1;
-            const int nbytes = enc_obj->data[i].nitems;
-            const uint8_t* buffer = enc_obj->data[i].ptr;
-            msgpack_pack_bin(&enc_obj->pk, len_mime+len_divisor+nbytes);
-            msgpack_pack_bin_body(&enc_obj->pk, mime, len_mime);
-            msgpack_pack_bin_body(&enc_obj->pk, "\0", len_divisor);
-            msgpack_pack_bin_body(&enc_obj->pk, buffer, nbytes);
+
         
         } else if ( type == ARRAY_I32 ) {
-
-            const int32_t nbytes = enc_obj->data[i].nitems;
-            msgpack_pack_array(&enc_obj->pk, nbytes);
-            const int32_t* data = (const int32_t*) enc_obj->data[i].ptr;
-            for (int32_t i=0; i<nbytes; i++) {
-                msgpack_pack_int(&enc_obj->pk, data[i]);
+            ufr_buffer_put_chr(&enc_obj->buffer, '[');
+            const int32_t* pi32 = enc_obj->data[i].pi32;
+            const int32_t nitems = enc_obj->data[i].nitems;
+            if ( nitems > 0) {
+                ufr_buffer_put_i32_as_str(&enc_obj->buffer, pi32[0]);
+                for (int j=1; j<nitems; j++) {
+                    ufr_buffer_put_chr(&enc_obj->buffer, ',');
+                    ufr_buffer_put_i32_as_str(&enc_obj->buffer, pi32[j]);
+                }
             }
+            ufr_buffer_put_chr(&enc_obj->buffer, ']');
             
         } else if ( type == ARRAY_I64 ) {
-            const int32_t nbytes = enc_obj->data[i].nitems;
-            msgpack_pack_array(&enc_obj->pk, nbytes);
-            const int64_t* data = (const int64_t*) enc_obj->data[i].ptr;
-            for (int32_t i=0; i<nbytes; i++) {
-                msgpack_pack_int64(&enc_obj->pk, data[i]);
-            }
+
+            
 
         } else if ( type == ARRAY_F32 ) {
-            const int32_t nbytes = enc_obj->data[i].nitems;
-            msgpack_pack_array(&enc_obj->pk, nbytes);
-            const float* data = (const float*) enc_obj->data[i].ptr;
-            for (int32_t i=0; i<nbytes; i++) {
-                msgpack_pack_float(&enc_obj->pk, data[i]);
+            ufr_buffer_put_chr(&enc_obj->buffer, '[');
+            const float* data = (float*) enc_obj->data[i].ptr;
+            const int32_t nitems = enc_obj->data[i].nitems;
+            if ( nitems > 0) {
+                ufr_buffer_put_f32_as_str(&enc_obj->buffer, data[0]);
+                for (int j=1; j<nitems; j++) {
+                    ufr_buffer_put_chr(&enc_obj->buffer, ',');
+                    ufr_buffer_put_f32_as_str(&enc_obj->buffer, data[j]);
+                }
             }
+            ufr_buffer_put_chr(&enc_obj->buffer, ']');
 
         } else if ( type == ARRAY_F64 ) {
-            const int32_t nbytes = enc_obj->data[i].nitems;
-            msgpack_pack_array(&enc_obj->pk, nbytes);
-            const double* data = (const float*) enc_obj->data[i].ptr;
-            for (int32_t i=0; i<nbytes; i++) {
-                msgpack_pack_double(&enc_obj->pk, data[i]);
-            }
+
 
         }
 
-        // printf("%d\n", enc_obj->data[i].type);
+        is_first = false;
     }
+
+    // Fim
+    ufr_buffer_put_chr(&enc_obj->buffer, '}');
+
 }
 
 void packer_clear(ll_encoder_t* enc_obj) {
-    msgpack_sbuffer_clear(&enc_obj->sbuf);
+    ufr_buffer_clear(&enc_obj->buffer);
 }
 
 // ============================================================================
@@ -476,8 +488,6 @@ int ufr_enc_dict_put_one_raw(link_t* link, const uint8_t* buffer, int size) {
         return -1;
     }
 
-    // msgpack_pack_bin(&enc_obj->pk, size);
-    // msgpack_pack_bin_body(&enc_obj->pk, buffer, size);
     return size;
 }
 
@@ -509,18 +519,8 @@ int ufr_enc_dict_cmd_send(link_t* link) {
     // Empacota os dados
     packer_encode(link);
 
-    // Envia os dados
-    const size_t size = enc_obj->sbuf.size;
-    const char* data = enc_obj->sbuf.data;
-
-    /*
-    for (int i=0; i<size; i++){
-        printf("%x ", data[i]);
-    }
-    printf("\n");
-    */
-
-    ufr_write(link, (char*) data, size);
+    
+    ufr_write(link, (char*) enc_obj->buffer.ptr, enc_obj->buffer.size);
     ufr_enc_dict_cmd_clear(link);
     return UFR_OK;
 }
@@ -567,10 +567,9 @@ int ufr_enc_dict_cmd_clear(link_t* link) {
 static
 int ufr_enc_dict_cmd_eof(link_t* link) {
     ll_encoder_t* enc_obj = link->enc_obj;
-    const size_t size = enc_obj->sbuf.size;
-    const char* data = enc_obj->sbuf.data;
-    ufr_write(link, data, size);
-    ufr_enc_dict_cmd_clear(link);
+    
+    // ufr_write(link, data, size);
+    // ufr_enc_dict_cmd_clear(link);
     return UFR_OK;
 }
 

@@ -307,3 +307,46 @@ void ufr_buffer_put_str(ufr_buffer_t* buffer, const char* text) {
     const size_t size = strlen(text); // Calcula o tamanho da string 
     ufr_buffer_put(buffer, text, size); // Se eh a primeira string, Adiciona a string sem divisor
 }
+
+
+/**
+ * Converte dados binários para Base64URL (seguro para JSON e URLs).
+ * Substitui '+' por '-', '/' por '_' e remove o preenchimento '='.
+ * 
+ */
+void ufr_buffer_put_bin_as_str (ufr_buffer_t* buffer, const unsigned char *data, size_t input_length) {
+    // Tabela Base64URL (substitui '+' por '-' e '/' por '_')
+    static const char base64url_table[] = 
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789-_";
+
+    // Tamanho base antes do ajuste de padding
+    size_t encoded_len = 4 * ((input_length + 2) / 3);
+    
+    // Aloca memória para a string + terminador nulo '\0'
+    ufr_buffer_check_size(buffer, encoded_len + 1);
+
+    // copia os dados
+    size_t i, j;
+    for (i = 0, j = 0; i < input_length;) {
+        uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;
+
+        uint32_t triple = (octet_a << 16) + (octet_b << 8) + octet_c;
+
+        ufr_buffer_put_chr( buffer, base64url_table[(triple >> 18) & 0x3F]);
+        ufr_buffer_put_chr( buffer, base64url_table[(triple >> 12) & 0x3F]);
+        ufr_buffer_put_chr( buffer, base64url_table[(triple >> 6) & 0x3F]);
+        ufr_buffer_put_chr( buffer, base64url_table[(triple) & 0x3F]);
+    }
+
+    // Tratamento de preenchimento (padding) com '=' caso o tamanho não seja múltiplo de 3
+    size_t mod = input_length % 3;
+    if (mod == 1) {
+        ufr_buffer_put_str( buffer, "==");
+    } else if (mod == 2) {
+        ufr_buffer_put_chr( buffer, '=');
+    }
+}
