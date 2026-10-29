@@ -273,9 +273,10 @@ typedef struct _link {
         };
     };
 
+    size_t   sent;                       // qtde de bytes enviados no ultimo envio
     uint32_t hash;                       // guarda um hash gerado pelos parametros
     uint16_t put_count;
-    char errstr[184];
+    char errstr[172];
 } link_t;
 
 // Renomeia link_t para UFILE

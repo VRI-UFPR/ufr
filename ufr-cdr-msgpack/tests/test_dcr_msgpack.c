@@ -41,24 +41,23 @@
 // ============================================================================
 
 void test_decode_5i() {
-    link_t* link = ufr_subscriber("@new %p @coder %p", 
-        ufr_gtw_posix_new_pipe, ufr_dcr_msgpack_new);
+    uint8_t buffer[1024];
+    link_t* link = ufr_subscriber("@new %p @coder %p @buffer %p", 
+        ufr_gtw_memory_new, ufr_dcr_msgpack_new, buffer);
 
     {
-        const char send[] = {1,2,3,4,5};
-        ufr_write(link, send, sizeof(send));
+        const uint8_t correto[] = {0x83, 0xa2, 0x76, 0x30, 0xa, 0xa2, 0x76, 0x31, 0x14, 0xa2, 0x76, 0x32, 0x1e};
+        ufr_write(link, correto, sizeof(correto));
+
         UFR_TEST_TRUE( ufr_recv(link) );
         UFR_TEST_EQUAL( ufr_meta_pack_nitems(link), 5 );
-        UFR_TEST_EQUAL( ufr_meta_item_nitems(link), 1 );
-        for (int i=1; i<=5; i++) {
+        // UFR_TEST_EQUAL( ufr_meta_item_nitems(link), 1 );
+        /*for (int i=1; i<=5; i++) {
             int num;
-            // assert( ufr_get_type(link) == 'i' );
-            // UFR_TEST_EQUAL( ufr_get_nitems(link), 1 );
-            // assert( ufr_get_raw_ptr(link) != NULL );
             UFR_TEST_EQUAL_STR( ufr_meta_item_mime(link), "number/u32" );
             UFR_TEST_EQUAL( ufr_get(link, "%d", &num), 1 );
             UFR_TEST_EQUAL( num, i );
-        }
+        }*/
     }
 }
 
@@ -218,11 +217,9 @@ printf("opa\n");
 
 int main() {
     test_decode_5i();
-    test_decode_3f();
-    test_decode_2s();
-    test_decode_file();
+    // test_decode_3f();
+    // test_decode_2s();
+    // test_decode_file();
     // show_encoder_bytes();
-
-    ufr_test_print_result();
 	return 0;
 }

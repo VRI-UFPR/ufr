@@ -66,18 +66,18 @@ int ufr_gtw_memory_boot(link_t* link, const ufr_args_t* args) {
         ufr_fatal(link, 1, "Memory fault");
     }
 
+    // get parameters
     uint8_t* buffer_ptr = ufr_args_getp(args, "@buffer", NULL);
     uint32_t maxsize = ufr_args_getu(args, "@max", 1024);
 
-    printf("%p\n", buffer_ptr);
-
+    // init the buffer struct
     buffer->idx = 0;
     buffer->size = 0;
     buffer->maxsize = maxsize;
     buffer->data = buffer_ptr;
     link->gtw_obj = buffer;
 
-	return 0;
+	return UFR_OK;
 }
 
 static
@@ -103,7 +103,6 @@ int ufr_gtw_memory_copy(link_t* link, link_t* out) {
 
 static
 size_t ufr_gtw_memory_read(link_t* link, char* out_buffer, size_t length) {
-	// buffer_t* buffer = (buffer_t*) link->gtw_obj;
     return 0;
 }
 
@@ -116,12 +115,19 @@ size_t ufr_gtw_memory_write(link_t* link, const char* buffer, size_t length) {
     
     memcpy(obj->data, buffer, length);
     obj->data[length] = '\0';
+    obj->size += length;
     return length;
 }
 
 static
 int ufr_gtw_memory_recv(link_t* link) {
-    return 0;
+    buffer_t* buffer = (buffer_t*) link->gtw_obj;
+
+    if ( link->dcr_api != NULL ) {
+        link->dcr_api->recv_cb(link, buffer->data, buffer->size);
+    }
+
+    return UFR_OK;
 }
 
 static

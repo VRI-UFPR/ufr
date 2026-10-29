@@ -313,7 +313,9 @@ size_t ufr_write(link_t* link, const char* buffer, size_t size) {
         }
 
         const size_t wrote = link->gtw_api->write(link, buffer, size);
+        link->sent = wrote;
         ufr_log(link, "sent %ld bytes", wrote);
+        
         return wrote;
 
     // No Debug

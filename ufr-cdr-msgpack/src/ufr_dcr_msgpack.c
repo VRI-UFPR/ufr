@@ -72,7 +72,6 @@ void ufr_dcr_msgpack_free(link_t* link) {
 
 static
 int ufr_dcr_msgpack_recv_cb(link_t* link, char* pack_data, size_t pack_nbytes) {
-printf("recebido\n");
     ll_decoder_t* decoder = link->dcr_obj;
     decoder->pack_data = (uint8_t*) pack_data;
     decoder->pack_nbytes = pack_nbytes;
@@ -82,7 +81,6 @@ printf("recebido\n");
     const int code = ufr_dcr_msgpack_next(link);
     if ( code == UFR_OK ) {
         if ( decoder->cursor >= decoder->pack_nbytes ) {
-printf("escalar\n");
             decoder->is_pack_scalar = true;
             decoder->pack_nitems = 1;
             if ( decoder->object.type == MSGPACK_OBJECT_ARRAY || decoder->object.type == MSGPACK_OBJECT_MAP ) {
@@ -701,8 +699,6 @@ static
 int ufr_dcr_msgpack_cmd_enter(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
 
-printf("aqui1\n");
-
     // Case object is Array
     if ( decoder->object.type == MSGPACK_OBJECT_ARRAY ) {
         decoder->l0_array = decoder->object.via.array;
@@ -714,7 +710,6 @@ printf("aqui1\n");
     
     // Case object is MAP
     if ( decoder->object.type == MSGPACK_OBJECT_MAP ) {
-printf("aqui2\n");
         decoder->l0_map = decoder->object.via.map;
         decoder->l0_idx = 0;
         decoder->dcr_api = link->dcr_api;
