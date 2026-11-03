@@ -371,6 +371,30 @@ char ufr_dcr_msgpack_map_meta_item_type(link_t* link) {
 static 
 const char* ufr_dcr_msgpack_map_meta_item_mime(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
+    if ( decoder->l0_idx < decoder->l0_map.size ) {
+        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+        const int type = item.type;
+
+        if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
+            return "number/u32";
+        }
+
+        if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
+            return "number/i32";
+        }
+        
+        if ( type == MSGPACK_OBJECT_FLOAT32 ) {
+            return "number/f32";
+        }
+
+        if ( type == MSGPACK_OBJECT_STR ) {
+            return "text/ascii";
+        }
+
+        if ( type == MSGPACK_OBJECT_ARRAY ) {
+            return "array";
+        }
+    }
     return "";
 }
 
@@ -399,14 +423,6 @@ int ufr_dcr_msgpack_map_meta_item_nitems(link_t* link) {
             return 1;
         }
 
-        if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_STR ) {
-            return 1;
-        }
-
         if ( type == MSGPACK_OBJECT_STR ) {
             return 1;
         }
@@ -422,6 +438,7 @@ int ufr_dcr_msgpack_map_meta_item_nitems(link_t* link) {
 static 
 const char* ufr_dcr_msgpack_map_meta_pack_mime(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
+    
     return "";
 }
 
@@ -434,39 +451,7 @@ int ufr_dcr_msgpack_map_meta_pack_nbytes(link_t* link) {
 static 
 int ufr_dcr_msgpack_map_meta_pack_nitems(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    if ( decoder->l0_idx < decoder->l0_map.size ) {
-        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
-        const int type = item.type;
-
-        if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_NEGATIVE_INTEGER ) {
-            return 1;
-        }
-        
-        if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_FLOAT32 ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_STR ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_STR ) {
-            return 1;
-        }
-
-        if ( type == MSGPACK_OBJECT_ARRAY ) {
-            return item.via.array.size;
-        }
-    }
-    return 0;
+    return decoder->l0_map.size;
 }
 
 

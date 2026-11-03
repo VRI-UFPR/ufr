@@ -68,7 +68,10 @@ int ufr_gtw_memory_boot(link_t* link, const ufr_args_t* args) {
 
     // get parameters
     uint8_t* buffer_ptr = ufr_args_getp(args, "@buffer", NULL);
-    uint32_t maxsize = ufr_args_getu(args, "@max", 1024);
+    const uint32_t maxsize = ufr_args_getu(args, "@max", 1024);
+    if ( buffer_ptr == NULL ) {
+        buffer_ptr = malloc(maxsize);
+    }
 
     // init the buffer struct
     buffer->idx = 0;
