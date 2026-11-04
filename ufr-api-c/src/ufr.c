@@ -324,6 +324,16 @@ size_t ufr_write(link_t* link, const char* buffer, size_t size) {
     }
 }
 
+size_t ufr_gtw_write_u8(link_t* link, const uint8_t* buffer, size_t size) {
+    return ufr_write(link, (const char*) buffer, size);
+}
+
+size_t ufr_gtw_write_i8(link_t* link, const char* buffer, size_t size) {
+    return ufr_write(link, buffer, size);
+}
+
+
+
 bool ufr_accept(link_t* link) {
     if ( link->log_level > 0 ) {
         if ( link->gtw_api == NULL ) {

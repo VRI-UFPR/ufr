@@ -343,6 +343,9 @@ const char* ufr_api_name(const link_t* link);
 // link_t ufr_accept(link_t* link);
 
 size_t ufr_write(link_t* link, const char* buffer, size_t size);
+size_t ufr_gtw_write_i8(link_t* link, const char* buffer, size_t size);
+size_t ufr_gtw_write_u8(link_t* link, const uint8_t* buffer, size_t size);
+
 size_t ufr_read(link_t* link, char* buffer, size_t maxsize);
 
 bool ufr_send(link_t* link);

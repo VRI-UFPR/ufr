@@ -132,7 +132,7 @@ void packer_encode(link_t* link) {
     for (int i=0; i<nitems; i++) {
         // Encoder the name of field
         const char* name = enc_obj->data[i].name;
-        const int8_t name_nbytes = enc_obj->data[i].name_nbytes;
+        // const int8_t name_nbytes = enc_obj->data[i].name_nbytes;
 
         if ( is_first == false ) {
             ufr_buffer_put_str(&enc_obj->buffer, ", "); 
@@ -566,8 +566,7 @@ int ufr_enc_dict_cmd_clear(link_t* link) {
 
 static
 int ufr_enc_dict_cmd_eof(link_t* link) {
-    ll_encoder_t* enc_obj = link->enc_obj;
-    
+    // ll_encoder_t* enc_obj = link->enc_obj;
     // ufr_write(link, data, size);
     // ufr_enc_dict_cmd_clear(link);
     return UFR_OK;

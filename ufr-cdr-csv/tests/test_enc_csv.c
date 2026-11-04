@@ -42,83 +42,59 @@ int ufr_enc_csv_new(link_t* link);
 // ============================================================================
 
 void test_simple() {
-    link_t* link = ufr_publisher("@new %p @coder %p @sep ;", 
-        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
+    char buffer[1024];
+    link_t* link = ufr_publisher("@new %p @coder %p @sep ; @buffer %p", 
+        ufr_gtw_memory_new, ufr_enc_csv_new, buffer);
 
     // test 1
     {
-        char buffer[128];
         UFR_TEST_EQUAL_I32( ufr_put(link, "%d %d %d\n", 10, 20, 30), 4 );
-        UFR_TEST_TRUE( ufr_recv(link) );
-        // int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        // UFR_TEST_EQUAL_I32( nbytes, 9 );
-        // buffer[nbytes] = '\0';
-        // UFR_TEST_EQUAL_STR(buffer, "10;20;30\n");
+        UFR_TEST_EQUAL_I32( link->sent, 9 );
+        UFR_TEST_EQUAL_STR(buffer, "10;20;30\n");
     }
 
 
-/*
     // test 2
     {
-        char buffer[128];
         ufr_put(link, "%d %d %d\n", 30, 20, 10);
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
-        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_I32( link->sent, 9 );
         UFR_TEST_EQUAL_STR(buffer, "30;20;10\n");
 
     }
 
     // test 3
     {
-        char buffer[128];
         ufr_put(link, "%s %d %d\n", "string com espaco", 8759834, -712345);
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 34 );
-        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_I32( link->sent, 34 );
         UFR_TEST_EQUAL_STR(buffer, "string com espaco;8759834;-712345\n");
     }
-*/
+
     ufr_close(link);
 }
 
 void test_simple_2() {
-    link_t* link = ufr_publisher("@new %p @coder %p @sep ,", 
-        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
+    char buffer[1024];
+    link_t* link = ufr_publisher("@new %p @coder %p @sep , @buffer %p", 
+        ufr_gtw_memory_new, ufr_enc_csv_new, buffer);
 
     // test 1
     {
-        char buffer[128];
         ufr_put(link, "%d %d %d\n", 10, 20, 30);
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
-        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_I32( link->sent, 9 );
         UFR_TEST_EQUAL_STR(buffer, "10,20,30\n");
     }
 
     // test 2
     {
-        char buffer[128];
         ufr_put(link, "%d %d %d\n", 30, 20, 10);
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 9 );
-        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_I32( link->sent, 9 );
         UFR_TEST_EQUAL_STR(buffer, "30,20,10\n");
-
     }
 
     // test 3
     {
-        char buffer[128];
         ufr_put(link, "%s %d %d\n", "string com espaco", 8759834, -712345);
-        UFR_TEST_TRUE( ufr_recv(link) );
-        const int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 34 );
-        buffer[nbytes] = '\0';
+        UFR_TEST_EQUAL_I32( link->sent, 34 );
         UFR_TEST_EQUAL_STR(buffer, "string com espaco,8759834,-712345\n");
     }
 
@@ -126,37 +102,12 @@ void test_simple_2() {
 }
 
 
-void test_simple_without_recv() {
-    link_t* link = ufr_publisher("@new %p @coder %p @sep ;", 
-        ufr_gtw_posix_new_pipe, ufr_enc_csv_new);
-
-    // test 1
-    {
-        char buffer[128];
-        ufr_put(link, "%d %d %d\n", 10, 20, 30);
-        int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 0 );
-    }
-
-    // test 1
-    {
-        char buffer[128];
-        ufr_put(link, "range: %f, angle_max: %f, angle_min: %f, ranges: [%f, 1024]\n", 10, 20, 30);
-        int nbytes = ufr_read(link, buffer, sizeof(buffer));
-        UFR_TEST_EQUAL_I32( nbytes, 0 );
-    }
-
-    ufr_close(link);
-}
-
 // ============================================================================
 //  Main
 // ============================================================================
 
 int main() {
     test_simple();
-    // test_simple_2();
-    // test_simple_without_recv();
-    // ufr_test_print_result();
+    test_simple_2();
     return 0;
 }

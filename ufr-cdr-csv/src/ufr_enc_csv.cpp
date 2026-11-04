@@ -210,7 +210,7 @@ int ufr_enc_csv_put_str(link_t* link, const char* val) {
     return 0;
 }
 
-int ufr_enc_csv_cmd_enter(link_t* link, size_t maxsize) {
+int ufr_enc_csv_cmd_enter(link_t* link, size_t) {
     encoder_obj_t* enc_obj = (encoder_obj_t*) link->enc_obj;
     if ( enc_obj->line.size() > 0 ) {
         enc_obj->line += enc_obj->sep;
@@ -245,13 +245,19 @@ int ufr_enc_csv_cmd_clear(link_t* link) {
     return UFR_OK;
 }
 
-int ufr_enc_csv_cmd_seek_str(link_t* link, const char* name) {
+int ufr_enc_csv_cmd_seek_str(link_t*, const char*) {
     return UFR_OK;
 }
 
 ufr_enc_api_t ufr_enc_std_csv_api = {
     .init = ufr_enc_csv_init,
     .free = ufr_enc_csv_free,
+
+    .put_u8 = NULL,
+    .put_i8 = NULL,
+
+    .put_u16 = NULL,
+    .put_i16 = NULL,
 
     // 32 bits
     .put_u32 = ufr_enc_csv_put_u32,
@@ -261,7 +267,7 @@ ufr_enc_api_t ufr_enc_std_csv_api = {
     // 64 bits
     .put_u64 = NULL,
     .put_i64 = NULL,
-    .put_f64 = NULL,
+    .put_f64 = ufr_enc_csv_put_f64,
 
     // Single - 8 bits
     // .put_cmd = ufr_enc_csv_put_cmd,

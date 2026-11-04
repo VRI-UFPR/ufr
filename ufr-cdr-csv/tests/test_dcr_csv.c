@@ -43,13 +43,13 @@ int ufr_dcr_csv_new(link_t* link);
 
 void test_simple() {
     link_t* link = ufr_subscriber("@new %p @coder %p @sep ;", 
-        ufr_gtw_posix_new_pipe, ufr_dcr_csv_new);
+        ufr_gtw_memory_new, ufr_dcr_csv_new);
 
     // test 1
     {
         int a=0,b=0,c=0;
-        const char* buffer = "10;20;30\n";
-        ufr_write(link, buffer, strlen(buffer));
+        const char buffer[] = "10;20;30\n";
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
         ufr_get(link, "> %d %d %d", &a, &b, &c);
         UFR_TEST_EQUAL_I32(a, 10);
         UFR_TEST_EQUAL_I32(b, 20);
@@ -60,7 +60,7 @@ void test_simple() {
     {
         float a=0,b=0,c=0;
         const char* buffer = "10.5;20.125;30.5\n";
-        ufr_write(link, buffer, strlen(buffer));
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
         ufr_get(link, "> %f %f %f", &a, &b, &c);
         UFR_TEST_EQUAL_F32(a, 10.5);
         UFR_TEST_EQUAL_F32(b, 20.125);
@@ -78,7 +78,7 @@ void test_simple_2() {
     {
         int a=0,b=0,c=0;
         const char* buffer = "10,20,30\n";
-        ufr_write(link, buffer, strlen(buffer));
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
         ufr_get(link, "> %d %d %d", &a, &b, &c);
         UFR_TEST_EQUAL_I32(a, 10);
         UFR_TEST_EQUAL_I32(b, 20);
@@ -89,7 +89,7 @@ void test_simple_2() {
     {
         float a=0,b=0,c=0;
         const char* buffer = "10.5,20.125,30.5\n";
-        ufr_write(link, buffer, strlen(buffer));
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
         ufr_get(link, "> %f %f %f", &a, &b, &c);
         UFR_TEST_EQUAL_F32(a, 10.5);
         UFR_TEST_EQUAL_F32(b, 20.125);
@@ -100,7 +100,7 @@ void test_simple_2() {
     {
         char text[512];
         const char* buffer = "abcde\n";
-        ufr_write(link, buffer, strlen(buffer));
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
         ufr_get(link, "> %s", text);
         UFR_TEST_EQUAL_STR(text, "abcde");
     }

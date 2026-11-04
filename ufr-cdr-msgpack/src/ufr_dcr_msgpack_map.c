@@ -66,6 +66,7 @@ int ufr_dcr_msgpack_map_recv_cb(link_t* link, char* pack_data, size_t pack_nbyte
     return -1;
 }
 
+/*
 static
 char ufr_dcr_msgpack_map_get_type(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
@@ -128,7 +129,6 @@ int ufr_dcr_msgpack_map_get_nbytes(link_t* link) {
     }
 }
 
-/*
 static
 int ufr_dcr_msgpack_map_get_nitems(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
@@ -159,7 +159,6 @@ int ufr_dcr_msgpack_map_get_nitems(link_t* link) {
             return 0;
     }
 }
-*/
 
 static
 uint8_t* ufr_dcr_msgpack_map_get_rawptr(link_t* link) {
@@ -169,6 +168,7 @@ uint8_t* ufr_dcr_msgpack_map_get_rawptr(link_t* link) {
     }
     return (uint8_t*) decoder->object.via.bin.ptr;
 }
+    */
 
 static
 int ufr_dcr_msgpack_map_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
@@ -364,7 +364,7 @@ int ufr_dcr_msgpack_map_get_f32(link_t* link, float out_val[], int max_nitems) {
 
 static 
 char ufr_dcr_msgpack_map_meta_item_type(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;
+    // ll_decoder_t* decoder = link->dcr_obj;
     return 0;
 }
 
@@ -400,7 +400,7 @@ const char* ufr_dcr_msgpack_map_meta_item_mime(link_t* link) {
 
 static 
 int ufr_dcr_msgpack_map_meta_item_nbytes(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;    
+    // ll_decoder_t* decoder = link->dcr_obj;    
     return 0;
 }
 
@@ -437,14 +437,13 @@ int ufr_dcr_msgpack_map_meta_item_nitems(link_t* link) {
 
 static 
 const char* ufr_dcr_msgpack_map_meta_pack_mime(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;
-    
+    // ll_decoder_t* decoder = link->dcr_obj;
     return "";
 }
 
 static 
 int ufr_dcr_msgpack_map_meta_pack_nbytes(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;
+    // ll_decoder_t* decoder = link->dcr_obj;
     return 0;
 }
 

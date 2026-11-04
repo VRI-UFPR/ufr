@@ -328,8 +328,7 @@ void ufr_buffer_put_bin_as_str (ufr_buffer_t* buffer, const unsigned char *data,
     ufr_buffer_check_size(buffer, encoded_len + 1);
 
     // copia os dados
-    size_t i, j;
-    for (i = 0, j = 0; i < input_length;) {
+    for (size_t i = 0; i < input_length;) {
         uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
         uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
         uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;

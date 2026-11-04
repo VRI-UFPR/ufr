@@ -130,6 +130,8 @@ int ufr_gtw_memory_recv(link_t* link) {
         link->dcr_api->recv_cb(link, buffer->data, buffer->size);
     }
 
+    // Limpa o buffer
+    buffer->size = 0;
     return UFR_OK;
 }
 

@@ -57,7 +57,7 @@ int main() {
 
     // Teste 2
     {
-        ufr_put(link, "%f %d %f %d\n", 10.525, 20, 3.141592, 30);
+        ufr_put(link, "%f %d %f %d\n", 10.525F, 20, 3.141592F, 30);
         UFR_TEST_EQUAL_STR( buffer, "{'v0': 10.525000, 'v1': 20, 'v2': 3.141592, 'v3': 30}" );
     }
 
@@ -76,7 +76,7 @@ int main() {
 
     // Teste 5
     {
-        float vetor[4] = {10.5,20.25,30.1234,40.125004};
+        float vetor[4] = {10.5F,20.25F,30.1234F,40.125004F};
         ufr_put(link, "%a:f:4\n", vetor);
         UFR_TEST_EQUAL_STR( buffer, "{'v0': [10.500000,20.250000,30.123400,40.125004]}" );
     }
@@ -84,7 +84,7 @@ int main() {
     // Teste 6
     {
         int vetor1[4] = {10,20,30,40};
-        float vetor2[4] = {10.5,20.25,30.1234,40.125004};
+        float vetor2[4] = {10.5F,20.25F,30.1234F,40.125004F};
         ufr_put(link, "%a:d:4 %a:f:4 %s\n", vetor1, vetor2, "opa");
         UFR_TEST_EQUAL_STR( buffer, "{'v0': [10,20,30,40], 'v1': [10.500000,20.250000,30.123400,40.125004], 'v2': 'opa'}" );
     }

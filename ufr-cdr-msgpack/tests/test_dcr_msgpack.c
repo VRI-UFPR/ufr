@@ -46,7 +46,7 @@ void test_decode_5i() {
 
     {
         const uint8_t correto[] = {0x83, 0xa2, 0x76, 0x30, 0xa, 0xa2, 0x76, 0x31, 0x14, 0xa2, 0x76, 0x32, 0x1e};
-        ufr_write(link, correto, sizeof(correto));
+        ufr_gtw_write_u8(link, correto, sizeof(correto));
 
         UFR_TEST_TRUE( ufr_recv(link) );
         UFR_TEST_EQUAL( ufr_meta_pack_nitems(link), 3 );
@@ -64,9 +64,38 @@ void test_decode_3f() {
     link_t* link = ufr_subscriber("@new %p @coder %p", 
         ufr_gtw_memory_new, ufr_dcr_msgpack_new);
 
+    // Fluxo
     {
-        const char send[] = {0xCA, 0x41, 0x28, 0, 0, 0xCA, 0x41, 0xA2, 0, 0, 0xCA, 0x41, 0xF1, 0, 0};
-        ufr_write(link, send, sizeof(send));
+        const uint8_t send[] = {0xCA, 0x41, 0x28, 0, 0, 0xCA, 0x41, 0xA2, 0, 0, 0xCA, 0x41, 0xF1, 0, 0};
+        ufr_gtw_write_u8(link, send, sizeof(send));
+        UFR_TEST_TRUE( ufr_recv(link) );
+
+        UFR_TEST_EQUAL( ufr_meta_pack_nitems(link), 3 );
+
+        float num = 0;
+        // assert( ufr_get_type(link) == 'f' );
+        UFR_TEST_EQUAL_STR( ufr_meta_item_mime(link), "number/f32" );
+        UFR_TEST_EQUAL( ufr_meta_item_nitems(link), 1 );
+        UFR_TEST_EQUAL( ufr_get(link, "%f", &num), 1 );
+        UFR_TEST_EQUAL_F32( num, 10.5 );
+
+        // assert( ufr_get_type(link) == 'f' );
+        UFR_TEST_EQUAL_STR( ufr_meta_item_mime(link), "number/f32" );
+        UFR_TEST_EQUAL( ufr_meta_item_nitems(link), 1 );
+        UFR_TEST_EQUAL( ufr_get(link, "%f", &num), 1 );
+        UFR_TEST_EQUAL_F32( num, 20.25 );
+
+        // assert( ufr_get_type(link) == 'f' );
+        UFR_TEST_EQUAL_STR( ufr_meta_item_mime(link), "number/f32" );
+        UFR_TEST_EQUAL( ufr_meta_item_nitems(link), 1 );
+        UFR_TEST_EQUAL( ufr_get(link, "%f", &num), 1 );
+        UFR_TEST_EQUAL_F32( num, 30.125 );
+    }
+
+    // Map
+    {
+        const uint8_t correto[] = {0x83, 0xa2, 0x76, 0x30, 0xca, 0x41, 0x28, 0x0, 0x0, 0xa2, 0x76, 0x31, 0xca, 0x41, 0xa2, 0x0, 0x0, 0xa2, 0x76, 0x32, 0xca, 0x41, 0xf1, 0x0, 0x0, };
+        ufr_gtw_write_u8(link, correto, sizeof(correto));
         UFR_TEST_TRUE( ufr_recv(link) );
 
         UFR_TEST_EQUAL( ufr_meta_pack_nitems(link), 3 );
@@ -97,13 +126,34 @@ void test_decode_2s() {
     link_t* link = ufr_subscriber("@new %p @coder %p", 
         ufr_gtw_posix_new_pipe, ufr_dcr_msgpack_new);
 
+    // Fluxo
     {
         uint8_t send[] = {
             0xa6, 0x61, 0x62, 0x63, 0x31, 0x32, 0x33, 
             0xa6, 0x61, 0x62, 0x63, 0x33, 0x34, 0x35, 
             '\n'
         };
-        ufr_write(link, (const char*) send, sizeof(send));
+        ufr_gtw_write_u8(link, send, sizeof(send));
+        ufr_recv(link);
+
+        char str[32];
+        // assert( ufr_get_type(link) == 's' );
+        assert( ufr_get(link, "%s", str) == 1 );
+        UFR_TEST_EQUAL_STR( str, "abc123" );
+
+        // assert( ufr_get_type(link) == 's' );
+        assert( ufr_get(link, "%s", str) == 1 );
+        UFR_TEST_EQUAL_STR( str, "abc345" );
+    }
+
+    // Map
+    {
+        const uint8_t correto[] = {
+            0x82, 
+            0xa2, 0x76, 0x30, 0xa6, 0x61, 0x62, 0x63, 0x31, 0x32, 0x33, 
+            0xa2, 0x76, 0x31, 0xa6, 0x61, 0x62, 0x63, 0x33, 0x34, 0x35
+        };
+        ufr_gtw_write_u8(link, correto, sizeof(correto));
         ufr_recv(link);
 
         char str[32];
@@ -118,7 +168,7 @@ void test_decode_2s() {
 }
 
 void test_decode_file() {
-    const char file_send[] = {
+    const uint8_t file_send[] = {
         0xc4, 0x1b, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x70, 
         0x6c, 0x61, 0x69, 0x6e, 0x00, 0x01, 0x02, 0x03, 
         0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 
@@ -127,7 +177,7 @@ void test_decode_file() {
 
     link_t* link = ufr_subscriber("@new %p @coder %p", 
         ufr_gtw_posix_new_pipe, ufr_dcr_msgpack_new);
-    ufr_write(link, (const char*) file_send, sizeof(file_send));
+    ufr_gtw_write_u8(link, file_send, sizeof(file_send));
     UFR_TEST_TRUE( ufr_recv(link) );
 
     // Test metadata for package
@@ -159,7 +209,7 @@ void test_decoded_array() {
 
     {
         uint8_t send[] = {0x95, 0x13, 0x14, 0x1e, 0x28, 0x32};
-        ufr_write(link, (const char*) send, sizeof(send));
+        ufr_gtw_write_u8(link, send, sizeof(send));
         ufr_recv(link);
 
         int num;
@@ -185,27 +235,25 @@ void test_decoded_array() {
 //  Tools
 // ============================================================================
 
-
 void show_encoder_bytes() {
-printf("opa\n");
-    link_t* link = ufr_publisher("@new %p @coder %p", 
-        ufr_gtw_posix_new_pipe, ufr_enc_msgpack_new);
-
-    // Envia os dados formatados
-    // ufr_put(link, "%d %d %d %d %d\n", 10, 20, 30, 40, 50);
-
-    const char file[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-    ufr_put_bin(link, "text/plain", file, 16);
-    ufr_put_eof(link);
-
-    // Mostra os dados codificados
     uint8_t buffer[1024];
-    ufr_recv(link);
-    size_t read = ufr_read(link, (char*) buffer, 1024);
-    for (int i=0; i<read; i++ ){
-        printf("%x ", buffer[i]);
+    link_t* link = ufr_publisher("@new %p @coder %p @buffer %p", 
+        ufr_gtw_memory_new, ufr_enc_msgpack_new, buffer);
+
+    
+    ufr_put(link, "%s %s\n", "abc123", "abc123");
+
+    // int vet[5] = {20,21,22,23,24};
+    // ufr_put(link, "name=%s score=%f age=%d vetor=%a:d:5\n", "felipe", 10.5, 30, vet);
+    // ufr_put(link, "%d %f %s\n", 10, 20.525, "texto");
+    // ufr_put(link, "%d %d %d\n", 10, 20, 30);
+    // ufr_put(link, "%s\n", "hello");
+    
+    printf("const uint8_t correto[] = {");
+    for (int i=0; i<link->sent; i++ ){
+        printf("0x%x, ", buffer[i]);
     }
-    printf("\n");
+    printf("};\n");
 
     ufr_close(link);
 }
@@ -215,9 +263,11 @@ printf("opa\n");
 // ============================================================================
 
 int main() {
+    show_encoder_bytes();
     test_decode_5i();
     test_decode_3f();
-    // test_decode_2s();
+    test_decode_2s();
+
     // test_decode_file();
     // show_encoder_bytes();
 	return 0;

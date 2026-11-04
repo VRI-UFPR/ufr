@@ -184,7 +184,7 @@ void packer_encode(link_t* link) {
         } else if ( type == ARRAY_F64 ) {
             const int32_t nbytes = enc_obj->data[i].nitems;
             msgpack_pack_array(&enc_obj->pk, nbytes);
-            const double* data = (const float*) enc_obj->data[i].ptr;
+            const double* data = (const double*) enc_obj->data[i].ptr;
             for (int32_t i=0; i<nbytes; i++) {
                 msgpack_pack_double(&enc_obj->pk, data[i]);
             }
