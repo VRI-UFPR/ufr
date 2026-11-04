@@ -31,23 +31,25 @@
 #pragma once
 
 typedef struct {
+    const ufr_dcr_api_t* saved_api;
+    msgpack_object object;
+    int index;
+} Level;
+
+typedef struct {
     msgpack_unpacked result;
     uint8_t* pack_data;
     uint32_t pack_nbytes;
     int  pack_nitems;
+    size_t pack_cursor;
 
     // Current cursor and item
-    size_t cursor;
     msgpack_object object;
+    int index;
 
-    // enter
-    msgpack_object_array l0_array;
-    msgpack_object_map l0_map;
-    size_t l0_idx;
-
-
-    // Pilha
-    const ufr_dcr_api_t* dcr_api;
+    // Stack of Objects
+    int8_t  stack_size;
+    Level   stack[8];
     
     // meta
     bool is_pack_scalar;
@@ -55,3 +57,8 @@ typedef struct {
 
 extern ufr_dcr_api_t ufr_dcr_msgpack_array_api;
 extern ufr_dcr_api_t ufr_dcr_msgpack_map_api;
+extern ufr_dcr_api_t ufr_dcr_msgpack_api;
+
+
+int ufr_dcr_msgpack_cmd_enter(link_t* link);
+int ufr_dcr_msgpack_cmd_leave(link_t* link);

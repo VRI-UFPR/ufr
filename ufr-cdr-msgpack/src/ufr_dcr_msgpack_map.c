@@ -57,7 +57,7 @@ void ufr_dcr_msgpack_map_free(link_t* link) {
 static
 int ufr_dcr_msgpack_map_cmd_next(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    decoder->l0_idx += 1;
+    decoder->index += 1;
     return UFR_OK;
 }
 
@@ -180,8 +180,8 @@ int ufr_dcr_msgpack_map_get_raw(link_t* link, uint8_t* out_val, int maxlen) {
 
     // get item
     size_t size = 0;
-    if ( decoder->l0_idx < decoder->l0_map.size ) {
-        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+    if ( decoder->index < decoder->object.via.map.size ) {
+        const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
         const int type = item.type;
         if ( type == MSGPACK_OBJECT_STR ) {
             const char* ptr = item.via.str.ptr;
@@ -223,8 +223,8 @@ int ufr_dcr_msgpack_map_get_str(link_t* link, char* out_val, int maxlen) {
         return 1;
     }
 
-    if ( decoder->l0_idx < decoder->l0_map.size ) {
-        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+    if ( decoder->index < decoder->object.via.map.size ) {
+        const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
         const int type = item.type;
         if ( type == MSGPACK_OBJECT_STR ) {
             const char* ptr = item.via.str.ptr;
@@ -265,11 +265,12 @@ int ufr_dcr_msgpack_map_get_u32(link_t* link, uint32_t out_val[], int max_nitems
     }
 
     // Read the data
-    const int n_items = (max_nitems < decoder->l0_map.size) ? max_nitems : decoder->l0_map.size;
+    const int map_size = decoder->object.via.map.size;
+    const int n_items = (max_nitems < map_size) ? max_nitems : map_size;
     int read_i = 0;
     for (; read_i<n_items; read_i++) {
-        if ( decoder->l0_idx < decoder->l0_map.size ) {
-            const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+        if ( decoder->index < decoder->object.via.map.size ) {
+            const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
             const int type = item.type;
             if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
                 out_val[read_i] = (uint32_t) item.via.u64;
@@ -301,11 +302,12 @@ int ufr_dcr_msgpack_map_get_i32(link_t* link, int32_t out_val[], int max_nitems)
     }
 
     // Read the data
-    const int n_items = (max_nitems < decoder->l0_map.size) ? max_nitems : decoder->l0_map.size;
+    const int map_size = decoder->object.via.map.size;
+    const int n_items = (max_nitems < map_size) ? max_nitems : map_size;
     int read_i = 0;
     for (; read_i<n_items; read_i++) {
-        if ( decoder->l0_idx < decoder->l0_map.size ) {
-            const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+        if ( decoder->index < decoder->object.via.map.size ) {
+            const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
             const int type = item.type;
             if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
                 out_val[read_i] = (int32_t) item.via.u64;
@@ -336,11 +338,12 @@ int ufr_dcr_msgpack_map_get_f32(link_t* link, float out_val[], int max_nitems) {
     }
 
     // Read the data
-    const int n_items = (max_nitems < decoder->l0_map.size) ? max_nitems : decoder->l0_map.size;
+    const int map_size = decoder->object.via.map.size;
+    const int n_items = (max_nitems < map_size) ? max_nitems : map_size;
     int read_i = 0;
     for (; read_i<n_items; read_i++) {
-        if ( decoder->l0_idx < decoder->l0_map.size ) {
-            const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+        if ( decoder->index < decoder->object.via.map.size ) {
+            const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
             const int type = item.type;
             if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
                 out_val[read_i] = (float) item.via.u64;
@@ -371,8 +374,8 @@ char ufr_dcr_msgpack_map_meta_item_type(link_t* link) {
 static 
 const char* ufr_dcr_msgpack_map_meta_item_mime(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    if ( decoder->l0_idx < decoder->l0_map.size ) {
-        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+    if ( decoder->index < decoder->object.via.map.size ) {
+        const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
         const int type = item.type;
 
         if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
@@ -407,8 +410,8 @@ int ufr_dcr_msgpack_map_meta_item_nbytes(link_t* link) {
 static 
 int ufr_dcr_msgpack_map_meta_item_nitems(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    if ( decoder->l0_idx < decoder->l0_map.size ) {
-        const msgpack_object item = decoder->l0_map.ptr[ decoder->l0_idx ].val;
+    if ( decoder->index < decoder->object.via.map.size ) {
+        const msgpack_object item = decoder->object.via.map.ptr[ decoder->index ].val;
         const int type = item.type;
 
         if ( type == MSGPACK_OBJECT_POSITIVE_INTEGER ) {
@@ -450,27 +453,60 @@ int ufr_dcr_msgpack_map_meta_pack_nbytes(link_t* link) {
 static 
 int ufr_dcr_msgpack_map_meta_pack_nitems(link_t* link) {
     ll_decoder_t* decoder = link->dcr_obj;
-    return decoder->l0_map.size;
+    return decoder->object.via.map.size;
 }
 
 
 
 static
 int ufr_dcr_msgpack_map_cmd_enter(link_t* link) {
-    return -1;
+    int result = UFR_OK;
+    ll_decoder_t* decoder = link->dcr_obj;
+    const int8_t stack_size = decoder->stack_size;
+    if ( decoder->index >= decoder->object.via.map.size ) {
+        return -1;
+    }
+
+    // Check type of item
+    const msgpack_object item = decoder->object.via.map.ptr[decoder->index].val;
+
+    // Case object is Array
+    if ( item.type == MSGPACK_OBJECT_ARRAY ) {
+        decoder->stack[stack_size].saved_api = link->dcr_api;
+        decoder->stack[stack_size].object = decoder->object;
+        decoder->stack[stack_size].index = decoder->index + 1;
+        decoder->object = item;
+        link->dcr_api = &ufr_dcr_msgpack_array_api;
+        decoder->stack_size += 1;
+    
+    // Case object is MAP
+    } else if ( item.type == MSGPACK_OBJECT_MAP ) {
+        decoder->stack[stack_size].saved_api = link->dcr_api;
+        decoder->stack[stack_size].object = decoder->object;
+        decoder->stack[stack_size].index = decoder->index + 1;
+        decoder->object = item;
+        link->dcr_api = &ufr_dcr_msgpack_map_api;
+        decoder->stack_size += 1;
+
+    // ERROR: Type is not possible to enter
+    } else {
+        result = -1;
+    }
+
+    // Return
+    return result;
 }
 
 static
 int ufr_dcr_msgpack_map_cmd_leave(link_t* link) {
-    ll_decoder_t* decoder = link->dcr_obj;
-    link->dcr_api = decoder->dcr_api;
-    return UFR_OK;
+    return ufr_dcr_msgpack_cmd_leave(link);
 }
 
 static
 int ufr_dcr_msgpack_map_cmd_prepare(link_t* link) {
+    link->dcr_api = &ufr_dcr_msgpack_api;
     ll_decoder_t* decoder = link->dcr_obj;
-    link->dcr_api = decoder->dcr_api;
+    decoder->stack_size = 0;
     return UFR_OK;
 }
 

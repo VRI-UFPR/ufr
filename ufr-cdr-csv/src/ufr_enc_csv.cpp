@@ -91,7 +91,6 @@ int ufr_enc_csv_put_u32(link_t* link, const uint32_t* val, int nitems) {
         for (; wrote<nitems; wrote++) {
             snprintf(buffer, sizeof(buffer), "%c%u", sep, val[wrote]);
             enc_obj->line += buffer;
-            wrote += 1;
         }
     }
 
@@ -117,7 +116,6 @@ int ufr_enc_csv_put_i32(link_t* link, const int32_t* val, int nitems) {
         for (; wrote<nitems; wrote++) {
             snprintf(buffer, sizeof(buffer), "%c%d", enc_obj->sep, val[wrote]);
             enc_obj->line += buffer;
-            wrote += 1;
         }
     }
 
@@ -144,7 +142,6 @@ int ufr_enc_csv_put_f32(link_t* link, const float* val, int nitems) {
         for (; wrote<nitems; wrote++) {
             snprintf(buffer, sizeof(buffer), "%c%f", sep, val[wrote]);
             enc_obj->line += buffer;
-            wrote += 1;
         }
     }
 

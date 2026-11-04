@@ -39,7 +39,6 @@
 
 #include "ufr_dcr_msgpack.h"
 
-static int ufr_dcr_msgpack_cmd_enter(link_t* link);
 static int ufr_dcr_msgpack_next(link_t* link);
 
 
@@ -54,6 +53,7 @@ int ufr_dcr_msgpack_init(link_t* link, const ufr_args_t* args) {
         return ufr_error(link, ENOMEM, strerror(ENOMEM));
     }
     msgpack_unpacked_init(&dcr_obj->result);
+    dcr_obj->stack_size = 0;
     link->dcr_obj = dcr_obj;
     return UFR_OK;
 }
@@ -75,12 +75,13 @@ int ufr_dcr_msgpack_recv_cb(link_t* link, char* pack_data, size_t pack_nbytes) {
     ll_decoder_t* decoder = link->dcr_obj;
     decoder->pack_data = (uint8_t*) pack_data;
     decoder->pack_nbytes = pack_nbytes;
-    decoder->cursor = 0;
+    decoder->pack_cursor = 0;
+    decoder->index = 0;
     decoder->is_pack_scalar = false;
     decoder->pack_nitems = -1;
     const int code = ufr_dcr_msgpack_next(link);
     if ( code == UFR_OK ) {
-        if ( decoder->cursor >= decoder->pack_nbytes ) {
+        if ( decoder->pack_cursor >= decoder->pack_nbytes ) {
             decoder->is_pack_scalar = true;
             decoder->pack_nitems = 1;
             if ( decoder->object.type == MSGPACK_OBJECT_ARRAY || decoder->object.type == MSGPACK_OBJECT_MAP ) {
@@ -606,7 +607,7 @@ int ufr_dcr_msgpack_meta_item_nbytes(link_t* link) {
         return (int32_t) ( decoder->object.via.bin.size - mime_len );
     }
 
-    if ( decoder->cursor >= decoder->pack_nbytes ) {
+    if ( decoder->pack_cursor >= decoder->pack_nbytes ) {
         printf("EOF\n");
     }
 
@@ -678,11 +679,11 @@ int ufr_dcr_msgpack_meta_pack_nitems(link_t* link) {
 
     if ( decoder->pack_nitems < 0 ) {
         int pack_nitems = 1;             // =1 -> first item already parsed
-        size_t cursor = decoder->cursor;
+        size_t pack_cursor = decoder->pack_cursor;
         msgpack_unpacked result;
         msgpack_unpacked_init(&result);
         while (1) {
-            const msgpack_unpack_return ret = msgpack_unpack_next(&result, (const char *) decoder->pack_data, decoder->pack_nbytes, &cursor);
+            const msgpack_unpack_return ret = msgpack_unpack_next(&result, (const char *) decoder->pack_data, decoder->pack_nbytes, &pack_cursor);
             if ( ret != MSGPACK_UNPACK_SUCCESS ) {
                 break;
             }
@@ -695,42 +696,57 @@ int ufr_dcr_msgpack_meta_pack_nitems(link_t* link) {
     return decoder->pack_nitems;
 }
 
-static
+// Public
 int ufr_dcr_msgpack_cmd_enter(link_t* link) {
+    int result = UFR_OK;
     ll_decoder_t* decoder = link->dcr_obj;
+    const int8_t stack_size = decoder->stack_size;
 
     // Case object is Array
     if ( decoder->object.type == MSGPACK_OBJECT_ARRAY ) {
-        decoder->l0_array = decoder->object.via.array;
-        decoder->l0_idx = 0;
-        decoder->dcr_api = link->dcr_api;
+        decoder->stack[stack_size].saved_api = link->dcr_api;
+        decoder->stack[stack_size].object = decoder->object;
+        decoder->stack[stack_size].index = decoder->index + 1;
         link->dcr_api = &ufr_dcr_msgpack_array_api;
-        return UFR_OK;
-    } 
+        decoder->stack_size += 1;
     
     // Case object is MAP
-    if ( decoder->object.type == MSGPACK_OBJECT_MAP ) {
-        decoder->l0_map = decoder->object.via.map;
-        decoder->l0_idx = 0;
-        decoder->dcr_api = link->dcr_api;
+    } else if ( decoder->object.type == MSGPACK_OBJECT_MAP ) {
+        decoder->stack[stack_size].saved_api = link->dcr_api;
+        decoder->stack[stack_size].object = decoder->object;
+        decoder->stack[stack_size].index = decoder->index + 1;
         link->dcr_api = &ufr_dcr_msgpack_map_api;
-        return UFR_OK;
+        decoder->stack_size += 1;
+
+    // ERROR: Type is not possible to enter
+    } else {
+        result = -1;
     }
 
-    // Error
-    return -1;
+    // Return
+    return result;
 }
 
-static
+// Public
 int ufr_dcr_msgpack_cmd_leave(link_t* link) {
-    return -1;
+    ll_decoder_t* decoder = link->dcr_obj;
+    if ( decoder->stack_size <= 0 ) {
+        return -1;
+    }
+
+    const int8_t level = decoder->stack_size - 1;
+    decoder->object = decoder->stack[level].object;
+    decoder->index = decoder->stack[level].index;
+    link->dcr_api = decoder->stack[level].saved_api;
+    decoder->stack_size = level;
+    return UFR_OK;
 }
 
 static
 int ufr_dcr_msgpack_next(link_t* link) {
     // parse the next object in the message
     ll_decoder_t* decoder = link->dcr_obj;
-    size_t current = decoder->cursor;
+    size_t current = decoder->pack_cursor;
 
     msgpack_unpack_return ret = msgpack_unpack_next(&decoder->result, (const char *) decoder->pack_data, decoder->pack_nbytes, &current);
 
@@ -743,7 +759,7 @@ int ufr_dcr_msgpack_next(link_t* link) {
     }
 
     // update decoder object
-    decoder->cursor = current;
+    decoder->pack_cursor = current;
     decoder->object = decoder->result.data;
     return UFR_OK;
 }
@@ -753,7 +769,7 @@ int ufr_dcr_msgpack_cmd_prepare(link_t* link) {
     return UFR_OK;
 }
 
-static
+// public
 ufr_dcr_api_t ufr_dcr_msgpack_api = {
     // Init/Free
     .init = ufr_dcr_msgpack_init,

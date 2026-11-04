@@ -151,6 +151,8 @@ int ufr_get_array(link_t* link, const Evento* evento, va_list list) {
             const int res = ufr_get_arr_i32(link, arr_ptr, arr_size);
             if ( res > 0 ) {
                 count = 1;
+            } else {
+                printf("EERRROR\n");
             }
         } break;
 
