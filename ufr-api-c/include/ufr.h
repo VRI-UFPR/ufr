@@ -758,6 +758,9 @@ int ufr_set_state_ready(link_t* link);
 int ufr_enc_enter(link_t* link, int max_nitems);
 int ufr_enc_leave(link_t* link);
 
+int ufr_dcr_enter(link_t* link);
+int ufr_dcr_leave(link_t* link);
+
 
 // ============================================================================
 //  UFR LOG

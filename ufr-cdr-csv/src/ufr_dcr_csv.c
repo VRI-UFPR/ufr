@@ -224,6 +224,27 @@ int ufr_dcr_csv_get_str(link_t* link, char* out_val, int maxlen) {
 }
 
 static
+int ufr_dcr_csv_cmd_enter(link_t* link) {
+    char token[TOKEN_SIZE];
+    ll_decoder_t* decoder = link->dcr_obj;
+    
+    if ( lex_next_token(decoder, token) != UFR_OK ) {
+        return -1;
+    }
+
+    if ( strcmp(token, "#[#") != 0 ) {
+        return -1;
+    }
+
+    return UFR_OK;
+}
+
+static
+int ufr_dcr_csv_cmd_leave(link_t* link) {
+    return UFR_OK;
+}
+
+static
 int ufr_dcr_csv_cmd_prepare(link_t* link) {
     return UFR_OK;
 }
@@ -268,8 +289,8 @@ ufr_dcr_api_t ufr_dcr_std_csv_api = {
     .meta_pack_nitems = NULL,
 
     // Commands
-    .cmd_enter = NULL,
-    .cmd_leave = NULL,
+    .cmd_enter = ufr_dcr_csv_cmd_enter,
+    .cmd_leave = ufr_dcr_csv_cmd_leave,
     .cmd_next = ufr_dcr_csv_cmd_next,
     .cmd_prepare = ufr_dcr_csv_cmd_prepare
 };

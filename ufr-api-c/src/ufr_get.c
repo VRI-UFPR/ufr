@@ -150,9 +150,7 @@ int ufr_get_array(link_t* link, const Evento* evento, va_list list) {
             const int32_t arr_size = (evento->tamanho[0] == -1) ? va_arg(list, int32_t) : evento->tamanho[0];
             const int res = ufr_get_arr_i32(link, arr_ptr, arr_size);
             if ( res > 0 ) {
-                count = 1;
-            } else {
-                printf("EERRROR\n");
+                count += res;
             }
         } break;
 
@@ -384,24 +382,8 @@ int ufr_get_bin(link_t* link, char** out_mime, char** out_data, int* out_nbytes)
 
 
 // Enter and Leave
-
-int ufr_get_enter(link_t* link) {
-    if (link->dcr_api->cmd_enter == NULL ) {
-        return ufr_error(link, 1, "Function enter in Decoder is NULL");
-    }
-    return link->dcr_api->cmd_enter(link);
-}
-
-int ufr_get_leave(link_t* link) {
-    if (link->dcr_api->cmd_leave == NULL ) {
-        return ufr_error(link, 1, "Function leave in Decoder is NULL");
-    }
-    return link->dcr_api->cmd_leave(link);
-}
-
-
 int ufr_get_arr_u8(link_t* link, uint8_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -409,12 +391,12 @@ int ufr_get_arr_u8(link_t* link, uint8_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_u8 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_i8(link_t* link, int8_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -422,12 +404,12 @@ int ufr_get_arr_i8(link_t* link, int8_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_i8 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_u16(link_t* link, uint16_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -435,12 +417,12 @@ int ufr_get_arr_u16(link_t* link, uint16_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_u16 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_i16(link_t* link, int16_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -448,12 +430,12 @@ int ufr_get_arr_i16(link_t* link, int16_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_i16 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_u32(link_t* link, uint32_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -461,12 +443,12 @@ int ufr_get_arr_u32(link_t* link, uint32_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_u32 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_i32(link_t* link, int32_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -474,12 +456,12 @@ int ufr_get_arr_i32(link_t* link, int32_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_i32 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_u64(link_t* link, uint64_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -487,12 +469,12 @@ int ufr_get_arr_u64(link_t* link, uint64_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_u64 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_i64(link_t* link, int64_t buffer[], int max_items) {
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -500,17 +482,13 @@ int ufr_get_arr_i64(link_t* link, int64_t buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_i64 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 
 int ufr_get_arr_f32(link_t* link, float buffer[], int max_items) {
-    if (link->dcr_api->cmd_leave == NULL ) {
-        return ufr_error(link, 1, "Function leave in Decoder is NULL");
-    }
-
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -518,16 +496,12 @@ int ufr_get_arr_f32(link_t* link, float buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_f32 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 
 int ufr_get_arr_f64(link_t* link, double buffer[], int max_items) {
-    if (link->dcr_api->cmd_leave == NULL ) {
-        return ufr_error(link, 1, "Function leave in Decoder is NULL");
-    }
-
-    const int res1 = link->dcr_api->cmd_enter(link);
+    const int res1 = ufr_dcr_enter(link);
     if ( res1 != UFR_OK ) {
         return ufr_error(link, -1, "Error on Enter function");
     }
@@ -535,7 +509,7 @@ int ufr_get_arr_f64(link_t* link, double buffer[], int max_items) {
     if ( items_read < 0 ) {
         return ufr_error(link, -1, "Error on get_f64 function");
     }
-    link->dcr_api->cmd_leave(link);
+    ufr_dcr_leave(link);
     return items_read;
 }
 

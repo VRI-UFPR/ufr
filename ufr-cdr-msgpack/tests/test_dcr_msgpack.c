@@ -214,7 +214,7 @@ void test_decoded_array() {
 
         int num;
         // assert( ufr_get_type(link) == 'a' );
-        UFR_TEST_OK( ufr_get_enter(link) );
+        UFR_TEST_OK( ufr_dcr_enter(link) );
         assert( ufr_get(link, "i", &num) == 1 );
         UFR_TEST_EQUAL( num, 0x13 );
         UFR_TEST_EQUAL( ufr_get(link, "%d", &num), 1 );
@@ -227,7 +227,7 @@ void test_decoded_array() {
         UFR_TEST_EQUAL( num, 0x32 );
         UFR_TEST_EQUAL( ufr_get(link, "%d", &num), 0 );
         UFR_TEST_EQUAL( num, 0 );
-        UFR_TEST_OK( ufr_get_leave(link) );
+        UFR_TEST_OK( ufr_dcr_leave(link) );
     }
 }
 

@@ -899,9 +899,70 @@ void ufr_exit_if_error(link_t* link) {
 
 
 int ufr_enc_enter(link_t* link, int max_nitems) {
+    if ( link->log_level > 0 ) {
+        if ( link == NULL ) {
+            return ufr_error(link, -1, "link is null");
+        }
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, -1, "link->enc_api is null");
+        }
+        if ( link->enc_api->cmd_enter == NULL ) {
+            return ufr_error(link, -1, "link->enc_api->cmd_enter is null");
+        }
+    }
+
+    // call cmd_enter
     return link->enc_api->cmd_enter(link, max_nitems);
 }
 
 int ufr_enc_leave(link_t* link) {
+    if ( link->log_level > 0 ) {
+        if ( link == NULL ) {
+            return ufr_error(link, -1, "link is null");
+        }
+        if ( link->enc_api == NULL ) {
+            return ufr_error(link, -1, "link->enc_api is null");
+        }
+        if ( link->enc_api->cmd_leave == NULL ) {
+            return ufr_error(link, -1, "link->enc_api->cmd_leave is null");
+        }
+    }
+
+    // call cmd_leave
     return link->enc_api->cmd_leave(link);
+}
+
+
+int ufr_dcr_enter(link_t* link) {
+    if ( link->log_level > 0 ) {
+        if ( link == NULL ) {
+            return ufr_error(link, -1, "link is null");
+        }
+        if ( link->dcr_api == NULL ) {
+            return ufr_error(link, -1, "link->dcr_api is null");
+        }
+        if ( link->dcr_api->cmd_enter == NULL ) {
+            return ufr_error(link, -1, "link->dcr_api->cmd_enter is null");
+        }
+    }
+
+    // call cmd_enter
+    return link->dcr_api->cmd_enter(link);
+}
+
+int ufr_dcr_leave(link_t* link) {
+    if ( link->log_level > 0 ) {
+        if ( link == NULL ) {
+            return ufr_error(link, -1, "link is null");
+        }
+        if ( link->dcr_api == NULL ) {
+            return ufr_error(link, -1, "link->dcr_api is null");
+        }
+        if ( link->dcr_api->cmd_leave == NULL ) {
+            return ufr_error(link, -1, "link->dcr_api->cmd_leave is null");
+        }
+    }
+
+    // call cmd_leave
+    return link->dcr_api->cmd_leave(link);
 }

@@ -87,11 +87,36 @@ void test_simple() {
 
     // test 4
     {
-        const char* buffer = "#[#;0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35;36;37;38;39;40;41;42;43;44;45;46;47;48;49;#]#\n"
-        const int res = ufr_get(link, "%a:d:50\n", vetor);
+        const char* buffer = "#[#;0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35;36;37;38;39;40;41;42;43;44;45;46;47;48;49;#]#\n";
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
+
+        int vetor[50];
+        const int res = ufr_get(link, "> %a:d:50", vetor);
         UFR_TEST_EQUAL_I32( res, 51 );
-        UFR_TEST_EQUAL_I32( link->sent, 148 );
-        UFR_TEST_EQUAL_STR(buffer, "");
+        for (int i=0; i<50; i++) {
+            UFR_TEST_EQUAL(vetor[i], i);
+        }
+        printf("Teste 1.4 - OK\n");
+    }
+
+    // test 5
+    {
+        const char* buffer = "10;20;30;OPAAA!!!!;#[#;0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35;36;37;38;39;40;41;42;43;44;45;46;47;48;49;#]#\n";
+        ufr_gtw_write_i8(link, buffer, strlen(buffer));
+
+        int vetor[50];
+        int a,b,c;
+        char texto[1024];
+        const int res = ufr_get(link, "> %d %d %d %s %a:d:?", &a, &b, &c, texto, vetor, 50);
+        UFR_TEST_EQUAL_I32( res, 55 );
+        UFR_TEST_EQUAL(a, 10);
+        UFR_TEST_EQUAL(b, 20);
+        UFR_TEST_EQUAL(c, 30);
+        UFR_TEST_EQUAL_STR(texto, "OPAAA!!!!");
+        for (int i=0; i<50; i++) {
+            UFR_TEST_EQUAL(vetor[i], i);
+        }
+        printf("Teste 1.5 - OK\n");
     }
 
     ufr_close(link);
